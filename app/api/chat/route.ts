@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { crayonStream } from "@crayonai/stream";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -28,6 +27,7 @@ OUTCOME CARD FIELDS:
 - contextToShare: Background info that would help someone make the right intro
 
 RULES:
+- CRITICAL: Output ONLY raw JSON. NO markdown code fences, NO backticks, NO "json" prefix. The very first character of your response must be { and the last must be }
 - Always output valid JSON — no markdown, no prose outside the JSON
 - Be specific, not generic. "Meet a Series B SaaS founder in HR tech" beats "expand your network"
 - One clarifying question max if needed — never a list of questions
@@ -38,57 +38,115 @@ EXAMPLES of good goals:
 - "Connect with an angel investor who has backed graph database companies at the seed stage"
 - "Meet a talent agent at UTA or WME who represents celebrities doing brand deals"`;
 
+const encoder = new TextEncoder();
+
+type ResponseItem =
+  | { type: "text"; text: string }
+  | { name: string; templateProps: Record<string, unknown> };
+
 export async function POST(req: NextRequest) {
-  const { prompt, threadId, messages = [] } = await req.json();
+  const { prompt, messages = [] } = await req.json();
 
-  // Build message history
-  const history = messages
-    .filter((m: any) => m.role === "user" || m.role === "assistant")
-    .map((m: any) => ({
-      role: m.role as "user" | "assistant",
-      content:
+  // messages is already sliced to exclude current msg (sent from frontend as messages.slice(0, -1))
+  const history = (messages as Array<{ role: string; message: unknown }>)
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .map((m) => {
+      const content =
         m.role === "assistant"
-          ? JSON.stringify({ response: [{ type: "text", text: m.message || "" }] })
-          : m.message || "",
-    }));
+          ? // assistant messages may be an array of content items or a string
+            typeof m.message === "string"
+            ? m.message
+            : JSON.stringify(m.message)
+          : typeof m.message === "string"
+          ? m.message
+          : String(m.message ?? "");
+      return {
+        role: m.role as "user" | "assistant",
+        content,
+      };
+    })
+    .filter((m) => m.content.length > 0);
 
-  // Add current user message
-  const currentMessage = typeof prompt === "string" ? prompt : prompt?.content || "";
+  const currentMessage = typeof prompt === "string" ? prompt : "";
 
-  const { stream, onText, onEnd, onError } = crayonStream();
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // Collect full response
+        let fullText = "";
+        const response = await client.messages.create({
+          model: "claude-sonnet-4-5",
+          max_tokens: 1024,
+          system: SYSTEM_PROMPT,
+          messages: [
+            ...history,
+            { role: "user", content: currentMessage },
+          ],
+          stream: true,
+        });
 
-  (async () => {
-    try {
-      const response = await client.messages.create({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: [
-          ...history,
-          { role: "user", content: currentMessage },
-        ],
-        stream: true,
-      });
-
-      for await (const event of response) {
-        if (
-          event.type === "content_block_delta" &&
-          event.delta.type === "text_delta"
-        ) {
-          onText(event.delta.text);
+        for await (const event of response) {
+          if (
+            event.type === "content_block_delta" &&
+            event.delta.type === "text_delta"
+          ) {
+            fullText += event.delta.text;
+          }
         }
-      }
-      onEnd();
-    } catch (err) {
-      onError(err as Error);
-    }
-  })();
 
-  return new Response(stream as unknown as ReadableStream, {
+        // Strip markdown code fences if present
+        const cleaned = fullText
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/, "")
+          .trim();
+
+        // Parse and emit SSE events
+        let items: ResponseItem[] = [];
+        try {
+          const parsed = JSON.parse(cleaned);
+          items = parsed?.response ?? [];
+        } catch {
+          // Fallback: treat raw text as a text item
+          items = [{ type: "text", text: cleaned || fullText }];
+        }
+
+        for (const item of items) {
+          if ("type" in item && item.type === "text") {
+            // Emit text in small chunks for streaming feel
+            const words = item.text.split(" ");
+            for (let i = 0; i < words.length; i++) {
+              const chunk = (i === 0 ? "" : " ") + words[i];
+              controller.enqueue(
+                encoder.encode(`event: text\ndata: ${chunk}\n\n`)
+              );
+            }
+          } else if ("name" in item && item.name) {
+            controller.enqueue(
+              encoder.encode(
+                `event: tpl\ndata: ${JSON.stringify({
+                  name: item.name,
+                  templateProps: item.templateProps,
+                })}\n\n`
+              )
+            );
+          }
+        }
+
+        controller.close();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Error";
+        controller.enqueue(encoder.encode(`event: text\ndata: ${msg}\n\n`));
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
     },
   });
 }
