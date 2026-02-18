@@ -1,0 +1,3 @@
+module.exports=[48968,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(67893);a.n(d("[project]/projects/orbiter-copilot-demo/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},71745,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(67893);a.n(d("[project]/projects/orbiter-copilot-demo/node_modules/next/dist/client/components/builtin/global-error.js"))},51695,a=>{"use strict";a.i(48968);var b=a.i(71745);a.n(b)}];
+
+//# sourceMappingURL=61075_next_dist_client_components_builtin_global-error_1dd3f0d5.js.map

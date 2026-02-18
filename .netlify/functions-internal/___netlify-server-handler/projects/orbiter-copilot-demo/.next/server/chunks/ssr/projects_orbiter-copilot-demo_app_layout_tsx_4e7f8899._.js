@@ -1,0 +1,3 @@
+module.exports=[71938,a=>{"use strict";var b=a.i(99361);function c({children:a}){return(0,b.jsxs)("html",{lang:"en",children:[(0,b.jsx)("head",{children:(0,b.jsx)("link",{href:"https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap",rel:"stylesheet"})}),(0,b.jsx)("body",{children:a})]})}a.s(["default",()=>c,"metadata",0,{title:"Orbiter Copilot — Outcomes",description:"AI-powered Outcomes creation for Orbiter"}])}];
+
+//# sourceMappingURL=projects_orbiter-copilot-demo_app_layout_tsx_4e7f8899._.js.map

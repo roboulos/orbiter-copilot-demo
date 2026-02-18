@@ -1,0 +1,11 @@
+var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/_global-error/page.js")
+R.c("server/chunks/ssr/[root-of-the-server]__2a3b2857._.js")
+R.c("server/chunks/ssr/projects_orbiter-copilot-demo_b5cb62ea._.js")
+R.c("server/chunks/ssr/61075_next_dist_a3fa74ce._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0cee904b._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__9234bc28._.js")
+R.c("server/chunks/ssr/61075_next_dist_c0040964._.js")
+R.c("server/chunks/ssr/projects_orbiter-copilot-demo_app_49615fc6._.js")
+R.c("server/chunks/ssr/4362b__next-internal_server_app__global-error_page_actions_a6f99037.js")
+R.m(44294)
+module.exports=R.m(44294).exports
