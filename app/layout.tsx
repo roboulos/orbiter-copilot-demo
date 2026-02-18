@@ -3,8 +3,8 @@ import "@crayonai/react-ui/styles/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Orbiter Copilot — Outcomes",
-  description: "AI-powered Outcomes creation for Orbiter",
+  title: "Orbiter Copilot",
+  description: "Network intelligence — turn goals into introductions, signals into actions.",
 };
 
 export default function RootLayout({

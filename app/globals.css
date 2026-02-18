@@ -1,58 +1,136 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-@import "tailwindcss";
+/* Orbiter Copilot — global overrides for CrayonAI dark theme */
 
-:root {
-  --background: #0a0a0f;
-  --foreground: #e8e8f0;
-}
+* { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Override C1 Chat to match Orbiter's dark aesthetic */
-.orbiter-chat-wrapper {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: #0a0a0f;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.orbiter-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
-  backdrop-filter: blur(10px);
+/* Make the Crayon shell background match our dark */
+[class*="crayon-shell-container"],
+[class*="crayon-bottom-tray-container"] {
+  background: #0a0a0f !important;
 }
 
-.orbiter-badge {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 100px;
+/* Sidebar */
+[class*="crayon-shell-sidebar-container"] {
+  background: #0d0d14 !important;
+  border-right: 1px solid rgba(255,255,255,0.07) !important;
+  border: none !important;
 }
 
-.orbiter-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #e8e8f0;
+/* Thread area */
+[class*="crayon-shell-thread-scroll-area"] {
+  background: #0a0a0f !important;
 }
 
-.orbiter-subtitle {
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  margin-left: auto;
+/* User message bubble */
+[class*="crayon-shell-thread-message-user__content"],
+[class*="crayon-bottom-tray-thread-message-user__content"] {
+  background: #1a1a2e !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+  color: #e8e8f0 !important;
+  border-radius: 18px 18px 4px 18px !important;
+}
+
+/* Input wrapper */
+[class*="crayon-shell-thread-composer__input-wrapper"],
+[class*="crayon-bottom-tray-thread-composer__input-wrapper"] {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 16px !important;
+}
+
+[class*="crayon-shell-thread-composer__input-wrapper"]:focus-within,
+[class*="crayon-bottom-tray-thread-composer__input-wrapper"]:focus-within {
+  border-color: rgba(99,102,241,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.08) !important;
+}
+
+/* Send button */
+[class*="crayon-icon-button-primary"] {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border: none !important;
+}
+
+/* Welcome screen title */
+[class*="crayon-shell-welcome-screen__title"],
+[class*="crayon-bottom-tray-welcome-screen__title"] {
+  color: #e8e8f0 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Welcome description */
+[class*="crayon-shell-welcome-screen__description"],
+[class*="crayon-bottom-tray-welcome-screen__description"] {
+  color: rgba(255,255,255,0.4) !important;
+}
+
+/* Conversation starter items */
+[class*="crayon-shell-conversation-starter-item-long"],
+[class*="crayon-bottom-tray-conversation-starter-item-long"] {
+  border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  color: rgba(255,255,255,0.65) !important;
+  padding: 12px 4px !important;
+  transition: color 0.15s ease !important;
+}
+
+[class*="crayon-shell-conversation-starter-item-long"]:hover,
+[class*="crayon-bottom-tray-conversation-starter-item-long"]:hover {
+  background: rgba(99,102,241,0.06) !important;
+  color: rgba(255,255,255,0.9) !important;
+  border-radius: 8px !important;
+}
+
+/* New chat button */
+[class*="crayon-shell-new-chat-button"],
+[class*="crayon-bottom-tray"] button[class*="New Chat"] {
+  background: rgba(99,102,241,0.12) !important;
+  border: 1px solid rgba(99,102,241,0.25) !important;
+  color: #a5b4fc !important;
+  border-radius: 10px !important;
+}
+
+/* Thread history items in sidebar */
+[class*="crayon-shell-thread-button-title"] {
+  color: rgba(255,255,255,0.55) !important;
+  font-size: 13px !important;
+}
+
+[class*="crayon-shell-thread-button--selected"] {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: rgba(99,102,241,0.2) !important;
+}
+
+/* Assistant message text */
+[class*="crayon-shell-thread-message-assistant__text"],
+[class*="crayon-bottom-tray-thread-message-assistant__text"] {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+/* Loading dots */
+[class*="crayon-message-loading"] {
+  opacity: 0.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
 }
