@@ -142,6 +142,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
+          onKeyDown={(e) => { if (e.key === "Escape") { setIsOpen(false); setQuery(""); setResults([]); } }}
           placeholder={loadingContext ? "Loading context..." : "Search your network..."}
           disabled={loadingContext}
           style={{
@@ -162,7 +163,13 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
       </div>
 
       {isOpen && results.length > 0 && (
-        <div
+        <>
+          {/* Backdrop to close on outside click */}
+          <div
+            onClick={() => { setIsOpen(false); setQuery(""); setResults([]); }}
+            style={{ position: "fixed", inset: 0, zIndex: 999 }}
+          />
+          <div
           style={{
             position: "absolute",
             top: "calc(100% + 4px)",
@@ -173,7 +180,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
             borderRadius: "10px",
             maxHeight: "300px",
             overflowY: "auto",
-            zIndex: 100,
+            zIndex: 1000,
             boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
           }}
         >
@@ -216,6 +223,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
             </button>
           ))}
         </div>
+        </>
       )}
     </div>
   );
