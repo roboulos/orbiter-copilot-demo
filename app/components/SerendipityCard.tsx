@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Steps, StepsItem } from "@crayonai/react-ui";
 import { Avatar } from "./Avatar";
+import { createOutcome, searchPersons } from "../lib/xano";
 
 interface SerendipityCardProps {
   personA: string;          // person in your network
@@ -15,6 +16,7 @@ interface SerendipityCardProps {
   sharedContext: string[];  // 2-3 things they have in common
   suggestedIntro: string;   // draft intro message you could send
   confidence: "high" | "medium" | "speculative";
+  masterPersonId?: number;
 }
 
 const confidenceConfig = {
@@ -38,11 +40,38 @@ export function SerendipityCard({
   sharedContext = [],
   suggestedIntro,
   confidence = "medium",
+  masterPersonId,
 }: SerendipityCardProps) {
   const cfg = confidenceConfig[confidence];
   const [introMsg, setIntroMsg] = useState(suggestedIntro);
   const [editingIntro, setEditingIntro] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleMakeIntro = async () => {
+    if (sending || sent) return;
+    setSending(true);
+    try {
+      let personId = masterPersonId;
+      if (!personId) {
+        const results = await searchPersons(personA, 1);
+        if (results.items.length > 0) {
+          personId = results.items[0].master_person_id;
+        }
+      }
+      await createOutcome({
+        copilot_mode: "serendipity",
+        request_panel_title: `Introduce ${personA} to ${personB}`,
+        request_context: `${whyTheyMatch}\n\nShared context: ${sharedContext.join(", ")}\n\nDraft intro: ${introMsg}`,
+        ...(personId ? { master_person_id: personId } : {}),
+      });
+      setSent(true);
+    } catch (err) {
+      console.error("Failed to create serendipity intro:", err);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div
@@ -292,7 +321,8 @@ export function SerendipityCard({
         }}
       >
         <button
-          onClick={() => setSent(true)}
+          onClick={handleMakeIntro}
+          disabled={sending}
           style={{
             flex: 2,
             padding: "9px 0",
@@ -304,11 +334,12 @@ export function SerendipityCard({
             color: sent ? "#34d399" : "white",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: sending ? "wait" : "pointer",
             transition: "all 0.2s ease",
+            opacity: sending ? 0.7 : 1,
           }}
         >
-          {sent ? "✓ Intro Sent" : "✨ Make the Intro"}
+          {sent ? "Intro Sent" : sending ? "Sending..." : "Make the Intro"}
         </button>
         <button
           onClick={() => {

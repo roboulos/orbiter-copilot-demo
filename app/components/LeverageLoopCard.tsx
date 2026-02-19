@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Avatar } from "./Avatar";
+import { createLeverageLoop, dispatchLeverageLoop, searchPersons } from "../lib/xano";
 
 interface LeverageLoopCardProps {
   trigger: string;
@@ -10,6 +11,7 @@ interface LeverageLoopCardProps {
   suggestedMessage: string;
   targetPerson: string;
   urgency: "high" | "medium" | "low";
+  masterPersonId?: number;
 }
 
 const urgencyConfig = {
@@ -46,11 +48,44 @@ export function LeverageLoopCard({
   suggestedMessage: initialMessage,
   targetPerson,
   urgency = "medium",
+  masterPersonId,
 }: LeverageLoopCardProps) {
   const cfg = urgencyConfig[urgency] || urgencyConfig.medium;
   const [message, setMessage] = useState(initialMessage);
   const [editingMsg, setEditingMsg] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (sending || sent) return;
+    setSending(true);
+    try {
+      let personId = masterPersonId;
+      if (!personId) {
+        const name = targetPerson.split("—")[0].trim();
+        const results = await searchPersons(name, 1);
+        if (results.items.length > 0) {
+          personId = results.items[0].master_person_id;
+        }
+      }
+      if (!personId) {
+        console.error("Could not resolve person for leverage loop");
+        setSending(false);
+        return;
+      }
+      const loop = await createLeverageLoop({
+        master_person_id: personId,
+        request_panel_title: trigger,
+        request_context: `${opportunity}\n\nSuggested action: ${suggestedAction}\n\nDraft message: ${message}`,
+      });
+      await dispatchLeverageLoop(loop.id);
+      setSent(true);
+    } catch (err) {
+      console.error("Failed to send leverage loop:", err);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div
@@ -271,7 +306,8 @@ export function LeverageLoopCard({
         }}
       >
         <button
-          onClick={() => setSent(true)}
+          onClick={handleSend}
+          disabled={sending}
           style={{
             flex: 2,
             padding: "9px 0",
@@ -283,11 +319,12 @@ export function LeverageLoopCard({
             color: sent ? "#34d399" : "white",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: sending ? "wait" : "pointer",
             transition: "all 0.2s ease",
+            opacity: sending ? 0.7 : 1,
           }}
         >
-          {sent ? "✓ Sent via Orbiter" : "⚡ Send Message"}
+          {sent ? "Sent via Orbiter" : sending ? "Sending..." : "Send Message"}
         </button>
         <button
           onClick={() => {

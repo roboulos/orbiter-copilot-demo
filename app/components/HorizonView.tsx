@@ -1,116 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
+import { getHorizon, addHorizonTarget, type HorizonTarget } from "../lib/xano";
+import { PersonPicker } from "./PersonPicker";
 
-type Stage = "Identified" | "Warming" | "Active" | "Connected";
-
-const TARGETS = [
-  {
-    id: 1,
-    name: "Priya Kapoor",
-    role: "Partner",
-    company: "NEA Ventures",
-    why: "Backed 3 graph-native SaaS companies in the last 18 months. Fund just closed $2.1B. Active seed check writer ($500K–$2M). Already 2 hops away via David Lin.",
-    nextAction: "Ask David Lin for a warm intro this week",
-    stage: "Warming" as Stage,
-    priority: "high",
-    addedAt: "3 days ago",
-    mutuals: 5,
-    tags: ["Seed", "Graph DB", "VC"],
-    progress: 40,
-  },
-  {
-    id: 2,
-    name: "Ryan Walsh",
-    role: "VP of Engineering",
-    company: "Lattice",
-    why: "HR tech mid-market ICP. Lattice just announced Series D expansion. Evaluating AI-powered relationship tools for internal use. 3 mutual connections.",
-    nextAction: "Share Orbiter's enterprise case study",
-    stage: "Active" as Stage,
-    priority: "high",
-    addedAt: "5 days ago",
-    mutuals: 3,
-    tags: ["Enterprise", "HR Tech", "ICP"],
-    progress: 65,
-  },
-  {
-    id: 3,
-    name: "Marcus Rodriguez",
-    role: "Head of Enterprise Sales",
-    company: "Notion",
-    why: "Building Notion's enterprise integration roadmap. 22 mutual connections. Connected to 3 of our target VCs. High-leverage node in the graph.",
-    nextAction: "Connect over Salesforce partnership angle",
-    stage: "Identified" as Stage,
-    priority: "medium",
-    addedAt: "1 week ago",
-    mutuals: 22,
-    tags: ["SaaS", "Integrations"],
-    progress: 15,
-  },
-  {
-    id: 4,
-    name: "Jennifer Tao",
-    role: "Principal",
-    company: "Sequoia Capital",
-    why: "Sequoia Seed focus on relationship-intelligence and B2B network tools. Backed Clay in early stages. 1 hop via Sarah Chen.",
-    nextAction: "Warm intro request via Sarah Chen",
-    stage: "Identified" as Stage,
-    priority: "high",
-    addedAt: "2 days ago",
-    mutuals: 1,
-    tags: ["Seed", "VC", "Network Tools"],
-    progress: 10,
-  },
-  {
-    id: 5,
-    name: "David Chen",
-    role: "Head of Partnerships",
-    company: "Apollo.io",
-    why: "Apollo serves 100K+ GTM professionals — natural distribution partner. David has spoken publicly about investing in relationship-intelligence tooling.",
-    nextAction: "Follow up after conference DM last week",
-    stage: "Active" as Stage,
-    priority: "medium",
-    addedAt: "2 weeks ago",
-    mutuals: 8,
-    tags: ["GTM", "Partnerships", "Distribution"],
-    progress: 55,
-  },
-  {
-    id: 6,
-    name: "Alicia Grant",
-    role: "CTO",
-    company: "Common Room",
-    why: "Common Room is a direct comp / potential acqui-hire scenario. Alicia is vocal about graph-based community intelligence. Orbiter and Common Room have 40% feature overlap.",
-    nextAction: "Strategic conversation — not a pitch",
-    stage: "Connected" as Stage,
-    priority: "low",
-    addedAt: "1 month ago",
-    mutuals: 11,
-    tags: ["Strategic", "Graph", "M&A"],
-    progress: 90,
-  },
-];
-
-const STAGE_CONFIG: Record<Stage, { color: string; bg: string; border: string; barColor: string }> = {
-  Identified: { color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.1)", barColor: "rgba(255,255,255,0.2)" },
-  Warming:    { color: "#60a5fa", bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.25)", barColor: "#60a5fa" },
-  Active:     { color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.25)", barColor: "#a78bfa" },
-  Connected:  { color: "#34d399", bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.25)", barColor: "#34d399" },
-};
-
-const STAGES: Stage[] = ["Identified", "Warming", "Active", "Connected"];
+function formatDate(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return d.toLocaleDateString();
+}
 
 export function HorizonView() {
-  const [activeStage, setActiveStage] = useState<Stage | "All">("All");
+  const [targets, setTargets] = useState<HorizonTarget[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [addingTarget, setAddingTarget] = useState(false);
 
-  const filtered = activeStage === "All" ? TARGETS : TARGETS.filter(t => t.stage === activeStage);
-  const highPriority = TARGETS.filter(t => t.priority === "high" && t.stage !== "Connected").length;
+  const fetchTargets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getHorizon({ per_page: 50 });
+      setTargets(data.items);
+      setTotal(data.itemsTotal);
+    } catch (err) {
+      console.error("Failed to load horizon:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTargets();
+  }, [fetchTargets]);
+
+  const handleAddTarget = async (person: { master_person_id: number; full_name: string; master_person: { name: string; avatar: string | null; current_title: string | null; master_company?: { company_name: string } | null } }, _context: string) => {
+    setAddingTarget(true);
+    try {
+      const { getNetwork } = await import("../lib/xano");
+      const network = await getNetwork({ query: person.full_name, per_page: 5 });
+      const match = network.items.find(p => p.master_person_id === person.master_person_id);
+      if (!match?.node_uuid) {
+        console.error("Could not find node_uuid for person");
+        return;
+      }
+      await addHorizonTarget(match.node_uuid);
+      setAdding(false);
+      fetchTargets();
+    } catch (err) {
+      console.error("Failed to add horizon target:", err);
+    } finally {
+      setAddingTarget(false);
+    }
+  };
 
   return (
     <div style={{ height: "100%", overflowY: "auto", padding: "28px 32px", background: "#0a0a0f" }}>
-
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px" }}>
         <div>
@@ -118,146 +71,187 @@ export function HorizonView() {
             Horizon
           </h2>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: "4px 0 0" }}>
-            {TARGETS.length} targets tracked · {highPriority} high priority · Orbiter is warming your paths
+            {total} targets tracked{loading ? " · Loading..." : ""}
           </p>
         </div>
-        <button style={{
-          display: "flex", alignItems: "center", gap: "6px",
-          fontSize: "12px", fontWeight: 600, padding: "8px 16px", borderRadius: "10px",
-          background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.35)",
-          color: "#a5b4fc", cursor: "pointer",
-        }}>
-          + Add Target
+        <button
+          onClick={() => setAdding(!adding)}
+          style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            fontSize: "12px", fontWeight: 600, padding: "8px 16px", borderRadius: "10px",
+            background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.35)",
+            color: "#a5b4fc", cursor: "pointer",
+          }}
+        >
+          <span>+</span> Add Target
         </button>
       </div>
 
-      {/* Pipeline stages overview */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "24px" }}>
-        {STAGES.map(s => {
-          const cfg = STAGE_CONFIG[s];
-          const count = TARGETS.filter(t => t.stage === s).length;
-          return (
-            <div key={s}
-              onClick={() => setActiveStage(activeStage === s ? "All" : s)}
-              style={{
-                background: activeStage === s ? cfg.bg : "rgba(255,255,255,0.025)",
-                border: `1px solid ${activeStage === s ? cfg.border : "rgba(255,255,255,0.07)"}`,
-                borderRadius: "12px", padding: "14px 16px", cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}>
-              <div style={{ fontSize: "22px", fontWeight: 700, color: cfg.color, marginBottom: "2px" }}>{count}</div>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{s}</div>
-              {/* mini progress bar */}
-              <div style={{ marginTop: "8px", height: "2px", background: "rgba(255,255,255,0.06)", borderRadius: "2px" }}>
-                <div style={{ width: `${(count / TARGETS.length) * 100}%`, height: "100%", background: cfg.barColor, borderRadius: "2px" }} />
-              </div>
-            </div>
-          );
-        })}
+      {/* Add target form */}
+      {adding && (
+        <div style={{
+          background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)",
+          borderRadius: "12px", padding: "18px", marginBottom: "20px",
+        }}>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: "0 0 12px" }}>
+            Search for a person to add to your Horizon targets:
+          </p>
+          <PersonPicker
+            onSelect={handleAddTarget}
+            selectedPerson={null}
+            onClear={() => {}}
+          />
+          {addingTarget && (
+            <p style={{ fontSize: "12px", color: "#a5b4fc", margin: "10px 0 0" }}>
+              Adding target...
+            </p>
+          )}
+          <button
+            onClick={() => setAdding(false)}
+            style={{
+              fontSize: "12px", padding: "8px 16px", borderRadius: "8px",
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.4)", cursor: "pointer", marginTop: "10px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", marginBottom: "24px",
+      }}>
+        <div style={{
+          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(99,102,241,0.25)",
+          borderRadius: "12px", padding: "14px 16px",
+        }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#6366f1", marginBottom: "2px" }}>
+            {total}
+          </div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+            Total Targets
+          </div>
+        </div>
+        <div style={{
+          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(52,211,153,0.25)",
+          borderRadius: "12px", padding: "14px 16px",
+        }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#34d399", marginBottom: "2px" }}>
+            {targets.filter(t => t.master_person?.current_title).length}
+          </div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+            With Title
+          </div>
+        </div>
       </div>
 
       {/* Target list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {filtered.map(t => {
-          const cfg = STAGE_CONFIG[t.stage];
-          const expanded = expandedId === t.id;
-          return (
-            <div key={t.id}
-              style={{
-                background: "rgba(255,255,255,0.025)",
-                border: `1px solid ${t.priority === "high" ? cfg.border : "rgba(255,255,255,0.07)"}`,
-                borderRadius: "14px", padding: "16px 18px", cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              onClick={() => setExpandedId(expanded ? null : t.id)}
-            >
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
-                <Avatar name={t.name} size={40} borderRadius="10px" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Top row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#e8e8f0" }}>{t.name}</span>
-                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{t.role} · {t.company}</span>
-                    <div style={{
-                      marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px",
-                      background: cfg.bg, border: `1px solid ${cfg.border}`,
-                      borderRadius: "6px", padding: "2px 8px",
-                      fontSize: "10px", fontWeight: 600, color: cfg.color, letterSpacing: "0.04em",
-                    }}>
-                      {t.stage}
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div style={{ marginBottom: "10px" }}>
-                    <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "2px", overflow: "hidden" }}>
-                      <div style={{
-                        width: `${t.progress}%`, height: "100%",
-                        background: cfg.barColor, borderRadius: "2px",
-                        transition: "width 0.5s ease",
-                      }} />
-                    </div>
-                  </div>
-
-                  {/* Next action */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>→</span>
-                      <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.55)" }}>{t.nextAction}</span>
-                    </div>
-                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                      {t.tags.slice(0, 2).map(tag => (
-                        <span key={tag} style={{
-                          fontSize: "10px", padding: "2px 6px", borderRadius: "4px",
-                          background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)",
-                        }}>{tag}</span>
-                      ))}
-                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginLeft: "4px" }}>
-                        {t.mutuals} mutual
+      {loading && targets.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
+          Loading...
+        </div>
+      ) : targets.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
+          No horizon targets yet. Add people you want to connect with to track them here.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {targets.map((t) => {
+            const mp = t.master_person;
+            const mc = mp?.master_company;
+            const expanded = expandedId === t.id;
+            return (
+              <div
+                key={t.id}
+                style={{
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(99,102,241,0.15)",
+                  borderRadius: "14px", padding: "16px 18px", cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onClick={() => setExpandedId(expanded ? null : t.id)}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                  <Avatar name={mp?.name || "?"} size={40} borderRadius="10px" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Top row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "#e8e8f0" }}>
+                        {mp?.name || "Unknown"}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+                        {mp?.current_title || "No title"}{mc?.company_name ? ` · ${mc.company_name}` : ""}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
+                        Added {formatDate(t.created_at)}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Expanded */}
-                  {expanded && (
-                    <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                      <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(167,139,250,0.6)", margin: "0 0 6px" }}>
-                        Why they're on Horizon
-                      </p>
-                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", margin: "0 0 14px" }}>
-                        {t.why}
-                      </p>
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <button onClick={e => e.stopPropagation()} style={{
-                          fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
-                          background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none",
-                          color: "white", cursor: "pointer",
-                        }}>
-                          Get intro path
-                        </button>
-                        <button onClick={e => e.stopPropagation()} style={{
-                          fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
-                          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                          color: "rgba(255,255,255,0.4)", cursor: "pointer",
-                        }}>
-                          Move stage
-                        </button>
-                        <button onClick={e => e.stopPropagation()} style={{
-                          fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
-                          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                          color: "rgba(255,255,255,0.4)", cursor: "pointer",
-                        }}>
-                          Add note
-                        </button>
+                    {/* Tags */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        {mp?.current_title && (
+                          <span style={{
+                            fontSize: "10px", padding: "2px 7px", borderRadius: "4px",
+                            background: "rgba(99,102,241,0.1)", color: "rgba(99,102,241,0.7)", fontWeight: 500,
+                          }}>
+                            {mp.current_title.split(" ").slice(0, 3).join(" ")}
+                          </span>
+                        )}
+                        {mc?.company_name && (
+                          <span style={{
+                            fontSize: "10px", padding: "2px 7px", borderRadius: "4px",
+                            background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontWeight: 500,
+                          }}>
+                            {mc.company_name}
+                          </span>
+                        )}
                       </div>
+                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>
+                        {expanded ? "Less" : "More"}
+                      </span>
                     </div>
-                  )}
+
+                    {/* Expanded detail */}
+                    {expanded && (
+                      <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        {mp?.bio && (
+                          <>
+                            <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(167,139,250,0.6)", margin: "0 0 6px" }}>
+                              Bio
+                            </p>
+                            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", margin: "0 0 14px" }}>
+                              {mp.bio}
+                            </p>
+                          </>
+                        )}
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button onClick={e => e.stopPropagation()} style={{
+                            fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                            background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none",
+                            color: "white", cursor: "pointer",
+                          }}>
+                            Get intro path
+                          </button>
+                          <button onClick={e => e.stopPropagation()} style={{
+                            fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
+                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                            color: "rgba(255,255,255,0.4)", cursor: "pointer",
+                          }}>
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

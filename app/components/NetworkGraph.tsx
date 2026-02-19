@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getNetwork, type NetworkPerson } from "../lib/xano";
 
 interface Node {
   id: string;
@@ -19,50 +20,80 @@ interface Node {
 interface Edge {
   source: string;
   target: string;
-  strength: number; // 0-1
+  strength: number;
 }
 
-const INITIAL_NODES: Node[] = [
-  { id: "you",     label: "Mark",           role: "You",                     x: 0,    y: 0,    vx: 0, vy: 0, color: "#6366f1", size: 20, isCenter: true },
-  { id: "jw",      label: "James W.",       role: "VP · Salesforce",         x: 120,  y: -60,  vx: 0, vy: 0, color: "#34d399", size: 14, signal: "🚀" },
-  { id: "sc",      label: "Sarah C.",       role: "VP · Salesforce",         x: 140,  y: 50,   vx: 0, vy: 0, color: "#34d399", size: 13, signal: "🚀" },
-  { id: "mr",      label: "Marcus R.",      role: "Ent Sales · Notion",      x: -110, y: -80,  vx: 0, vy: 0, color: "#a78bfa", size: 13 },
-  { id: "pk",      label: "Priya K.",       role: "Partner · NEA",           x: -130, y: 40,   vx: 0, vy: 0, color: "#60a5fa", size: 14, signal: "💼" },
-  { id: "dl",      label: "David L.",       role: "CTO · Clay",              x: 20,   y: 140,  vx: 0, vy: 0, color: "#fb923c", size: 13 },
-  { id: "rb",      label: "Rachel B.",      role: "Partnerships · Apollo",   x: -30,  y: -150, vx: 0, vy: 0, color: "#fbbf24", size: 12 },
-  { id: "jt",      label: "Jennifer T.",    role: "Principal · Sequoia",     x: 80,   y: -140, vx: 0, vy: 0, color: "#60a5fa", size: 12, signal: "⚡" },
-  // 2nd degree nodes
-  { id: "sf1",     label: "Tom H.",         role: "Salesforce",              x: 220,  y: -90,  vx: 0, vy: 0, color: "#475569", size: 9 },
-  { id: "nea1",    label: "Chris M.",       role: "NEA Portfolio",           x: -220, y: 70,   vx: 0, vy: 0, color: "#475569", size: 9 },
-  { id: "clay1",   label: "Alex W.",        role: "Clay",                    x: 60,   y: 220,  vx: 0, vy: 0, color: "#475569", size: 9 },
-  { id: "notion1", label: "Kat B.",         role: "Notion",                  x: -200, y: -100, vx: 0, vy: 0, color: "#475569", size: 9 },
-];
+const NODE_COLORS = ["#34d399", "#a78bfa", "#60a5fa", "#fb923c", "#fbbf24", "#f87171", "#818cf8", "#2dd4bf"];
 
-const EDGES: Edge[] = [
-  { source: "you", target: "jw",      strength: 0.75 },
-  { source: "you", target: "sc",      strength: 0.55 },
-  { source: "you", target: "mr",      strength: 0.65 },
-  { source: "you", target: "pk",      strength: 0.40 },
-  { source: "you", target: "dl",      strength: 0.70 },
-  { source: "you", target: "rb",      strength: 0.35 },
-  { source: "you", target: "jt",      strength: 0.30 },
-  { source: "jw",  target: "sc",      strength: 0.60 },
-  { source: "jw",  target: "sf1",     strength: 0.85 },
-  { source: "sc",  target: "sf1",     strength: 0.80 },
-  { source: "pk",  target: "nea1",    strength: 0.90 },
-  { source: "pk",  target: "jt",      strength: 0.45 },
-  { source: "dl",  target: "clay1",   strength: 0.88 },
-  { source: "mr",  target: "notion1", strength: 0.82 },
-  { source: "rb",  target: "dl",      strength: 0.40 },
-  { source: "jt",  target: "pk",      strength: 0.35 },
-];
+function buildGraphData(contacts: NetworkPerson[]): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [
+    { id: "you", label: "You", role: "Center", x: 0, y: 0, vx: 0, vy: 0, color: "#6366f1", size: 20, isCenter: true },
+  ];
+  const edges: Edge[] = [];
+
+  // Take up to 20 contacts for the visualization
+  const shown = contacts.slice(0, 20);
+  const angleStep = (2 * Math.PI) / shown.length;
+
+  shown.forEach((c, i) => {
+    const angle = angleStep * i - Math.PI / 2;
+    const connected = c.status_connected === "connected";
+    const hasActivity = !!c.last_activity_at;
+
+    // Compute distance: connected = closer, recent activity = closer
+    let radius = 140;
+    if (connected) radius = 90 + Math.random() * 40;
+    else if (hasActivity) radius = 110 + Math.random() * 50;
+    else radius = 140 + Math.random() * 40;
+
+    // Compute strength from recency
+    let strength = 0.2;
+    if (c.last_activity_at) {
+      const daysAgo = (Date.now() - c.last_activity_at) / (1000 * 60 * 60 * 24);
+      if (daysAgo < 7) strength = 0.85;
+      else if (daysAgo < 30) strength = 0.65;
+      else if (daysAgo < 90) strength = 0.45;
+      else strength = 0.25;
+    }
+
+    const colorIdx = i % NODE_COLORS.length;
+    const name = c.full_name.split(" ").map(n => n[0] + ".").join(" ").replace(/\.\s*$/, "");
+    const shortName = c.full_name.split(" ")[0] + " " + (c.full_name.split(" ")[1]?.[0] || "") + ".";
+
+    nodes.push({
+      id: `c${c.id}`,
+      label: shortName,
+      role: c.master_person?.current_title
+        ? `${c.master_person.current_title.split(" ").slice(0, 3).join(" ")}${c.master_person.master_company?.company_name ? ` · ${c.master_person.master_company.company_name}` : ""}`
+        : c.master_person?.master_company?.company_name || "",
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+      vx: 0,
+      vy: 0,
+      color: connected ? "#34d399" : NODE_COLORS[colorIdx],
+      size: connected ? 14 : strength > 0.5 ? 12 : 10,
+      signal: connected && strength > 0.6 ? "🔗" : undefined,
+    });
+
+    edges.push({
+      source: "you",
+      target: `c${c.id}`,
+      strength,
+    });
+  });
+
+  return { nodes, edges };
+}
 
 export function NetworkGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const nodesRef = useRef<Node[]>(INITIAL_NODES.map(n => ({ ...n })));
+  const nodesRef = useRef<Node[]>([]);
+  const edgesRef = useRef<Edge[]>([]);
   const animFrameRef = useRef<number>(0);
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
   const [dimensions, setDimensions] = useState({ w: 800, h: 300 });
+  const [nodeCount, setNodeCount] = useState(0);
+  const [edgeCount, setEdgeCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,16 +108,31 @@ export function NetworkGraph() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
+  // Fetch real network data
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getNetwork({ per_page: 20 });
+        const { nodes, edges } = buildGraphData(data.items);
+        nodesRef.current = nodes;
+        edgesRef.current = edges;
+        setNodeCount(nodes.length);
+        setEdgeCount(edges.length);
+      } catch (err) {
+        console.error("Failed to load network for graph:", err);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || nodeCount === 0) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const cx = dimensions.w / 2;
     const cy = dimensions.h / 2;
 
-    // Set canvas resolution for retina
     const dpr = window.devicePixelRatio || 1;
     canvas.width = dimensions.w * dpr;
     canvas.height = dimensions.h * dpr;
@@ -101,30 +147,29 @@ export function NetworkGraph() {
       tick++;
 
       const nodes = nodesRef.current;
+      const edges = edgesRef.current;
 
       // Gentle floating animation
       nodes.forEach((node) => {
         if (!node.isCenter) {
-          node.x += Math.sin(tick * 0.008 + node.id.charCodeAt(0)) * 0.15;
-          node.y += Math.cos(tick * 0.008 + node.id.charCodeAt(1) || 0) * 0.15;
+          node.x += Math.sin(tick * 0.008 + node.id.charCodeAt(1)) * 0.15;
+          node.y += Math.cos(tick * 0.008 + node.id.charCodeAt(2) || 0) * 0.15;
         }
       });
 
-      // Build node map
       const nodeMap: Record<string, Node> = {};
       nodes.forEach(n => nodeMap[n.id] = n);
 
       // Draw edges
-      EDGES.forEach(edge => {
+      edges.forEach(edge => {
         const s = nodeMap[edge.source];
         const t = nodeMap[edge.target];
         if (!s || !t) return;
 
         const opacity = edge.strength * 0.4;
-        const isActive = edge.strength > 0.6;
+        const isActive = edge.strength > 0.5;
 
         if (isActive) {
-          // Animated pulse on strong edges
           const pulseOpacity = opacity + Math.sin(tick * 0.04 + edge.strength * 10) * 0.08;
           ctx.beginPath();
           ctx.strokeStyle = `rgba(99,102,241,${pulseOpacity})`;
@@ -184,7 +229,7 @@ export function NetworkGraph() {
         }
 
         // Label
-        if (node.size >= 12) {
+        if (node.size >= 10) {
           ctx.font = `${node.isCenter ? 600 : 500} ${node.isCenter ? 11 : 9}px Inter, sans-serif`;
           ctx.fillStyle = node.isCenter ? "#e8e8f0" : "rgba(255,255,255,0.65)";
           ctx.textAlign = "center";
@@ -198,7 +243,7 @@ export function NetworkGraph() {
 
     draw();
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [dimensions]);
+  }, [dimensions, nodeCount]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -223,21 +268,19 @@ export function NetworkGraph() {
         marginBottom: "24px",
       }}
     >
-      {/* Graph label */}
       <div style={{
         position: "absolute", top: "12px", left: "16px", zIndex: 2,
         fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em",
         textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
       }}>
-        ◉ Live graph · {INITIAL_NODES.length} nodes · {EDGES.length} edges
+        {nodeCount > 0 ? `Live graph · ${nodeCount} nodes · ${edgeCount} edges` : "Loading graph..."}
       </div>
 
-      {/* Legend */}
       <div style={{
         position: "absolute", top: "12px", right: "16px", zIndex: 2,
         display: "flex", gap: "12px", alignItems: "center",
       }}>
-        {[["#34d399","Signal"], ["#6366f1","You"], ["#60a5fa","VC"], ["#a78bfa","SaaS"]].map(([c, l]) => (
+        {[["#34d399","Connected"], ["#6366f1","You"], ["#60a5fa","Contact"]].map(([c, l]) => (
           <div key={l} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: c }} />
             <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{l}</span>
@@ -252,7 +295,6 @@ export function NetworkGraph() {
         style={{ display: "block", cursor: hoveredNode ? "pointer" : "default" }}
       />
 
-      {/* Hover tooltip */}
       {hoveredNode && !hoveredNode.isCenter && (
         <div style={{
           position: "absolute",

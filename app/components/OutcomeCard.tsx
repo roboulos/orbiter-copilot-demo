@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createOutcome } from "../lib/xano";
 
 interface OutcomeCardProps {
   goal: string;
@@ -9,6 +10,7 @@ interface OutcomeCardProps {
   timeframe: string;
   contextToShare: string;
   matchStrength?: "high" | "medium" | "building";
+  masterPersonId?: number;
 }
 
 export function OutcomeCard({
@@ -18,9 +20,11 @@ export function OutcomeCard({
   timeframe: initialTimeframe,
   contextToShare: initialContext,
   matchStrength = "building",
+  masterPersonId,
 }: OutcomeCardProps) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [goal, setGoal] = useState(initialGoal);
   const [whyItMatters, setWhyItMatters] = useState(initialWhy);
   const [idealHelper, setIdealHelper] = useState(initialHelper);
@@ -36,7 +40,24 @@ export function OutcomeCard({
 
   const handleSave = () => {
     setEditing(false);
-    setSaved(true);
+  };
+
+  const handleSaveToOrbiter = async () => {
+    if (saving || saved) return;
+    setSaving(true);
+    try {
+      await createOutcome({
+        copilot_mode: "outcome",
+        request_panel_title: goal,
+        request_context: [whyItMatters, `Ideal connector: ${idealHelper}`, `Timeframe: ${timeframe}`, contextToShare].filter(Boolean).join("\n"),
+        ...(masterPersonId ? { master_person_id: masterPersonId } : {}),
+      });
+      setSaved(true);
+    } catch (err) {
+      console.error("Failed to save outcome:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -234,7 +255,8 @@ export function OutcomeCard({
         ) : (
           <>
             <button
-              onClick={() => setSaved(true)}
+              onClick={handleSaveToOrbiter}
+              disabled={saving}
               style={{
                 flex: 2,
                 padding: "9px 0",
@@ -246,11 +268,12 @@ export function OutcomeCard({
                 color: saved ? "#34d399" : "white",
                 fontSize: "13px",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: saving ? "wait" : "pointer",
                 transition: "all 0.2s ease",
+                opacity: saving ? 0.7 : 1,
               }}
             >
-              {saved ? "✓ Saved to Orbiter" : "✓ Save to Orbiter"}
+              {saved ? "Saved to Orbiter" : saving ? "Saving..." : "Save to Orbiter"}
             </button>
             <button
               onClick={() => setEditing(true)}

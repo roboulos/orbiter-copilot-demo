@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckBoxGroup, CheckBoxItem } from "@crayonai/react-ui";
 import { Avatar } from "./Avatar";
+import { createOutcome, searchPersons } from "../lib/xano";
 
 interface ContactCardProps {
   name: string;
@@ -15,6 +16,7 @@ interface ContactCardProps {
   actionItems?: string[];           // checklist of suggested actions
   insight?: string;                 // AI insight about why they matter now
   linkedIn?: string;
+  masterPersonId?: number;
 }
 
 const bondConfig = {
@@ -51,11 +53,38 @@ export function ContactCard({
   bondStrength = "warm",
   actionItems = [],
   insight,
+  masterPersonId,
 }: ContactCardProps) {
   const bond = bondConfig[bondStrength];
   const [checks, setChecks] = useState<boolean[]>(actionItems.map(() => false));
   const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [grads] = useState(() => avatarGradient(name));
+
+  const handleAddToOutcome = async () => {
+    if (adding || added) return;
+    setAdding(true);
+    try {
+      let personId = masterPersonId;
+      if (!personId) {
+        const results = await searchPersons(name, 1);
+        if (results.items.length > 0) {
+          personId = results.items[0].master_person_id;
+        }
+      }
+      await createOutcome({
+        copilot_mode: "outcome",
+        request_panel_title: `Connect with ${name} — ${role} at ${company}`,
+        request_context: [relationshipContext, insight].filter(Boolean).join("\n"),
+        ...(personId ? { master_person_id: personId } : {}),
+      });
+      setAdded(true);
+    } catch (err) {
+      console.error("Failed to add to outcome:", err);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div
@@ -219,7 +248,8 @@ export function ContactCard({
         }}
       >
         <button
-          onClick={() => setAdded(true)}
+          onClick={handleAddToOutcome}
+          disabled={adding}
           style={{
             flex: 2,
             padding: "8px 0",
@@ -231,11 +261,12 @@ export function ContactCard({
             color: added ? "#34d399" : "white",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: adding ? "wait" : "pointer",
             transition: "all 0.2s ease",
+            opacity: adding ? 0.7 : 1,
           }}
         >
-          {added ? "✓ Added to Outcome" : "+ Add to Outcome"}
+          {added ? "Added to Outcome" : adding ? "Adding..." : "+ Add to Outcome"}
         </button>
         <button
           style={{

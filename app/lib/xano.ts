@@ -128,3 +128,115 @@ export async function dispatchLeverageLoop(id: number) {
     body: {},
   });
 }
+
+// ── Network ──────────────────────────────────────────────
+
+export interface NetworkPerson {
+  id: number;
+  master_person_id: number;
+  full_name: string;
+  status_connected: string;
+  last_activity_at: number | null;
+  keep_in_touch: number | null;
+  node_uuid: string | null;
+  master_person: {
+    id: number;
+    name: string;
+    avatar: string | null;
+    master_company_id: number | null;
+    current_title: string | null;
+    bio: string | null;
+    master_company?: { id: number; company_name: string; logo: string | null } | null;
+  } | null;
+}
+
+export interface PaginatedResponse<T> {
+  itemsReceived: number;
+  curPage: number;
+  nextPage: number | null;
+  prevPage: number | null;
+  itemsTotal: number;
+  pageTotal: number;
+  items: T[];
+}
+
+export async function getNetwork(opts: { query?: string; page?: number; per_page?: number } = {}) {
+  const params: Record<string, string> = {};
+  if (opts.query) params.query = opts.query;
+  if (opts.page) params.page = String(opts.page);
+  if (opts.per_page) params.per_page = String(opts.per_page);
+  return xanoFetch<PaginatedResponse<NetworkPerson>>("/network", { params });
+}
+
+// ── Outcomes / Suggestion Requests ───────────────────────
+
+export interface OutcomeItem {
+  id: number;
+  created_at: number;
+  updated_at: number | null;
+  copilot_mode: "outcome" | "loop" | "serendipity";
+  request_panel_title: string;
+  request_header_title: string | null;
+  request_context: string | null;
+  master_person_id: number | null;
+  status: "draft" | "processing" | "suggestion" | "submitted" | "archived";
+  master_person: {
+    id: number;
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    master_company?: { id: number; company_name: string; logo: string | null } | null;
+  } | null;
+}
+
+export async function getOutcomes(opts: { copilot_mode?: string; query?: string; page?: number; per_page?: number } = {}) {
+  const params: Record<string, string> = {};
+  if (opts.copilot_mode) params.copilot_mode = opts.copilot_mode;
+  if (opts.query) params.query = opts.query;
+  if (opts.page) params.page = String(opts.page);
+  if (opts.per_page) params.per_page = String(opts.per_page);
+  return xanoFetch<PaginatedResponse<OutcomeItem>>("/outcomes", { params });
+}
+
+export async function createOutcome(data: {
+  copilot_mode?: string;
+  request_panel_title: string;
+  request_context?: string;
+  master_person_id?: number;
+}) {
+  return xanoFetch<OutcomeItem>("/outcome", {
+    method: "POST",
+    body: { copilot_mode: "outcome", ...data },
+  });
+}
+
+// ── Horizon / Node Targets ───────────────────────────────
+
+export interface HorizonTarget {
+  id: number;
+  created_at: number;
+  node_uuid: string;
+  master_person: {
+    id: number;
+    name: string;
+    avatar: string | null;
+    master_company_id: number | null;
+    current_title: string | null;
+    bio: string | null;
+    master_company?: { id: number; company_name: string; logo: string | null } | null;
+  } | null;
+}
+
+export async function getHorizon(opts: { page?: number; per_page?: number } = {}) {
+  const params: Record<string, string> = {};
+  if (opts.page) params.page = String(opts.page);
+  if (opts.per_page) params.per_page = String(opts.per_page);
+  return xanoFetch<PaginatedResponse<HorizonTarget>>("/horizon", { params });
+}
+
+export async function addHorizonTarget(node_uuid: string) {
+  return xanoFetch<HorizonTarget>("/horizon-target", {
+    method: "POST",
+    body: { node_uuid },
+  });
+}
