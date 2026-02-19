@@ -19,6 +19,8 @@ import { ForkInTheRoad } from "./components/ForkInTheRoad";
 import { ButtonGroup } from "./components/ButtonGroup";
 import { ConfirmationModal } from "./components/ConfirmationModal";
 import { SubmitButton } from "./components/SubmitButton";
+import { SuccessToast } from "./components/SuccessToast";
+import { ErrorMessage } from "./components/ErrorMessage";
 import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -30,6 +32,7 @@ const templates = [
   { name: "meeting_prep_card",  Component: MeetingPrepCard   },
   { name: "button_group",       Component: ButtonGroup       },
   { name: "submit_button",      Component: SubmitButton      },
+  { name: "error_message",      Component: ErrorMessage      },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
@@ -109,20 +112,36 @@ function CopilotModal({
   const personTitle = selectedPerson?.master_person?.current_title;
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
 
-  const defaultStarters = [
-    {
-      displayText: "🎯 Outcome — Find VCs in my network who back graph tech",
-      prompt: "I'm raising a $4M seed round for Orbiter, a relationship intelligence platform built on a graph database. Find warm introductions to seed-stage investors who have backed graph databases, network intelligence tools, or relationship-driven SaaS in the last 2 years.",
-    },
-    {
-      displayText: "✨ Serendipity — Who should meet our fractional CFO?",
-      prompt: "Serendipity match: We just brought on a fractional CFO who specializes in SaaS Series A financials. She needs deal flow. Find the best person in my network to introduce her to right now.",
-    },
-    {
-      displayText: "📅 Meeting Prep — Select someone above first",
-      prompt: "Meeting prep: give me a meeting prep card for the person I've selected. Include a summary, 3 talking points, things to listen for, and any landmines to avoid.",
-    },
-  ];
+  // Dynamic conversation starters based on whether person is selected
+  const defaultStarters = selectedPerson
+    ? [
+        {
+          displayText: `⚡ Leverage Network for ${personName}`,
+          prompt: `Leverage my network for ${personName}${personTitle ? ` (${personTitle})` : ""}. What's my single best move right now to activate this relationship? Be direct and concise — tell me what to do and draft the message.`,
+        },
+        {
+          displayText: `🎯 Help ${personName} with something specific`,
+          prompt: `I want to help ${personName}${personTitle ? ` — ${personTitle}` : ""} with something specific. Ask me what I want to help them with — keep it brief.`,
+        },
+        {
+          displayText: `📅 Meeting Prep for ${personName}`,
+          prompt: `Meeting prep: give me a meeting prep card for ${personName}. Include a summary, 3 talking points, things to listen for, and any landmines to avoid.`,
+        },
+      ]
+    : [
+        {
+          displayText: "🏠 I want to buy a house in Costa Rica",
+          prompt: "I want to buy a house in Costa Rica for relocation. Help me find connections to realtors and expats who know the area.",
+        },
+        {
+          displayText: "💰 Find investors for my startup",
+          prompt: "I'm raising a seed round for a B2B SaaS company. Find warm introductions to seed-stage investors in my network.",
+        },
+        {
+          displayText: "🎯 Help someone I know with...",
+          prompt: "I want to help someone in my network with something specific. Ask me who and what they need.",
+        },
+      ];
 
   return (
     <>
@@ -540,6 +559,8 @@ export default function Home() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [dispatching, setDispatching] = useState(false);
   const [dispatchSummary, setDispatchSummary] = useState("");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
 
@@ -613,13 +634,17 @@ export default function Home() {
       setDispatching(false);
       setShowConfirmation(false);
       setModalOpen(false);
-      handlePersonClear();
       
-      // Could show a success toast here
+      // Show success toast
+      setSuccessMessage("Your network has been activated! We'll notify you when connections are found.");
+      setShowSuccessToast(true);
+      
+      handlePersonClear();
     } catch (error) {
       console.error("Dispatch failed:", error);
       setDispatching(false);
-      // Could show an error toast here
+      // Error will be shown in the modal
+      // Could add error state here if needed
     }
   }, [handlePersonClear]);
 
@@ -918,6 +943,13 @@ export default function Home() {
         onConfirm={handleConfirmDispatch}
         summary={dispatchSummary}
         dispatching={dispatching}
+      />
+
+      {/* ─── Success Toast ─────────────────────────────────*/}
+      <SuccessToast
+        visible={showSuccessToast}
+        message={successMessage}
+        onClose={() => setShowSuccessToast(false)}
       />
     </div>
   );
