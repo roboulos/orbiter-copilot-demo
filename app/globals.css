@@ -108,11 +108,55 @@ html, body {
 }
 .crayon-shell-welcome-screen__title {
   font-size: 20px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: #e8e8f0 !important;
 }
 .crayon-shell-welcome-screen__description {
   font-size: 13px !important;
-  line-height: 1.6 !important;
+  line-height: 1.65 !important;
+  color: rgba(255,255,255,0.4) !important;
+  max-width: 380px !important;
+}
+
+/* ─── Chat composer — polished ─── */
+.crayon-shell-desktop-welcome-composer,
+.crayon-shell-thread-composer {
+  border-radius: 14px !important;
+  border-color: rgba(99,102,241,0.18) !important;
+}
+.crayon-shell-desktop-welcome-composer:focus-within,
+.crayon-shell-thread-composer:focus-within {
+  border-color: rgba(99,102,241,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.08) !important;
+}
+
+/* ─── Submit button — brand gradient ─── */
+.crayon-shell-composer-submit-button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border-radius: 10px !important;
+  border: none !important;
+}
+.crayon-shell-composer-submit-button:disabled {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+/* ─── AI message text ─── */
+.crayon-shell-thread-message-agent__text {
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+  color: rgba(255,255,255,0.82) !important;
+}
+
+/* ─── User message bubble ─── */
+.crayon-shell-thread-message-user__content {
+  border-radius: 14px 14px 4px 14px !important;
+  font-size: 13px !important;
+}
+
+/* ─── Thinking indicator ─── */
+.crayon-shell-thread-message-agent__loading {
+  color: rgba(99,102,241,0.5) !important;
 }
 
 /* ─── Sidebar / history ─── */

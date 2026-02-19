@@ -5,6 +5,88 @@ import { Avatar } from "./Avatar";
 import { NetworkGraph } from "./NetworkGraph";
 import { getNetwork, getPersonContext, type NetworkPerson } from "../lib/xano";
 
+// Parse the YAML profile string into structured sections
+function parseProfileYaml(raw: string): {
+  name?: string;
+  bio?: string;
+  bio500?: string;
+  currentTitle?: string;
+  currentCompany?: string;
+  workHistory?: Array<{ title: string; company: string; startYear?: string; endYear?: string }>;
+  skills?: string[];
+  roles?: string[];
+} {
+  try {
+    const lines = raw.split("\n");
+    const result: ReturnType<typeof parseProfileYaml> = {};
+    let section = "";
+    let bioLines: string[] = [];
+    let inBio500 = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith("name:")) {
+        result.name = trimmed.replace(/^name:\s*['"]?/, "").replace(/['"]$/, "").trim();
+      } else if (trimmed.startsWith("bio:") && !trimmed.startsWith("bio_500")) {
+        result.bio = trimmed.replace(/^bio:\s*['"]?/, "").replace(/['"]$/, "").trim();
+        section = "bio";
+      } else if (trimmed.startsWith("bio_500:")) {
+        inBio500 = true;
+        bioLines = [];
+        section = "bio500";
+      } else if (trimmed.startsWith("work_history:")) {
+        inBio500 = false;
+        if (bioLines.length > 0) result.bio500 = bioLines.join(" ").trim();
+        section = "work_history";
+      } else if (trimmed.startsWith("skills:")) {
+        inBio500 = false;
+        section = "skills";
+        result.skills = [];
+      } else if (trimmed.startsWith("roles:")) {
+        inBio500 = false;
+        section = "roles";
+        result.roles = [];
+      } else if (trimmed.startsWith("current_position:")) {
+        inBio500 = false;
+        section = "current_position";
+      } else if (section === "bio500" && inBio500) {
+        if (trimmed && !trimmed.startsWith("|-")) bioLines.push(trimmed);
+      } else if (section === "work_history" && trimmed.startsWith("-")) {
+        // Parse: - { title: '...', company_name: '...', start_year: '...', end_year: '...' }
+        const titleMatch = trimmed.match(/title:\s*['"]([^'"]+)['"]/);
+        const companyMatch = trimmed.match(/company_name:\s*['"]([^'"]+)['"]/);
+        const startYearMatch = trimmed.match(/start_year:\s*['"]([^'"]+)['"]/);
+        const endYearMatch = trimmed.match(/end_year:\s*['"]([^'"]+)['"]/);
+        if (titleMatch || companyMatch) {
+          if (!result.workHistory) result.workHistory = [];
+          result.workHistory.push({
+            title: titleMatch?.[1] || "",
+            company: companyMatch?.[1] || "",
+            startYear: startYearMatch?.[1],
+            endYear: endYearMatch?.[1],
+          });
+        }
+      } else if (section === "skills" && trimmed.startsWith("-")) {
+        result.skills?.push(trimmed.replace(/^-\s*['"]?/, "").replace(/['"]$/, "").trim());
+      } else if (section === "roles" && trimmed.startsWith("-")) {
+        result.roles?.push(trimmed.replace(/^-\s*['"]?/, "").replace(/['"]$/, "").trim());
+      } else if (section === "current_position") {
+        if (trimmed.startsWith("title:")) {
+          result.currentTitle = trimmed.replace(/^title:\s*['"]?/, "").replace(/['"]$/, "").trim();
+        } else if (trimmed.startsWith("company:")) {
+          result.currentCompany = trimmed.replace(/^company:\s*['"]?/, "").replace(/['"]$/, "").trim();
+        }
+      }
+    }
+    if (bioLines.length > 0 && !result.bio500) result.bio500 = bioLines.join(" ").trim();
+    return result;
+  } catch {
+    return {};
+  }
+}
+
 const FILTERS = ["All contacts", "Connected", "Has title", "Has company"];
 
 function BondBar({ lastActivity }: { lastActivity: number | null }) {
@@ -297,15 +379,15 @@ export function NetworkView() {
 
                   {/* Tags */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", gap: "5px" }}>
+                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                       {mp?.current_title && (
-                        <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "4px", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
-                          {mp.current_title.split(" ").slice(0, 2).join(" ")}
+                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "4px", background: "rgba(99,102,241,0.08)", color: "rgba(165,180,252,0.7)", fontWeight: 500, border: "1px solid rgba(99,102,241,0.12)" }}>
+                          {mp.current_title.length > 22 ? mp.current_title.slice(0, 22) + "…" : mp.current_title}
                         </span>
                       )}
                       {mc?.company_name && (
-                        <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "4px", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>
-                          {mc.company_name}
+                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "4px", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", fontWeight: 500, border: "1px solid rgba(255,255,255,0.07)" }}>
+                          {mc.company_name.length > 18 ? mc.company_name.slice(0, 18) + "…" : mc.company_name}
                         </span>
                       )}
                     </div>
@@ -422,33 +504,86 @@ export function NetworkView() {
             </div>
 
             {profileLoading ? (
-              <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(99,102,241,0.6)", fontSize: "13px" }}>
-                Loading profile...
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "8px 0" }}>
+                {[1,2,3].map(i => (
+                  <div key={i} style={{ height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.06)", width: i === 1 ? "100%" : i === 2 ? "80%" : "60%", animation: "pulse 1.5s infinite" }} />
+                ))}
               </div>
-            ) : profileContext ? (
-              <div>
-                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.6)", marginBottom: "10px" }}>
-                  📋 Profile
-                </div>
-                <div style={{
-                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "10px", padding: "14px",
-                }}>
-                  {profileContext.split("\n").filter(Boolean).map((line, i) => (
-                    <div key={i} style={{
-                      fontSize: "12px",
-                      color: line.match(/^[a-z_]+:/i) ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.75)",
-                      lineHeight: 1.7,
-                      paddingLeft: line.startsWith("-") ? "8px" : "0",
-                      fontWeight: line.match(/^[a-z_]+:/i) ? 600 : 400,
-                    }}>
-                      {line}
+            ) : profileContext ? (() => {
+              const profile = parseProfileYaml(profileContext);
+              const bio = profile.bio500 || profile.bio;
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Bio */}
+                  {bio && (
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.5)", marginBottom: "8px" }}>About</div>
+                      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{bio}</p>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Skills */}
+                  {profile.skills && profile.skills.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.5)", marginBottom: "8px" }}>Skills</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                        {profile.skills.map((s, i) => (
+                          <span key={i} style={{ fontSize: "11px", padding: "3px 9px", borderRadius: "6px", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", color: "#a5b4fc" }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Work history */}
+                  {profile.workHistory && profile.workHistory.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.5)", marginBottom: "10px" }}>Experience</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                        {profile.workHistory.slice(0, 5).map((w, i) => (
+                          <div key={i} style={{
+                            display: "flex", gap: "12px", paddingBottom: "14px",
+                            borderLeft: i < profile.workHistory!.length - 1 ? "1px solid rgba(99,102,241,0.15)" : "1px solid transparent",
+                            marginLeft: "6px", paddingLeft: "16px", position: "relative",
+                          }}>
+                            <div style={{
+                              position: "absolute", left: "-5px", top: "2px",
+                              width: "9px", height: "9px", borderRadius: "50%",
+                              background: i === 0 ? "#6366f1" : "rgba(99,102,241,0.3)",
+                              border: "2px solid #0f0f1a",
+                              boxShadow: i === 0 ? "0 0 6px rgba(99,102,241,0.5)" : "none",
+                            }} />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: "#e8e8f0", marginBottom: "1px" }}>{w.title}</div>
+                              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+                                {w.company}
+                                {(w.startYear || w.endYear) && (
+                                  <span style={{ marginLeft: "6px", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
+                                    {w.startYear}{w.endYear ? ` → ${w.endYear}` : " → Present"}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Roles */}
+                  {profile.roles && profile.roles.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.5)", marginBottom: "8px" }}>Roles</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                        {profile.roles.map((r, i) => (
+                          <span key={i} style={{ fontSize: "11px", padding: "3px 9px", borderRadius: "6px", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399" }}>{r}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.25)", fontSize: "13px" }}>
+              );
+            })() : (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.2)", fontSize: "13px" }}>
                 No additional profile data available.
               </div>
             )}
