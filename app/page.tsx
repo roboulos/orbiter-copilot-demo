@@ -57,15 +57,18 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("Copilot");
   const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(null);
   const personContextRef = useRef<string>("");
+  const masterPersonIdRef = useRef<number | undefined>(undefined);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
     setSelectedPerson(person);
     personContextRef.current = context;
+    masterPersonIdRef.current = person.master_person_id;
   }, []);
 
   const handlePersonClear = useCallback(() => {
     setSelectedPerson(null);
     personContextRef.current = "";
+    masterPersonIdRef.current = undefined;
   }, []);
 
   // processMessage: calls Xano /chat, converts JSON response to SSE stream for CrayonChat
@@ -88,7 +91,8 @@ export default function Home() {
       const data = await chat(
         prompt,
         personContextRef.current || undefined,
-        history.length > 0 ? history : undefined
+        history.length > 0 ? history : undefined,
+        masterPersonIdRef.current
       );
 
       // Parse the raw LLM response

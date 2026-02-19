@@ -94,13 +94,15 @@ export async function getPersonContext(masterPersonId: number): Promise<string> 
 export async function chat(
   prompt: string,
   personContext?: string,
-  history?: Array<{ role: string; content: string }>
+  history?: Array<{ role: string; content: string }>,
+  masterPersonId?: number
 ) {
   return xanoFetch<{ raw: string; model: string }>("/chat", {
     method: "POST",
     body: {
       prompt,
       ...(personContext ? { person_context: personContext } : {}),
+      ...(masterPersonId ? { master_person_id: masterPersonId } : {}),
       ...(history?.length ? { history } : {}),
     },
   });
