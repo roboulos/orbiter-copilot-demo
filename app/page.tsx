@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { CrayonChat } from "@crayonai/react-ui";
 import { OutcomeCard } from "./components/OutcomeCard";
 import { LeverageLoopCard } from "./components/LeverageLoopCard";
@@ -10,6 +10,8 @@ import { NetworkView } from "./components/NetworkView";
 import { OutcomesView } from "./components/OutcomesView";
 import { HorizonView } from "./components/HorizonView";
 import { DocsView } from "./components/DocsView";
+import { PersonPicker } from "./components/PersonPicker";
+import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
@@ -25,23 +27,127 @@ const STARTERS = [
     prompt: "I'm raising a $4M seed round for Orbiter, a relationship intelligence platform built on a graph database. I need warm introductions to seed-stage investors who have backed graph databases, network intelligence tools, or relationship-driven SaaS in the last 2 years. We're 60 days from target close.",
   },
   {
-    displayText: "⚡ Leverage Loop — My contact James just became VP at Salesforce",
-    prompt: "My contact James Whitfield just got promoted to VP of Platform Partnerships at Salesforce. We worked together 3 years ago at a Series B startup. This is a leverage loop — what's my move and draft me a message to send today.",
+    displayText: "⚡ Leverage Loop — My contact just became VP at Salesforce",
+    prompt: "My contact just got promoted to VP of Platform Partnerships at Salesforce. We worked together 3 years ago at a Series B startup. This is a leverage loop — what's my move and draft me a message to send today.",
   },
   {
-    displayText: "✨ Serendipity — Who in my network should meet our fractional CFO Caitlin?",
-    prompt: "Serendipity match: We just brought on a fractional CFO named Caitlin who specializes in SaaS Series A financials. She needs deal flow. Find the best person in my network to introduce her to right now.",
+    displayText: "✨ Serendipity — Who in my network should meet our fractional CFO?",
+    prompt: "Serendipity match: We just brought on a fractional CFO who specializes in SaaS Series A financials. She needs deal flow. Find the best person in my network to introduce her to right now.",
   },
   {
-    displayText: "👤 Contact Profile — Pull up James Whitfield at Salesforce",
-    prompt: "Pull up the contact profile for James Whitfield, VP of Platform Partnerships at Salesforce. We worked together 3 years ago at a Series B startup called Relay. Show me our relationship context, bond strength, and what I should do next.",
+    displayText: "👤 Contact Profile — Pull up the selected person",
+    prompt: "Pull up the contact profile for the person I've selected. Show me our relationship context, bond strength, and what I should do next.",
   },
 ];
 
 type Tab = "Copilot" | "Network" | "Outcomes" | "Horizon" | "Docs";
 
+interface SelectedPerson {
+  master_person_id: number;
+  full_name: string;
+  master_person: {
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    master_company?: { company_name: string } | null;
+  };
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("Copilot");
+  const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(null);
+  const personContextRef = useRef<string>("");
+
+  const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
+    setSelectedPerson(person);
+    personContextRef.current = context;
+  }, []);
+
+  const handlePersonClear = useCallback(() => {
+    setSelectedPerson(null);
+    personContextRef.current = "";
+  }, []);
+
+  // processMessage: calls Xano /chat, converts JSON response to SSE stream for CrayonChat
+  const processMessage = useCallback(
+    async ({ messages, abortController }: { threadId: string; messages: Array<{ role: string; message?: unknown }>; abortController: AbortController }) => {
+      const lastMessage = messages[messages.length - 1];
+      const prompt = typeof lastMessage?.message === "string" ? lastMessage.message : String(lastMessage?.message ?? "");
+
+      // Build history from previous messages
+      const history = messages
+        .slice(0, -1)
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          role: m.role,
+          content: typeof m.message === "string" ? m.message : JSON.stringify(m.message),
+        }))
+        .filter((m) => m.content.length > 0);
+
+      // Call Xano /chat directly
+      const data = await chat(
+        prompt,
+        personContextRef.current || undefined,
+        history.length > 0 ? history : undefined
+      );
+
+      // Parse the raw LLM response
+      let raw = data.raw || "";
+      const cleaned = raw
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/, "")
+        .trim();
+
+      type ResponseItem =
+        | { type: "text"; text: string }
+        | { name: string; templateProps: Record<string, unknown> };
+
+      let items: ResponseItem[] = [];
+      try {
+        const parsed = JSON.parse(cleaned);
+        items = parsed?.response ?? [];
+      } catch {
+        items = [{ type: "text", text: cleaned || raw }];
+      }
+
+      // Convert to SSE stream that CrayonChat expects
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          if (abortController.signal.aborted) {
+            controller.close();
+            return;
+          }
+
+          for (const item of items) {
+            if ("type" in item && item.type === "text" && item.text) {
+              const words = item.text.split(" ");
+              for (let i = 0; i < words.length; i++) {
+                const chunk = (i === 0 ? "" : " ") + words[i];
+                controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
+              }
+            } else if ("name" in item && item.name) {
+              controller.enqueue(
+                encoder.encode(
+                  `event: tpl\ndata: ${JSON.stringify({ name: item.name, templateProps: (item as { templateProps: Record<string, unknown> }).templateProps })}\n\n`
+                )
+              );
+            }
+          }
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+        },
+      });
+    },
+    []
+  );
 
   return (
     <div
@@ -67,7 +173,6 @@ export default function Home() {
           zIndex: 10,
         }}
       >
-        {/* Logo */}
         <div
           style={{
             width: "28px",
@@ -92,19 +197,12 @@ export default function Home() {
 
         <div style={{ width: "1px", height: "16px", background: "rgba(255,255,255,0.12)", margin: "0 2px" }} />
 
-        {/* Mode tabs */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           {(["Copilot", "Network", "Outcomes", "Horizon", "Docs"] as Tab[]).map((tab) => (
-            <ModeTab
-              key={tab}
-              label={tab}
-              active={activeTab === tab}
-              onClick={() => setActiveTab(tab)}
-            />
+            <ModeTab key={tab} label={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)} />
           ))}
         </div>
 
-        {/* Right */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <div
@@ -117,7 +215,7 @@ export default function Home() {
               }}
             />
             <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-              Network scanning
+              Live — Xano + OpenRouter
             </span>
           </div>
           <div
@@ -134,40 +232,44 @@ export default function Home() {
               color: "white",
             }}
           >
-            M
+            R
           </div>
         </div>
       </header>
 
+      {/* Person picker — shown when Copilot tab is active */}
+      {activeTab === "Copilot" && (
+        <div style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.04)", flexShrink: 0 }}>
+          <PersonPicker
+            onSelect={handlePersonSelect}
+            selectedPerson={selectedPerson}
+            onClear={handlePersonClear}
+          />
+        </div>
+      )}
+
       {/* Tab content */}
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        {/* CrayonChat: always mounted, hidden via display:none when not active — no overflow/clip wrapping */}
-        <div style={{
-          flex: 1,
-          minHeight: 0,
-          display: activeTab === "Copilot" ? "flex" : "none",
-          flexDirection: "column",
-        }}>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: activeTab === "Copilot" ? "flex" : "none",
+            flexDirection: "column",
+          }}
+        >
           <CrayonChat
-            processMessage={async ({ messages, abortController }) => {
-              const lastMessage = messages[messages.length - 1];
-              return fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  prompt: lastMessage?.message ?? "",
-                  messages: messages.slice(0, -1),
-                }),
-                signal: abortController.signal,
-              });
-            }}
+            processMessage={processMessage}
             agentName="Orbiter Copilot"
             responseTemplates={templates}
             theme={{ mode: "dark" }}
             welcomeMessage={{
-              title: "What do you want to make happen?",
-              description:
-                "Tell me a goal, share a signal from your network, or ask for a serendipity match — I'll use your graph to find the right move.",
+              title: selectedPerson
+                ? `What do you want to do with ${selectedPerson.full_name}?`
+                : "What do you want to make happen?",
+              description: selectedPerson
+                ? `${selectedPerson.master_person.current_title || ""}${selectedPerson.master_person.master_company?.company_name ? ` at ${selectedPerson.master_person.master_company.company_name}` : ""} — Ask about this contact, create a leverage loop, or explore outcomes.`
+                : "Search your network above, then tell me a goal, share a signal, or ask for a serendipity match.",
             }}
             conversationStarters={{
               variant: "long",
