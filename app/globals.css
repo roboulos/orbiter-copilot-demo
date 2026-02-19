@@ -44,6 +44,21 @@ html, body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 20px)) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes forkSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes arcDraw {
   from { stroke-dashoffset: 300; opacity: 0; }
   to   { stroke-dashoffset: 0;   opacity: 1; }
@@ -88,15 +103,15 @@ html, body {
 .crayon-shell-container {
   height: 100% !important;
   background: #0a0a0f !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 /* ══════════════════════════════════════════════════════
    WELCOME SCREEN — Premium
    ══════════════════════════════════════════════════════ */
-
-.crayon-shell-desktop-welcome-screen {
-  padding-top: 48px !important;
-}
 
 .crayon-shell-welcome-screen__title {
   font-size: 24px !important;
@@ -109,6 +124,8 @@ html, body {
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
   animation: fadeUp 0.5s ease both !important;
+  text-align: center !important;
+  width: 100% !important;
 }
 
 .crayon-shell-welcome-screen__description {
@@ -117,6 +134,9 @@ html, body {
   color: rgba(255,255,255,0.38) !important;
   max-width: 380px !important;
   animation: fadeUp 0.55s 0.06s ease both !important;
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -190,19 +210,18 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════
-   COMPOSER — Premium
+   COMPOSER — Premium inline layout (input + button on same row)
    ══════════════════════════════════════════════════════ */
 
+/* Force the welcome composer to be a horizontal flex row */
 .crayon-shell-desktop-welcome-composer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 8px 8px 16px !important;
   background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255,255,255,0.08) !important;
-  border-radius: 16px !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-.crayon-shell-thread-composer__input-wrapper {
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 16px !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
@@ -212,25 +231,80 @@ html, body {
   box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
 }
 
+/* Input takes up all remaining space */
+.crayon-shell-desktop-welcome-composer__input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  color: #e8e8f0 !important;
+  caret-color: #a5b4fc !important;
+  min-height: 24px !important;
+  max-height: 120px !important;
+  height: auto !important;
+  resize: none !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  padding: 4px 0 !important;
+}
+
+.crayon-shell-desktop-welcome-composer__input::placeholder {
+  color: rgba(255,255,255,0.2) !important;
+}
+
+/* Submit button stays right-aligned, fixed size */
+.crayon-shell-desktop-welcome-composer .crayon-shell-composer-submit-button {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+}
+
+/* Thread composer (in-chat) — same treatment */
+.crayon-shell-thread-composer__input-wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 8px 8px 16px !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 16px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
 .crayon-shell-thread-composer:focus-within .crayon-shell-thread-composer__input-wrapper {
   border-color: rgba(99,102,241,0.42) !important;
   box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
 }
 
-.crayon-shell-desktop-welcome-composer__input,
 .crayon-shell-thread-composer__input {
+  flex: 1 !important;
+  min-width: 0 !important;
   color: #e8e8f0 !important;
   caret-color: #a5b4fc !important;
   min-height: 24px !important;
+  max-height: 120px !important;
   height: auto !important;
   resize: none !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  padding: 4px 0 !important;
 }
 
-.crayon-shell-desktop-welcome-composer__input::placeholder,
 .crayon-shell-thread-composer__input::placeholder {
   color: rgba(255,255,255,0.2) !important;
+}
+
+.crayon-shell-thread-composer__input-wrapper .crayon-shell-composer-submit-button {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -241,6 +315,12 @@ html, body {
   background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
   border-radius: 10px !important;
   border: none !important;
+  width: 36px !important;
+  height: 36px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   transition: opacity 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
 }
 
@@ -291,9 +371,33 @@ html, body {
 .crayon-shell-thread-messages-list,
 [class*="thread-messages"],
 [class*="messages-list"] {
+  flex: 1 !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
   scroll-behavior: smooth !important;
   padding-bottom: 32px !important;
+}
+
+/* Desktop welcome container needs full height */
+.crayon-shell-desktop-welcome-container {
+  height: 100% !important;
+  display: grid !important;
+  grid-template-rows: 1fr auto !important;
+  grid-template-columns: 1fr !important;
+  gap: 32px !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  padding: 32px !important;
+  box-sizing: border-box !important;
+}
+
+/* Force composer to bottom */
+.crayon-shell-desktop-welcome-composer-wrapper {
+  width: 100% !important;
+  max-width: 720px !important;
+  margin: 0 auto !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -346,19 +450,76 @@ html, body {
 .crayon-copilot-shell-container {
   width: 100% !important;
   max-width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
   border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  overflow: hidden !important;
 }
 
 /* Full-width standalone shell */
 [class*="standalone"] .crayon-shell-container,
 [class*="copilot"] .crayon-shell-container {
   width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  overflow: hidden !important;
 }
 
-/* Welcome screen max-width for readability */
+/* Force all internal containers to fill height */
+.crayon-shell-main,
+.crayon-shell-main-content,
+.crayon-shell-thread,
+.crayon-shell-thread-container {
+  flex: 1 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Welcome screen — centered with proper constraints */
 .crayon-shell-desktop-welcome-screen {
-  max-width: 680px !important;
+  max-width: 720px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 28px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+  flex: 1 !important;
   margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+/* Ensure starters don't overflow */
+.crayon-shell-conversation-starters-container {
+  flex-shrink: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  max-height: 400px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* Thread container full height */
+.crayon-shell-thread-container {
+  flex: 1 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Messages column max-width */

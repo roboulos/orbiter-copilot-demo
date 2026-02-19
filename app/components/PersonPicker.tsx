@@ -318,16 +318,10 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
             style={{ position: "fixed", inset: 0, zIndex: 9998 }}
           />
           <div style={{
-            position: "fixed",
-            top: containerRef.current
-              ? containerRef.current.getBoundingClientRect().bottom + 6
-              : 0,
-            left: containerRef.current
-              ? containerRef.current.getBoundingClientRect().left
-              : 0,
-            width: containerRef.current
-              ? containerRef.current.getBoundingClientRect().width
-              : "auto",
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            left: 0,
+            right: 0,
             background: "#12121f",
             border: "1px solid rgba(99,102,241,0.22)",
             borderRadius: "12px",
