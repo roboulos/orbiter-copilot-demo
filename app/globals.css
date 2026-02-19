@@ -109,6 +109,14 @@ html, body {
   width: 100% !important;
 }
 
+/* Thread area - constrain max width for readability */
+.crayon-shell-thread {
+  max-width: 900px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+}
+
 /* ══════════════════════════════════════════════════════
    WELCOME SCREEN — Premium
    ══════════════════════════════════════════════════════ */
@@ -181,24 +189,26 @@ html, body {
   display: flex !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
-  margin-right: auto !important;
-  max-width: 75% !important;
+  width: 100% !important;
   animation: cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
-}
-
-.crayon-shell-thread-message-agent__content {
-  max-width: 100% !important;
-  overflow: visible !important;
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  border-radius: 18px 18px 18px 4px !important;
-  padding: 10px 14px !important;
 }
 
 .crayon-shell-thread-message-agent__avatar {
   flex-shrink: 0 !important;
   margin-top: 4px !important;
   margin-right: 10px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.crayon-shell-thread-message-agent__content {
+  max-width: 65% !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 18px 18px 18px 4px !important;
+  padding: 10px 14px !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -208,12 +218,12 @@ html, body {
 .crayon-shell-thread-message-user {
   display: flex !important;
   justify-content: flex-end !important;
-  margin-left: auto !important;
-  max-width: 75% !important;
+  width: 100% !important;
   animation: slideInRight 0.25s ease both !important;
 }
 
 .crayon-shell-thread-message-user__content {
+  max-width: 65% !important;
   background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.12)) !important;
   color: #e8e8f0 !important;
   border: 1px solid rgba(99,102,241,0.22) !important;
@@ -221,6 +231,8 @@ html, body {
   font-size: 13px !important;
   backdrop-filter: blur(8px) !important;
   padding: 10px 14px !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 /* ══════════════════════════════════════════════════════
