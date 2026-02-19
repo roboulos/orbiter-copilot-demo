@@ -111,10 +111,41 @@ html, body {
 
 /* Thread area - constrain max width for readability */
 .crayon-shell-thread {
-  max-width: 900px !important;
+  max-width: 800px !important;
   width: 100% !important;
   margin: 0 auto !important;
-  padding: 0 24px !important;
+  padding: 20px 32px !important;
+}
+
+/* Thread messages container */
+.crayon-shell-thread-messages {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* Remove any centering from message wrappers */
+.crayon-shell-thread-message {
+  width: 100% !important;
+  display: flex !important;
+}
+
+/* Force message bodies to not expand */
+.crayon-shell-thread-message-agent__body,
+.crayon-shell-thread-message-user__body {
+  width: auto !important;
+  max-width: 500px !important;
+}
+
+/* Any inner content containers */
+.crayon-shell-thread-message-agent__content > *,
+.crayon-shell-thread-message-user__content > * {
+  max-width: 100% !important;
+}
+
+/* Template responses (cards, buttons, etc) */
+.crayon-shell-response-template {
+  max-width: 500px !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -182,33 +213,43 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════
-   CHAT MESSAGES — Card entrance animations
+   CHAT MESSAGES — Proper alignment like iMessage
    ══════════════════════════════════════════════════════ */
 
+/* AI Messages - LEFT aligned */
 .crayon-shell-thread-message-agent {
   display: flex !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
   width: 100% !important;
+  margin-bottom: 16px !important;
+  padding: 0 !important;
   animation: cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
 }
 
 .crayon-shell-thread-message-agent__avatar {
   flex-shrink: 0 !important;
-  margin-top: 4px !important;
+  margin-top: 2px !important;
   margin-right: 10px !important;
   width: 32px !important;
   height: 32px !important;
+  border-radius: 50% !important;
 }
 
 .crayon-shell-thread-message-agent__content {
-  max-width: 65% !important;
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
-  border-radius: 18px 18px 18px 4px !important;
-  padding: 10px 14px !important;
+  display: inline-block !important;
+  max-width: 480px !important;
+  width: fit-content !important;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 20px 20px 20px 4px !important;
+  padding: 12px 16px !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: rgba(255,255,255,0.9) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -219,20 +260,26 @@ html, body {
   display: flex !important;
   justify-content: flex-end !important;
   width: 100% !important;
+  margin-bottom: 16px !important;
+  padding: 0 !important;
   animation: slideInRight 0.25s ease both !important;
 }
 
 .crayon-shell-thread-message-user__content {
-  max-width: 65% !important;
-  background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.12)) !important;
+  display: inline-block !important;
+  max-width: 480px !important;
+  width: fit-content !important;
+  background: linear-gradient(135deg, rgba(99,102,241,0.20), rgba(139,92,246,0.16)) !important;
   color: #e8e8f0 !important;
-  border: 1px solid rgba(99,102,241,0.22) !important;
-  border-radius: 18px 18px 4px 18px !important;
-  font-size: 13px !important;
-  backdrop-filter: blur(8px) !important;
-  padding: 10px 14px !important;
+  border: 1px solid rgba(99,102,241,0.30) !important;
+  border-radius: 20px 20px 4px 20px !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  backdrop-filter: blur(12px) !important;
+  padding: 12px 16px !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15) !important;
 }
 
 /* ══════════════════════════════════════════════════════
