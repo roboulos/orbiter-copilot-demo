@@ -91,6 +91,38 @@ export async function getPersonContext(masterPersonId: number): Promise<string> 
   return typeof data === "string" ? data : JSON.stringify(data);
 }
 
+/**
+ * System prompt additions for the Xano /chat endpoint.
+ *
+ * ─── meeting_prep_card ───────────────────────────────────────────────────────
+ * TRIGGER phrases: "meeting with", "prep for", "prepare for", "before I meet",
+ *                  "meeting prep", "prepare me for a meeting", "get me ready for"
+ *
+ * When triggered, respond with a card named "meeting_prep_card" with this schema:
+ * {
+ *   "name": "meeting_prep_card",
+ *   "templateProps": {
+ *     "personName": string,            // Full name of the person
+ *     "personTitle": string?,          // Their current job title
+ *     "personCompany": string?,        // Their company
+ *     "summary": string,               // 2-3 sentence overview of who they are
+ *     "talkingPoints": [               // 2-4 talking points
+ *       {
+ *         "topic": string,             // Short topic label
+ *         "opener": string,            // Suggested conversation opener
+ *         "whyTheyCare": string        // Why this matters to them
+ *       }
+ *     ],
+ *     "listenFor": string[],           // 2-4 things to listen for
+ *     "landmines": string[],           // 2-3 topics to avoid
+ *     "sharedContext": string?         // What you have in common (optional)
+ *   }
+ * }
+ *
+ * ─── All other card types follow the same response format: ─────────────────
+ * { "response": [ { "name": "card_name", "templateProps": { ... } } ] }
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
 export async function chat(
   prompt: string,
   personContext?: string,

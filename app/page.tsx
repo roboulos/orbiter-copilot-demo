@@ -10,15 +10,19 @@ import { NetworkView } from "./components/NetworkView";
 import { OutcomesView } from "./components/OutcomesView";
 import { HorizonView } from "./components/HorizonView";
 import { DocsView } from "./components/DocsView";
+import { SearchView } from "./components/SearchView";
+import { CollectionsView } from "./components/CollectionsView";
+import { MeetingPrepCard } from "./components/MeetingPrepCard";
 import { PersonPicker } from "./components/PersonPicker";
 import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
-  { name: "outcome_card",      Component: OutcomeCard      },
-  { name: "leverage_loop_card", Component: LeverageLoopCard },
-  { name: "contact_card",      Component: ContactCard      },
-  { name: "serendipity_card",  Component: SerendipityCard  },
+  { name: "outcome_card",       Component: OutcomeCard       },
+  { name: "leverage_loop_card", Component: LeverageLoopCard  },
+  { name: "contact_card",       Component: ContactCard       },
+  { name: "serendipity_card",   Component: SerendipityCard   },
+  { name: "meeting_prep_card",  Component: MeetingPrepCard   },
 ];
 
 const DEFAULT_STARTERS = [
@@ -64,7 +68,7 @@ function getPersonStarters(person: SelectedPerson) {
   ];
 }
 
-type Tab = "Copilot" | "Network" | "Outcomes" | "Horizon" | "Docs";
+type Tab = "Copilot" | "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Docs";
 
 interface SelectedPerson {
   master_person_id: number;
@@ -350,9 +354,17 @@ export default function Home() {
 
         {/* Nav tabs */}
         <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-          {(["Copilot", "Network", "Outcomes", "Horizon", "Docs"] as Tab[]).map((tab) => (
-            <ModeTab key={tab} label={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)} />
-          ))}
+          {(["Copilot", "Network", "Search", "Outcomes", "Horizon", "Collections", "Docs"] as Tab[]).map((tab) => {
+            const icons: Record<string, string> = { Search: "🔍 ", Collections: "📁 " };
+            return (
+              <ModeTab
+                key={tab}
+                label={(icons[tab] || "") + tab}
+                active={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+              />
+            );
+          })}
         </div>
 
         {/* Right side — status + avatar */}
@@ -434,10 +446,12 @@ export default function Home() {
           </div>
         </div>
 
-        {activeTab === "Network"  && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
-        {activeTab === "Outcomes" && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
-        {activeTab === "Horizon"  && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
-        {activeTab === "Docs"     && <TabPanel key="docs"><DocsView /></TabPanel>}
+        {activeTab === "Network"     && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Search"      && <TabPanel key="search"><SearchView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Outcomes"    && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Horizon"     && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Collections" && <TabPanel key="collections"><CollectionsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Docs"        && <TabPanel key="docs"><DocsView /></TabPanel>}
       </div>
     </div>
   );
