@@ -19,7 +19,24 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
 
   const handleSelect = (value: string) => {
     setSelected(value);
-    // Auto-send the selected value as a message
+    
+    // Send message through Crayon by triggering input
+    // Find the message input and programmatically send the value
+    const input = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
+    const sendButton = document.querySelector('button[type="submit"], button:has(img[alt*="Send"])') as HTMLButtonElement;
+    
+    if (input && sendButton) {
+      // Set the value
+      input.value = value;
+      // Trigger input event so Crayon sees the change
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      // Click send button
+      setTimeout(() => {
+        sendButton.click();
+      }, 100);
+    }
+    
+    // Also call onSelect if provided
     if (onSelect) {
       onSelect(value);
     }
