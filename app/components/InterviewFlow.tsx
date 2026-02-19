@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useThreadActions, useThreadState } from "@crayonai/react-core";
 import { QuestionCard } from "./QuestionCard";
 import { ScanningCard } from "./ScanningCard";
+import { ProgressTracker } from "./ProgressTracker";
+import { BackButton } from "./BackButton";
 
 interface InterviewStep {
   id: string;
@@ -15,14 +17,16 @@ interface InterviewStep {
 interface InterviewFlowProps {
   topic: string;  // "costa-rica", "investor-intro", etc.
   onComplete: (answers: Record<string, string>) => void;
+  allowBack?: boolean;
 }
 
-export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
-  const { appendMessages, processMessage } = useThreadActions();
+export function InterviewFlow({ topic, onComplete, allowBack = true }: InterviewFlowProps) {
+  const { appendMessages, processMessage, deleteMessage, updateMessage } = useThreadActions();
   const { isRunning, messages, error } = useThreadState();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [messageHistory, setMessageHistory] = useState<string[]>([]);
 
   // Define interview steps based on topic
   const getInterviewSteps = (topic: string): InterviewStep[] => {
@@ -113,12 +117,14 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
     setAnswers(newAnswers);
 
     // Add user message
+    const userMessageId = crypto.randomUUID();
     appendMessages({
-      id: crypto.randomUUID(),
+      id: userMessageId,
       role: "user",
       message: label,
       createdAt: new Date(),
     });
+    setMessageHistory(prev => [...prev, userMessageId]);
 
     // Move to next step
     const nextStepIndex = currentStep + 1;
@@ -134,8 +140,9 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
       
       if (nextStep.type === "scanning") {
         // Show scanning card
+        const scanMessageId = crypto.randomUUID();
         appendMessages({
-          id: crypto.randomUUID(),
+          id: scanMessageId,
           role: "agent",
           message: {
             template: "scanning_card",
@@ -143,6 +150,7 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
           },
           createdAt: new Date(),
         });
+        setMessageHistory(prev => [...prev, scanMessageId]);
         
         // Auto-advance after 2 seconds
         setTimeout(() => {
@@ -150,8 +158,9 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
         }, 2000);
       } else {
         // Show next question
+        const questionMessageId = crypto.randomUUID();
         appendMessages({
-          id: crypto.randomUUID(),
+          id: questionMessageId,
           role: "agent",
           message: {
             template: "question_card",
@@ -159,6 +168,7 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
           },
           createdAt: new Date(),
         });
+        setMessageHistory(prev => [...prev, questionMessageId]);
       }
     }
   };
@@ -167,8 +177,9 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
   useEffect(() => {
     if (steps.length > 0 && messages.length === 0) {
       const firstStep = steps[0];
+      const firstMessageId = crypto.randomUUID();
       appendMessages({
-        id: crypto.randomUUID(),
+        id: firstMessageId,
         role: "agent",
         message: {
           template: "question_card",
@@ -176,15 +187,61 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
         },
         createdAt: new Date(),
       });
+      setMessageHistory([firstMessageId]);
     }
   }, [steps, messages.length, appendMessages]);
+
+  // Back navigation
+  const goBack = useCallback(() => {
+    if (currentStep === 0) return;
+    
+    // Go to previous question step (skip scanning steps)
+    let prevStep = currentStep - 1;
+    while (prevStep >= 0 && steps[prevStep].type === "scanning") {
+      prevStep--;
+    }
+    
+    if (prevStep >= 0) {
+      // Remove last answer
+      const stepToRemove = steps[currentStep];
+      const newAnswers = { ...answers };
+      delete newAnswers[stepToRemove.id];
+      setAnswers(newAnswers);
+      
+      // Remove last messages (user message and AI response)
+      const lastMessages = messageHistory.slice(-2);
+      lastMessages.forEach(msgId => deleteMessage(msgId));
+      setMessageHistory(prev => prev.slice(0, -2));
+      
+      setCurrentStep(prevStep);
+    }
+  }, [currentStep, steps, answers, messageHistory, deleteMessage]);
 
   // Progress indicator
   const totalQuestions = steps.filter(s => s.type === "question_card").length;
   const answeredQuestions = Object.keys(answers).length;
+  const stepLabels = steps
+    .filter(s => s.type === "question_card")
+    .map(s => s.id.charAt(0).toUpperCase() + s.id.slice(1));
 
   return (
-    <div style={{
+    <>
+      {/* Progress tracker */}
+      <ProgressTracker
+        currentStep={answeredQuestions}
+        totalSteps={totalQuestions}
+        stepLabels={stepLabels}
+      />
+
+      {/* Back button (if not first step) */}
+      {allowBack && currentStep > 0 && (
+        <div style={{ padding: "12px 20px" }}>
+          <BackButton onClick={goBack} disabled={isRunning} />
+        </div>
+      )}
+
+      {/* Status indicator (fixed bottom right) */}
+      <div style={{
       position: "fixed",
       bottom: 20,
       right: 20,
@@ -247,5 +304,6 @@ export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
         }
       `}</style>
     </div>
+    </>
   );
 }
