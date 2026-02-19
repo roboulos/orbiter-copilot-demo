@@ -7,17 +7,21 @@
 
 ## ✅ COMPLETED
 
-### Phase 1: Message Alignment ✅
+### Phase 1: Message Alignment ✅ (FIXED PROPERLY)
 **Files:** `app/globals.css`
 
-- ✅ User messages right-aligned (like iMessage)
-- ✅ AI messages left-aligned with avatar
-- ✅ Proper speech bubble border-radius (18px 18px 4px 18px)
-- ✅ Max-width 75% for both message types
-- ✅ Gradient backgrounds and hover states
+- ✅ User messages RIGHT-aligned with `justify-content: flex-end`
+- ✅ AI messages LEFT-aligned with avatar
+- ✅ Messages constrained to **480px max-width** (not full width!)
+- ✅ `width: fit-content` to prevent expansion
+- ✅ Proper speech bubble border-radius (20px with tails)
+- ✅ Thread container max-width 800px
+- ✅ Better padding (12px 16px)
+- ✅ Box shadows for depth
 - ✅ Smooth animations (slideInRight, cardEntrance)
+- ✅ Forced overrides for message body, content, templates
 
-**Result:** Messages now look like modern chat UI (iMessage/Telegram style)
+**Result:** Actually looks like iMessage now - narrow bubbles, proper alignment, no expansion
 
 ---
 
