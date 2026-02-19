@@ -76,6 +76,69 @@ html, body {
   color: rgba(255, 255, 255, 0.25) !important;
 }
 
+/* ─── Chat messages area — smooth scroll, cards never clipped ─── */
+.crayon-shell-thread-messages-list,
+[class*="thread-messages"],
+[class*="messages-list"] {
+  overflow-y: auto !important;
+  scroll-behavior: smooth !important;
+  padding-bottom: 24px !important;
+}
+
+/* ─── Template card wrapper — constrain width, don't overflow ─── */
+.crayon-shell-thread-message-agent__content {
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+/* ─── Agent message row — allow wrapping tall cards ─── */
+.crayon-shell-thread-message-agent {
+  align-items: flex-start !important;
+}
+
+/* ─── Agent avatar ─── */
+.crayon-shell-thread-message-agent__avatar {
+  flex-shrink: 0 !important;
+  margin-top: 4px !important;
+}
+
+/* ─── Welcome screen — tighter vertical rhythm ─── */
+.crayon-shell-desktop-welcome-screen {
+  padding-top: 40px !important;
+}
+.crayon-shell-welcome-screen__title {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+.crayon-shell-welcome-screen__description {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* ─── Sidebar / history ─── */
+.crayon-shell-sidebar {
+  background: rgba(10, 10, 15, 0.95) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.crayon-shell-sidebar-thread-item {
+  border-radius: 8px !important;
+  color: rgba(255,255,255,0.5) !important;
+  font-size: 11px !important;
+}
+.crayon-shell-sidebar-thread-item:hover,
+.crayon-shell-sidebar-thread-item[data-active="true"] {
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: #a5b4fc !important;
+}
+
+/* ─── New Chat button ─── */
+.crayon-shell-new-thread-button {
+  font-size: 12px !important;
+  border-radius: 8px !important;
+  border-color: rgba(99,102,241,0.3) !important;
+  color: rgba(255,255,255,0.6) !important;
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

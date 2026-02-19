@@ -153,8 +153,36 @@ export function HorizonView() {
           Loading...
         </div>
       ) : targets.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
-          No horizon targets yet. Add people you want to connect with to track them here.
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "80px 32px", textAlign: "center",
+        }}>
+          <div style={{
+            width: "72px", height: "72px", borderRadius: "20px",
+            background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))",
+            border: "1px solid rgba(99,102,241,0.25)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "32px", marginBottom: "20px",
+          }}>
+            🔭
+          </div>
+          <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#e8e8f0", margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+            No targets on your radar yet
+          </h3>
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: "0 0 24px", maxWidth: "320px", lineHeight: "1.6" }}>
+            Horizon tracks people you want to connect with. Add founders, investors, or potential partners — Orbiter will surface the right moment to reach out.
+          </p>
+          <button
+            onClick={() => setAdding(true)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              fontSize: "13px", fontWeight: 600, padding: "10px 20px", borderRadius: "10px",
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none",
+              color: "white", cursor: "pointer", boxShadow: "0 4px 20px rgba(99,102,241,0.35)",
+            }}
+          >
+            + Add your first target
+          </button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

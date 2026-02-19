@@ -268,10 +268,14 @@ export function NetworkView() {
                   {/* Activity recency */}
                   <div style={{ marginBottom: "14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Activity</span>
+                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Last Touch</span>
                       <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>{formatLastActivity(c.last_activity_at)}</span>
                     </div>
-                    <BondBar lastActivity={c.last_activity_at} />
+                    {c.last_activity_at ? (
+                      <BondBar lastActivity={c.last_activity_at} />
+                    ) : (
+                      <div style={{ height: "3px", borderRadius: "2px", background: "rgba(255,255,255,0.06)" }} />
+                    )}
                   </div>
 
                   {/* Tags */}

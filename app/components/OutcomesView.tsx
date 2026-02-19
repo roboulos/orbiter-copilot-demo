@@ -15,10 +15,10 @@ const STATUS_CONFIG: Record<Status, { color: string; bg: string; border: string;
   archived: { color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)", dot: "rgba(255,255,255,0.3)" },
 };
 
-const MODE_LABELS: Record<CopilotMode, { icon: string; label: string; color: string }> = {
-  outcome: { icon: "🎯", label: "Outcome", color: "#6366f1" },
-  loop: { icon: "⚡", label: "Leverage Loop", color: "#a78bfa" },
-  serendipity: { icon: "✨", label: "Serendipity", color: "#10b981" },
+const MODE_LABELS: Record<CopilotMode, { icon: string; label: string; plural: string; color: string }> = {
+  outcome: { icon: "🎯", label: "Outcome", plural: "Outcomes", color: "#6366f1" },
+  loop: { icon: "⚡", label: "Leverage Loop", plural: "Leverage Loops", color: "#a78bfa" },
+  serendipity: { icon: "✨", label: "Serendipity", plural: "Serendipity", color: "#10b981" },
 };
 
 const FILTERS = ["All", "outcome", "loop", "serendipity"];
@@ -173,7 +173,7 @@ export function OutcomesView() {
                 {counts[mode]}
               </div>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-                {ml.icon} {ml.label}s
+                {ml.icon} {ml.plural}
               </div>
             </div>
           );
@@ -196,7 +196,7 @@ export function OutcomesView() {
                 cursor: "pointer", transition: "all 0.12s ease",
               }}
             >
-              {ml ? `${ml.icon} ${ml.label}s` : "All"}
+              {ml ? `${ml.icon} ${ml.plural}` : "All"}
             </button>
           );
         })}
