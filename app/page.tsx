@@ -21,7 +21,7 @@ import { ConfirmationModal } from "./components/ConfirmationModal";
 import { SubmitButton } from "./components/SubmitButton";
 import { SuccessToast } from "./components/SuccessToast";
 import { ErrorMessage } from "./components/ErrorMessage";
-import { chat } from "./lib/xano";
+import { chat, dispatch } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
@@ -563,27 +563,7 @@ export default function Home() {
   const [successMessage, setSuccessMessage] = useState("");
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    const tabHandler = ((e: CustomEvent<{ tab: string }>) => {
-      const t = e.detail.tab;
-      if (t !== "Copilot" && t !== "Home") setActiveTab(t as Tab);
-    }) as EventListener;
-
-    const dispatchHandler = ((e: CustomEvent<{ summary: string }>) => {
-      handleReadyToDispatch(e.detail.summary);
-    }) as EventListener;
-
-    window.addEventListener("orbiter:switch-tab", tabHandler);
-    window.addEventListener("orbiter:switch-tab-after-action", tabHandler);
-    window.addEventListener("orbiter:ready-to-dispatch", dispatchHandler);
-    
-    return () => {
-      window.removeEventListener("orbiter:switch-tab", tabHandler);
-      window.removeEventListener("orbiter:switch-tab-after-action", tabHandler);
-      window.removeEventListener("orbiter:ready-to-dispatch", dispatchHandler);
-    };
-  }, [handleReadyToDispatch]);
+  const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
     setSelectedPerson(person);
@@ -623,30 +603,63 @@ export default function Home() {
     setShowConfirmation(true);
   }, []);
 
+  useEffect(() => {
+    const tabHandler = ((e: CustomEvent<{ tab: string }>) => {
+      const t = e.detail.tab;
+      if (t !== "Copilot" && t !== "Home") setActiveTab(t as Tab);
+    }) as EventListener;
+
+    const dispatchHandler = ((e: CustomEvent<{ summary: string }>) => {
+      handleReadyToDispatch(e.detail.summary);
+    }) as EventListener;
+
+    window.addEventListener("orbiter:switch-tab", tabHandler);
+    window.addEventListener("orbiter:switch-tab-after-action", tabHandler);
+    window.addEventListener("orbiter:ready-to-dispatch", dispatchHandler);
+    
+    return () => {
+      window.removeEventListener("orbiter:switch-tab", tabHandler);
+      window.removeEventListener("orbiter:switch-tab-after-action", tabHandler);
+      window.removeEventListener("orbiter:ready-to-dispatch", dispatchHandler);
+    };
+  }, [handleReadyToDispatch]);
+
   const handleConfirmDispatch = useCallback(async () => {
     setDispatching(true);
     try {
-      // TODO: Call actual dispatch endpoint
-      // For now, just simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call real dispatch endpoint
+      const result = await dispatch({
+        summary: dispatchSummary,
+        context: {
+          copilot_mode: selectedPerson ? "loop" : "outcome",
+          person_context: personContextRef.current || undefined,
+        },
+        person_id: masterPersonIdRef.current || null,
+        conversation_history: conversationHistoryRef.current,
+      });
+      
+      console.log("Dispatch success:", result);
       
       // Success - close modal and reset
       setDispatching(false);
       setShowConfirmation(false);
       setModalOpen(false);
       
-      // Show success toast
-      setSuccessMessage("Your network has been activated! We'll notify you when connections are found.");
+      // Show success toast with dispatch ID
+      setSuccessMessage(
+        `Your network has been activated! (${result.dispatch_id}) We'll notify you when connections are found.`
+      );
       setShowSuccessToast(true);
       
       handlePersonClear();
     } catch (error) {
       console.error("Dispatch failed:", error);
       setDispatching(false);
-      // Error will be shown in the modal
-      // Could add error state here if needed
+      // Show error in toast
+      setSuccessMessage("Failed to dispatch. Please try again.");
+      setShowSuccessToast(true);
     }
-  }, [handlePersonClear]);
+  }, [dispatchSummary, selectedPerson, handlePersonClear]);
 
   const handleCancelDispatch = useCallback(() => {
     setShowConfirmation(false);
@@ -672,6 +685,12 @@ export default function Home() {
           content: typeof m.message === "string" ? m.message : JSON.stringify(m.message),
         }))
         .filter((m) => m.content.length > 0);
+
+      // Store conversation history for dispatch
+      conversationHistoryRef.current = [
+        ...history,
+        { role: "user", content: prompt }
+      ];
 
       const data = await chat(
         prompt,

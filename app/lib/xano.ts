@@ -411,3 +411,26 @@ export async function dispatchOutcomeItem(id: number, mode: string) {
 export async function archiveOutcome(id: number) {
   return xanoFetch<OutcomeItem>(`/outcome/${id}`, { method: "PATCH", body: { status: "archived" } });
 }
+
+// ── Dispatch ─────────────────────────────────────────────
+
+export interface DispatchRequest {
+  summary: string;
+  context: Record<string, unknown>;
+  person_id: number | null;
+  conversation_history: Array<{ role: string; content: string }>;
+}
+
+export interface DispatchResponse {
+  success: boolean;
+  dispatch_id: string;
+  suggestion_request_id: number;
+  status: string;
+}
+
+export async function dispatch(data: DispatchRequest) {
+  return xanoFetch<DispatchResponse>("/dispatch", {
+    method: "POST",
+    body: data,
+  });
+}
