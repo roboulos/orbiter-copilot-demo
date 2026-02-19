@@ -101,7 +101,7 @@ function OverviewSection({ onImageClick }: { onImageClick: (url: string) => void
 
       {/* Whiteboard previews — all 5 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "40px" }}>
-        <WhiteboardCard url={WB_FEB18_RECAP}   title="Feb 18 — Today's Breakthroughs" caption="Meeting recap + 7 commits shipped today" onClick={() => onImageClick(WB_FEB18_RECAP)} />
+        <WhiteboardCard url={WB_FEB18_RECAP}   title="Feb 18 — Today's Breakthroughs" caption="Meeting recap · 15 commits · 5 cards · 8 tabs shipped" onClick={() => onImageClick(WB_FEB18_RECAP)} />
         <WhiteboardCard url={WB_CRAYON_ARCH}   title="How CrayonAI SDK Works"        caption="CrayonChat → SSE → Cards → Components" onClick={() => onImageClick(WB_CRAYON_ARCH)} />
         <WhiteboardCard url={WB_ORBITER_ARCH}  title="Orbiter Product Architecture"   caption="FalkorDB · Xano · 3 Modes · Horizon"    onClick={() => onImageClick(WB_ORBITER_ARCH)} />
         <WhiteboardCard url={WB_CONVERSATIONS} title="Key Conversations + Insights"   caption="What Robert and Mark aligned on"         onClick={() => onImageClick(WB_CONVERSATIONS)} />
@@ -160,7 +160,7 @@ function TodayRecapSection({ onImageClick }: { onImageClick: (url: string) => vo
   ];
 
   const technicalWins = [
-    { title: "Xano /chat Rewritten", desc: "Full Orbiter system prompt, all 4 card schemas, person_context injection, Claude Sonnet 4 via OpenRouter — single endpoint powers all intelligence", color: "#6366f1" },
+    { title: "Xano /chat Rewritten", desc: "Full Orbiter system prompt, all 5 card schemas (including Meeting Prep), person_context injection, Claude Sonnet 4 via OpenRouter — single endpoint powers all intelligence", color: "#6366f1" },
     { title: "PersonPicker Rebuilt", desc: "Orbital SVG spinner on load, live green dot when focused, gradient chip, 'In focus' badge, crossfade transitions, search with glow ring", color: "#8b5cf6" },
     { title: "World-Class Animation System", desc: "12 keyframe animations in globals.css: orbital SVG rings (12s/18s/26s), animated arc connector between people, pulsing glow states, bond strength bar, scan rings", color: "#06b6d4" },
     { title: "Sidebar Removed", desc: "Standalone mode + .crayon-shell-sidebar-container hidden → clean full-width layout. Copilot chat fills the entire panel with no visual noise.", color: "#10b981" },
@@ -276,24 +276,29 @@ function ArchSection({ onImageClick }: { onImageClick: (url: string) => void }) 
           "Canvas 2D — force-directed network graph",
         ]} />
         <StackCard title="API Layer" color="#8b5cf6" items={[
-          "POST /api/chat — single route",
-          "Anthropic Claude sonnet",
-          "Manual SSE via TextEncoder",
-          "event: text → word-by-word streaming",
-          "event: tpl → card component render",
-          "JSON fence stripping (LLM quirk fix)",
+          "POST /chat — Xano endpoint 8064 (Robert API group)",
+          "Claude Sonnet 4 via OpenRouter",
+          "person_context → Claude system message",
+          "masterPersonId injected into every card templateProps",
+          "Manual SSE via TextEncoder (frontend)",
+          "JSON fence stripping + lenient parser (LLM quirk fix)",
         ]} />
-        <StackCard title="4 Card Types" color="#06b6d4" items={[
-          "OutcomeCard — goal tracking, save toggle",
-          "LeverageLoopCard — draft editor, send state",
-          "SerendipityCard — intro draft, shared context steps",
+        <StackCard title="5 Card Types" color="#06b6d4" items={[
+          "OutcomeCard — goal tracking, save to Orbiter",
+          "LeverageLoopCard — draft editor, send + dispatch",
+          "SerendipityCard — intro draft, Make the Intro",
           "ContactCard — bond score, action checklist",
+          "MeetingPrepCard — talking points, listen-for, landmines",
         ]} />
-        <StackCard title="4 Tab Views" color="#10b981" items={[
-          "Copilot — CrayonChat (persistent, display:none strategy)",
-          "Network — contact grid + animated graph",
-          "Outcomes — saved goals board",
-          "Horizon — 4-stage pipeline tracker",
+        <StackCard title="8 Tab Views" color="#10b981" items={[
+          "Copilot — CrayonChat + PersonPicker + orbital bg",
+          "Network — live graph + contact cards + profile panels",
+          "🔍 Search — NL search, My Network / Universe toggle",
+          "Outcomes — real data, stat cards, dispatch/archive",
+          "Horizon — 4-stage pipeline, Add Target",
+          "📁 Collections — themed groups, Ask Copilot",
+          "📊 Insights — recharts analytics dashboard",
+          "Docs — this playbook",
         ]} />
       </div>
 
@@ -313,7 +318,8 @@ data: {"name":"outcome_card","templateProps":{...}}`}</CodeBlock>
   contains job change / signal / leverage → leverage_loop_card  
   contains "introduce / who should meet / serendipity" → serendipity_card
   contains "contact / profile / pull up / who is" → contact_card
-  
+  contains "prep for / meeting with / before I meet" → meeting_prep_card
+
 RULE: Never ask a clarifying question when card type is clearly implied.
 Pick a mode. Generate the card. Always.`}</CodeBlock>
       </div>
@@ -349,7 +355,7 @@ function TimelineSection({ onImageClick }: { onImageClick: (url: string) => void
     {
       date: "Feb 17, 2026",
       title: "Demo Built — All 4 Cards + All 4 Tabs",
-      body: "Full Orbiter Copilot demo built from scratch in one session. CrayonChat wired to Claude via manual SSE streaming. All 4 card types fully interactive. Network tab with animated force-directed graph. DiceBear avatars. Horizon pipeline. Chat input bugs diagnosed and fixed via DOM inspection.",
+      body: "Full Orbiter Copilot demo built from scratch in one session. CrayonChat wired to Claude via manual SSE streaming. All 5 card types fully interactive. Network tab with animated force-directed graph. DiceBear avatars. Horizon pipeline. Search, Collections, Insights tabs. Chat input bugs diagnosed and fixed via DOM inspection.",
       tag: "Shipped",
       color: "#10b981",
     },
