@@ -24,11 +24,10 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
     
     console.log('[ButtonGroup] Button clicked:', value);
     
-    // Find the textarea and form
+    // Find the textarea
     const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-    const form = textarea?.closest('form');
     
-    if (textarea && form) {
+    if (textarea) {
       // Set value using native setter to bypass React's synthetic event system
       const nativeSetter = Object.getOwnPropertyDescriptor(
         window.HTMLTextAreaElement.prototype,
@@ -42,32 +41,30 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
       }
       
       // Trigger React onChange with real event
-      const event = new Event('input', { bubbles: true });
-      textarea.dispatchEvent(event);
+      const inputEvent = new Event('input', { bubbles: true });
+      textarea.dispatchEvent(inputEvent);
       
       // Focus the textarea
       textarea.focus();
       
-      // Wait a bit for React to process, then submit the form
+      // Wait a bit for React to process, then press Enter
       setTimeout(() => {
-        console.log('[ButtonGroup] Submitting form');
+        console.log('[ButtonGroup] Pressing Enter to send');
         
-        // Try multiple submit strategies
-        // Strategy 1: Form submit event
-        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-        form.dispatchEvent(submitEvent);
+        // Press Enter (this is what actually sends in Crayon)
+        const enterEvent = new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          which: 13,
+          keyCode: 13,
+          bubbles: true,
+        });
+        textarea.dispatchEvent(enterEvent);
         
-        // Strategy 2: If that didn't work, find and click submit button
-        setTimeout(() => {
-          const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
-          if (submitButton) {
-            submitButton.click();
-          }
-          setSending(false);
-        }, 100);
-      }, 200);
+        setSending(false);
+      }, 150);
     } else {
-      console.error('[ButtonGroup] Could not find textarea or form');
+      console.error('[ButtonGroup] Could not find textarea');
       setSending(false);
     }
     
