@@ -486,7 +486,7 @@ export function OutcomesView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (ta
                           </>
                         )}
                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                          {(o.status === "draft" || o.status === "processing") && (
+                          {(o.status === "draft" || o.status === "processing") && !(o.copilot_mode === "loop" && o.request_context && isGenericLoopContext(o.request_context)) && (
                             <button
                               onClick={(e) => handleDispatch(o.id, o.copilot_mode, e)}
                               disabled={actionLoading === o.id}
@@ -498,6 +498,18 @@ export function OutcomesView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (ta
                               }}
                             >
                               {actionLoading === o.id ? "Dispatching…" : "⚡ Dispatch"}
+                            </button>
+                          )}
+                          {(o.status === "draft" || o.status === "processing") && o.copilot_mode === "loop" && o.request_context && isGenericLoopContext(o.request_context) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); if (onSelectPerson && o.master_person && o.master_person_id) { onSelectPerson({ master_person_id: o.master_person_id, full_name: o.master_person.name, in_my_network: true, master_person: { id: o.master_person.id, name: o.master_person.name, avatar: o.master_person.avatar, current_title: o.master_person.current_title, master_company: o.master_person.master_company ?? null } }); } else { onSwitchTab("Copilot"); } }}
+                              style={{
+                                fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
+                                color: "#a5b4fc", cursor: "pointer",
+                              }}
+                            >
+                              Open in Copilot →
                             </button>
                           )}
                           {o.status === "suggestion" && (
