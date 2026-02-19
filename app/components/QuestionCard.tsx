@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useThreadActions } from "@crayonai/react-core";
+import { getContextualImage } from "../lib/images";
 
 interface QuestionCardProps {
   image_url?: string;
@@ -14,6 +15,7 @@ interface QuestionCardProps {
     emoji?: string;
     subtitle?: string;
   }>;
+  autoImage?: boolean;  // Auto-select image based on title/description
 }
 
 export function QuestionCard({
@@ -22,10 +24,14 @@ export function QuestionCard({
   title,
   description,
   buttons,
+  autoImage = true,
 }: QuestionCardProps) {
   const { appendMessages, processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
+
+  // Auto-select image if not provided
+  const displayImage = image_url || (autoImage && !icon ? getContextualImage(title + " " + (description || "")) : undefined);
 
   const handleSelect = async (button: { label: string; value: string }) => {
     if (selectedValue !== null) return; // Already selected
@@ -80,12 +86,12 @@ export function QuestionCard({
       />
 
       {/* Image/Icon Section */}
-      {image_url ? (
+      {displayImage ? (
         <div
           style={{
             width: "100%",
             height: "200px",
-            background: `url(${image_url}) center/cover`,
+            background: `url(${displayImage}) center/cover`,
             position: "relative",
           }}
         >
@@ -121,7 +127,7 @@ export function QuestionCard({
       ) : null}
 
       {/* Content */}
-      <div style={{ padding: image_url ? "24px" : "20px 24px 24px 24px" }}>
+      <div style={{ padding: displayImage ? "24px" : "20px 24px 24px 24px" }}>
         {/* Title */}
         <h3
           style={{

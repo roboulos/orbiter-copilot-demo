@@ -23,6 +23,9 @@ import { SuccessToast } from "./components/SuccessToast";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { QuestionCard } from "./components/QuestionCard";
 import { ScanningCard } from "./components/ScanningCard";
+import { RichWelcomeScreen } from "./components/RichWelcomeScreen";
+import { LoadingIndicator } from "./components/LoadingIndicator";
+import { ErrorCard } from "./components/ErrorCard";
 import { chat, dispatch } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -37,6 +40,8 @@ const templates = [
   { name: "error_message",      Component: ErrorMessage      },
   { name: "question_card",      Component: QuestionCard      },
   { name: "scanning_card",      Component: ScanningCard      },
+  { name: "loading_indicator",  Component: LoadingIndicator  },
+  { name: "error_card",         Component: ErrorCard         },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
