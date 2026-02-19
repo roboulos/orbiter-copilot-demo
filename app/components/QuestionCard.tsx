@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useThreadActions } from "@crayonai/react-core";
 
 interface QuestionCardProps {
   image_url?: string;
@@ -22,21 +23,25 @@ export function QuestionCard({
   description,
   buttons,
 }: QuestionCardProps) {
+  const { appendMessages, processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
 
-  const handleSelect = (value: string) => {
-    setSelectedValue(value);
-    
-    // Emit custom event with selected button
-    const selectedButton = buttons.find(b => b.value === value);
-    if (selectedButton) {
-      window.dispatchEvent(
-        new CustomEvent("orbiter:send-button-message", {
-          detail: { message: selectedButton.label },
-        })
-      );
-    }
+  const handleSelect = async (button: { label: string; value: string }) => {
+    if (selectedValue !== null) return; // Already selected
+
+    setSelectedValue(button.value);
+
+    // Add user's selection to the thread
+    appendMessages({
+      id: crypto.randomUUID(),
+      role: "user",
+      message: button.label,
+      createdAt: new Date(),
+    });
+
+    // Request next AI response
+    await processMessage({ message: button.value });
   };
 
   return (
@@ -153,14 +158,15 @@ export function QuestionCard({
             gap: "10px",
           }}
         >
-          {buttons.map((button, index) => {
+          {buttons.map((button) => {
             const isSelected = selectedValue === button.value;
-            
+            const isDisabled = selectedValue !== null && !isSelected;
+
             return (
               <button
                 key={button.value}
-                onClick={() => handleSelect(button.value)}
-                disabled={selectedValue !== null && !isSelected}
+                onClick={() => handleSelect(button)}
+                disabled={isDisabled}
                 style={{
                   width: "100%",
                   padding: "16px 20px",
@@ -180,7 +186,7 @@ export function QuestionCard({
                   display: "flex",
                   alignItems: "center",
                   gap: "12px",
-                  opacity: selectedValue !== null && !isSelected ? 0.4 : 1,
+                  opacity: isDisabled ? 0.4 : 1,
                   transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: "relative",
                   overflow: "hidden",
