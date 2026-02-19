@@ -42,23 +42,41 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
     
     console.log('[ButtonGroup] Found send button:', sendButton);
     
-    if (input && sendButton) {
-      // Set the value
-      (input as HTMLTextAreaElement | HTMLInputElement).value = value;
+    if (input) {
+      // Set the value using React-friendly approach
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      )?.set;
       
-      // Trigger multiple events to ensure Crayon sees the change
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(input, value);
+      } else {
+        (input as HTMLTextAreaElement).value = value;
+      }
+      
+      // Trigger React's onChange
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
       
-      // Small delay then click send
+      // Focus the input first
+      input.focus();
+      
+      // Wait for React to update, then press Enter
       setTimeout(() => {
-        console.log('[ButtonGroup] Clicking send button');
-        (sendButton as HTMLButtonElement).click();
-      }, 150);
+        console.log('[ButtonGroup] Pressing Enter to send');
+        const enterEvent = new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          which: 13,
+          keyCode: 13,
+          bubbles: true,
+        });
+        input.dispatchEvent(enterEvent);
+      }, 200);
     } else {
-      console.error('[ButtonGroup] Could not find input or send button');
+      console.error('[ButtonGroup] Could not find input');
       console.log('[ButtonGroup] All textareas:', document.querySelectorAll('textarea'));
-      console.log('[ButtonGroup] All buttons:', document.querySelectorAll('button'));
     }
     
     // Also call onSelect if provided
