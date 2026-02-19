@@ -363,9 +363,6 @@ function CopilotModal({
               </div>
             )}
           </div>
-
-          {/* Cancel button (shows during processing) */}
-          <CancelButton />
         </div>
       </div>
     </>
