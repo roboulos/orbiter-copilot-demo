@@ -561,6 +561,7 @@ export default function Home() {
   const [dispatchSummary, setDispatchSummary] = useState("");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [networkSummary, setNetworkSummary] = useState<string>("");
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
@@ -623,6 +624,26 @@ export default function Home() {
       window.removeEventListener("orbiter:ready-to-dispatch", dispatchHandler);
     };
   }, [handleReadyToDispatch]);
+
+  // Fetch network summary when copilot opens
+  useEffect(() => {
+    if (modalOpen && !networkSummary) {
+      import("./lib/xano").then(({ getNetwork }) => {
+        getNetwork({ per_page: 50 })
+          .then((data) => {
+            const summary = `My Network (${data.items.length} connections):\n` +
+              data.items.slice(0, 20).map(p => 
+                `- ${p.full_name}${p.master_person?.current_title ? ` (${p.master_person.current_title})` : ''}${p.master_person?.master_company?.company_name ? ` at ${p.master_person.master_company.company_name}` : ''}`
+              ).join('\n');
+            setNetworkSummary(summary);
+            console.log('[Network] Loaded summary:', data.items.length, 'connections');
+          })
+          .catch((err) => {
+            console.error('[Network] Failed to load:', err);
+          });
+      });
+    }
+  }, [modalOpen, networkSummary]);
 
   const handleConfirmDispatch = useCallback(async () => {
     setDispatching(true);
@@ -692,9 +713,15 @@ export default function Home() {
         { role: "user", content: prompt }
       ];
 
+      // Combine network summary with person context
+      const combinedContext = [
+        networkSummary,
+        personContextRef.current
+      ].filter(Boolean).join('\n\n');
+
       const data = await chat(
         prompt,
-        personContextRef.current || undefined,
+        combinedContext || undefined,
         history.length > 0 ? history : undefined,
         masterPersonIdRef.current
       );
@@ -756,7 +783,7 @@ export default function Home() {
         },
       });
     },
-    []
+    [networkSummary]
   );
 
   const tabs: Array<{ id: Tab; icon: string }> = [
