@@ -65,25 +65,105 @@ export async function xanoFetch<T = unknown>(
 }
 
 // Typed API helpers
-export async function searchPersons(query: string, limit = 10) {
-  return xanoFetch<{
-    itemsReceived: number;
-    itemsTotal: number;
-    items: Array<{
-      id: number;
-      master_person_id: number;
-      full_name: string;
-      status_connected: string;
-      master_person: {
-        id: number;
-        name: string;
-        avatar: string | null;
-        master_company_id: number | null;
-        current_title: string | null;
-        master_company?: { company_name: string } | null;
-      };
-    }>;
-  }>("/person-search", { params: { query, limit: String(limit) } });
+
+// ── Semantic Search ──────────────────────────────────────
+
+export interface SearchPerson {
+  master_person_id: number;
+  full_name: string;
+  in_my_network: boolean;
+  master_person: {
+    id: number;
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    bio: string | null;
+    master_company: { id: number; company_name: string; logo: string | null } | null;
+  } | null;
+}
+
+export async function searchPersons(q: string, mode: "network" | "universe" = "network", limit = 20) {
+  return xanoFetch<{ items: SearchPerson[] }>("/search", {
+    params: { q, mode, limit: String(limit) },
+  });
+}
+
+// ── Connection Path ──────────────────────────────────────
+
+export interface ConnectionHop {
+  name: string;
+  title: string | null;
+  company: string | null;
+  relationship: "connected" | "in_network";
+  master_person_id: number;
+  avatar: string | null;
+}
+
+export interface ConnectionPath {
+  target: { name: string; title: string | null; avatar: string | null; master_person_id: number };
+  hops: ConnectionHop[];
+  hop_count: number;
+  in_network: boolean;
+}
+
+export async function getConnectionPath(target_master_person_id: number) {
+  return xanoFetch<ConnectionPath>("/connection-path", {
+    params: { target_master_person_id: String(target_master_person_id) },
+  });
+}
+
+// ── Collections ──────────────────────────────────────────
+
+export interface Collection {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string;
+  created_at: number;
+  member_count: number;
+}
+
+export interface CollectionMember {
+  collection_node_id: number;
+  master_person_id: number;
+  name: string;
+  avatar: string | null;
+  current_title: string | null;
+  company_name: string | null;
+  added_at: number;
+}
+
+export interface CollectionDetail extends Collection {
+  members: CollectionMember[];
+}
+
+export async function getCollections(opts: { page?: number; per_page?: number } = {}) {
+  const params: Record<string, string> = {};
+  if (opts.page) params.page = String(opts.page);
+  if (opts.per_page) params.per_page = String(opts.per_page);
+  return xanoFetch<{ items: Collection[]; total: number }>("/collections", { params });
+}
+
+export async function createCollection(data: { name: string; description?: string; color?: string }) {
+  return xanoFetch<Collection>("/collection", { method: "POST", body: data });
+}
+
+export async function getCollection(id: number) {
+  return xanoFetch<CollectionDetail>(`/collection/${id}`);
+}
+
+export async function addCollectionMember(collectionId: number, master_person_id: number) {
+  return xanoFetch<{ success: boolean; collection_node_id: number }>(
+    `/collection/${collectionId}/member`,
+    { method: "POST", body: { master_person_id } }
+  );
+}
+
+export async function removeCollectionMember(collectionId: number, master_person_id: number) {
+  return xanoFetch<{ success: boolean }>(
+    `/collection/${collectionId}/member/${master_person_id}`,
+    { method: "DELETE", body: {} }
+  );
 }
 
 export async function getPersonContext(masterPersonId: number): Promise<string> {
@@ -272,6 +352,13 @@ export async function addHorizonTarget(node_uuid: string) {
   return xanoFetch<HorizonTarget>("/horizon-target", {
     method: "POST",
     body: { node_uuid },
+  });
+}
+
+export async function addHorizonTargetByPersonId(master_person_id: number) {
+  return xanoFetch<HorizonTarget>("/horizon-target-by-person-id", {
+    method: "POST",
+    body: { master_person_id },
   });
 }
 

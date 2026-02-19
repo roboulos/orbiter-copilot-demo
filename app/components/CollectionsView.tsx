@@ -1,26 +1,18 @@
 "use client";
 
-// TODO: Wire to real Xano endpoints: GET /collections, POST /collection, GET /collection/{id}, POST /collection/{id}/member, DELETE /collection/{id}/member/{my_person_id}
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Avatar } from "./Avatar";
-import { xanoFetch } from "../lib/xano";
-
-interface CollectionMember {
-  id: number;
-  name: string;
-  title: string;
-  company: string;
-  master_person_id: number;
-}
-
-interface Collection {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-  members: CollectionMember[];
-}
+import {
+  xanoFetch,
+  getCollections,
+  createCollection,
+  getCollection,
+  addCollectionMember,
+  removeCollectionMember,
+  type Collection,
+  type CollectionDetail,
+  type CollectionMember,
+} from "../lib/xano";
 
 interface SearchResult {
   master_person_id: number;
@@ -33,30 +25,6 @@ interface SearchResult {
   };
 }
 
-const MOCK_COLLECTIONS: Collection[] = [
-  {
-    id: 1,
-    name: "Seed Round Targets",
-    description: "VCs and angels for our $4M raise",
-    color: "#6366f1",
-    members: [
-      { id: 1, name: "Adam Rothenberg", title: "Partner", company: "BoxGroup", master_person_id: 100 },
-      { id: 2, name: "Amish Jani", title: "Founder & Partner", company: "FirstMark", master_person_id: 101 },
-      { id: 3, name: "Anamitra Banerji", title: "Managing Partner", company: "Afore Capital", master_person_id: 102 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Enterprise Pilots",
-    description: "Potential enterprise customers for Q1",
-    color: "#10b981",
-    members: [
-      { id: 4, name: "Aaron Skonnard", title: "Co-Founder and CEO", company: "Pluralsight", master_person_id: 103 },
-      { id: 5, name: "Aber Whitcomb", title: "President", company: "Salt AI", master_person_id: 104 },
-    ],
-  },
-];
-
 const PRESET_COLORS = [
   { label: "Indigo",  value: "#6366f1" },
   { label: "Purple",  value: "#a855f7" },
@@ -66,10 +34,13 @@ const PRESET_COLORS = [
 ];
 
 export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
-  const [collections, setCollections] = useState<Collection[]>(MOCK_COLLECTIONS);
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(true);
+  const [selectedCollection, setSelectedCollection] = useState<CollectionDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
 
   // New collection form state
   const [newName, setNewName] = useState("");
@@ -77,61 +48,67 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
   const [newColor, setNewColor] = useState("#6366f1");
 
   // Panel state
-  const [editingName, setEditingName] = useState(false);
-  const [editingDesc, setEditingDesc] = useState(false);
-  const [panelName, setPanelName] = useState("");
-  const [panelDesc, setPanelDesc] = useState("");
   const [addMemberQuery, setAddMemberQuery] = useState("");
   const [addMemberResults, setAddMemberResults] = useState<SearchResult[]>([]);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [addingMember, setAddingMember] = useState<number | null>(null);
+  const [removingMember, setRemovingMember] = useState<number | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const openCollection = useCallback((col: Collection) => {
-    setSelectedCollection(col);
-    setPanelName(col.name);
-    setPanelDesc(col.description);
-    setEditingName(false);
-    setEditingDesc(false);
+  const loadCollections = useCallback(async () => {
+    setCollectionsLoading(true);
+    try {
+      const data = await getCollections();
+      setCollections(data.items || []);
+    } catch (err) {
+      console.error("Failed to load collections:", err);
+      setCollections([]);
+    } finally {
+      setCollectionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCollections();
+  }, [loadCollections]);
+
+  const openCollection = useCallback(async (col: Collection) => {
+    setDetailLoading(true);
+    setShowAddMember(false);
     setAddMemberQuery("");
     setAddMemberResults([]);
-    setShowAddMember(false);
+    try {
+      const detail = await getCollection(col.id);
+      setSelectedCollection(detail);
+    } catch (err) {
+      console.error("Failed to load collection detail:", err);
+      // Fallback: show with empty members
+      setSelectedCollection({ ...col, members: [] });
+    } finally {
+      setDetailLoading(false);
+    }
   }, []);
 
   const closePanel = useCallback(() => {
     setSelectedCollection(null);
-    setEditingName(false);
-    setEditingDesc(false);
     setShowAddMember(false);
     setAddMemberResults([]);
     setAddMemberQuery("");
   }, []);
 
-  // Sync panel edits back to collection list
-  const savePanelName = useCallback(() => {
-    if (!selectedCollection || !panelName.trim()) return;
-    setCollections((prev) =>
-      prev.map((c) => c.id === selectedCollection.id ? { ...c, name: panelName.trim() } : c)
-    );
-    setSelectedCollection((prev) => prev ? { ...prev, name: panelName.trim() } : prev);
-    setEditingName(false);
-  }, [selectedCollection, panelName]);
-
-  const savePanelDesc = useCallback(() => {
-    if (!selectedCollection) return;
-    setCollections((prev) =>
-      prev.map((c) => c.id === selectedCollection.id ? { ...c, description: panelDesc } : c)
-    );
-    setSelectedCollection((prev) => prev ? { ...prev, description: panelDesc } : prev);
-    setEditingDesc(false);
-  }, [selectedCollection, panelDesc]);
-
-  const handleRemoveMember = useCallback((memberId: number) => {
-    if (!selectedCollection) return;
-    const updated = { ...selectedCollection, members: selectedCollection.members.filter((m) => m.id !== memberId) };
-    setSelectedCollection(updated);
-    setCollections((prev) => prev.map((c) => c.id === selectedCollection.id ? updated : c));
-  }, [selectedCollection]);
+  const refreshDetail = useCallback(async (id: number) => {
+    try {
+      const detail = await getCollection(id);
+      setSelectedCollection(detail);
+      // Also update the member_count in the list
+      setCollections((prev) =>
+        prev.map((c) => c.id === id ? { ...c, member_count: detail.members.length } : c)
+      );
+    } catch (err) {
+      console.error("Failed to refresh collection:", err);
+    }
+  }, []);
 
   // Add member search
   useEffect(() => {
@@ -153,38 +130,51 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [addMemberQuery]);
 
-  const handleAddMember = useCallback((result: SearchResult) => {
+  const handleAddMember = useCallback(async (result: SearchResult) => {
     if (!selectedCollection) return;
     const alreadyIn = selectedCollection.members.some((m) => m.master_person_id === result.master_person_id);
     if (alreadyIn) return;
-    const newMember: CollectionMember = {
-      id: Date.now(),
-      name: result.full_name,
-      title: result.master_person?.current_title || "",
-      company: result.master_person?.master_company?.company_name || "",
-      master_person_id: result.master_person_id,
-    };
-    const updated = { ...selectedCollection, members: [...selectedCollection.members, newMember] };
-    setSelectedCollection(updated);
-    setCollections((prev) => prev.map((c) => c.id === selectedCollection.id ? updated : c));
-    setAddMemberQuery("");
-    setAddMemberResults([]);
-    setShowAddMember(false);
-  }, [selectedCollection]);
+    setAddingMember(result.master_person_id);
+    try {
+      await addCollectionMember(selectedCollection.id, result.master_person_id);
+      setAddMemberQuery("");
+      setAddMemberResults([]);
+      setShowAddMember(false);
+      await refreshDetail(selectedCollection.id);
+    } catch (err) {
+      console.error("Failed to add member:", err);
+    } finally {
+      setAddingMember(null);
+    }
+  }, [selectedCollection, refreshDetail]);
 
-  const handleCreateCollection = useCallback(() => {
+  const handleRemoveMember = useCallback(async (member: CollectionMember) => {
+    if (!selectedCollection) return;
+    setRemovingMember(member.master_person_id);
+    try {
+      await removeCollectionMember(selectedCollection.id, member.master_person_id);
+      await refreshDetail(selectedCollection.id);
+    } catch (err) {
+      console.error("Failed to remove member:", err);
+    } finally {
+      setRemovingMember(null);
+    }
+  }, [selectedCollection, refreshDetail]);
+
+  const handleCreateCollection = useCallback(async () => {
     if (!newName.trim()) return;
-    const newCol: Collection = {
-      id: Date.now(),
-      name: newName.trim(),
-      description: newDesc.trim(),
-      color: newColor,
-      members: [],
-    };
-    setCollections((prev) => [newCol, ...prev]);
-    setNewName(""); setNewDesc(""); setNewColor("#6366f1");
-    setShowNewForm(false);
-  }, [newName, newDesc, newColor]);
+    setCreating(true);
+    try {
+      await createCollection({ name: newName.trim(), description: newDesc.trim() || undefined, color: newColor });
+      setNewName(""); setNewDesc(""); setNewColor("#6366f1");
+      setShowNewForm(false);
+      await loadCollections();
+    } catch (err) {
+      console.error("Failed to create collection:", err);
+    } finally {
+      setCreating(false);
+    }
+  }, [newName, newDesc, newColor, loadCollections]);
 
   return (
     <div style={{ height: "100%", overflowY: "auto", padding: "28px 32px", background: "#0a0a0f" }}>
@@ -195,7 +185,7 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
             Collections
           </h2>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
-            {collections.length} collection{collections.length !== 1 ? "s" : ""}
+            {collectionsLoading ? "Loading…" : `${collections.length} collection${collections.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <button
@@ -271,16 +261,17 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
             <div style={{ display: "flex", gap: "8px" }}>
               <button
                 onClick={handleCreateCollection}
-                disabled={!newName.trim()}
+                disabled={!newName.trim() || creating}
                 style={{
                   flex: 1, padding: "9px", borderRadius: "8px",
-                  background: newName.trim() ? "linear-gradient(135deg, #4f46e5, #7c3aed)" : "rgba(255,255,255,0.05)",
-                  border: "none", color: newName.trim() ? "white" : "rgba(255,255,255,0.25)",
-                  fontSize: "12px", fontWeight: 600, cursor: newName.trim() ? "pointer" : "default",
+                  background: newName.trim() && !creating ? "linear-gradient(135deg, #4f46e5, #7c3aed)" : "rgba(255,255,255,0.05)",
+                  border: "none", color: newName.trim() && !creating ? "white" : "rgba(255,255,255,0.25)",
+                  fontSize: "12px", fontWeight: 600, cursor: newName.trim() && !creating ? "pointer" : "default",
                   fontFamily: "Inter, sans-serif",
+                  opacity: creating ? 0.7 : 1,
                 }}
               >
-                Create
+                {creating ? "Creating…" : "Create"}
               </button>
               <button
                 onClick={() => setShowNewForm(false)}
@@ -298,125 +289,105 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
         </div>
       )}
 
-      {/* Collections Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "14px" }}>
-        {collections.map((col) => {
-          const hovered = hoveredId === col.id;
-          const displayMembers = col.members.slice(0, 4);
-          return (
-            <div
-              key={col.id}
-              onMouseEnter={() => setHoveredId(col.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{
-                background: hovered ? `${col.color}08` : "rgba(255,255,255,0.025)",
-                border: `1px solid ${hovered ? `${col.color}45` : "rgba(255,255,255,0.07)"}`,
-                borderLeft: `4px solid ${col.color}`,
-                borderRadius: "14px",
-                padding: "20px",
-                cursor: "pointer",
-                transition: "all 0.18s ease",
-                transform: hovered ? "translateY(-2px)" : "none",
-                boxShadow: hovered ? `0 8px 24px ${col.color}18` : "none",
-              }}
-            >
-              {/* Name + description */}
-              <div style={{ marginBottom: "14px" }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "#e8e8f0", marginBottom: "4px" }}>
-                  {col.name}
-                </div>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
-                  {col.description}
-                </div>
-              </div>
-
-              {/* Member count + avatars */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {displayMembers.map((m, i) => (
-                    <div
-                      key={m.id}
-                      title={m.name}
-                      style={{
-                        marginLeft: i > 0 ? "-8px" : "0",
-                        borderRadius: "50%",
-                        border: "2px solid #0a0a0f",
-                        overflow: "hidden",
-                        flexShrink: 0,
-                        width: 28, height: 28,
-                      }}
-                    >
-                      <Avatar name={m.name} size={28} borderRadius="50%" />
-                    </div>
-                  ))}
-                  {col.members.length > 4 && (
-                    <div
-                      style={{
-                        marginLeft: "-8px",
-                        width: 28, height: 28,
-                        borderRadius: "50%",
-                        background: "rgba(255,255,255,0.08)",
-                        border: "2px solid #0a0a0f",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "9px", color: "rgba(255,255,255,0.5)", fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      +{col.members.length - 4}
-                    </div>
-                  )}
-                </div>
-                <span
-                  style={{
-                    fontSize: "11px", fontWeight: 600,
-                    color: col.color,
-                    background: `${col.color}14`,
-                    border: `1px solid ${col.color}30`,
-                    borderRadius: "5px",
-                    padding: "2px 8px",
-                  }}
-                >
-                  {col.members.length} member{col.members.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-
-              {/* Open button */}
-              <button
-                onClick={() => openCollection(col)}
+      {/* Loading skeleton */}
+      {collectionsLoading ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "14px" }}>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "14px", padding: "20px" }}>
+              <div className="orbiter-shimmer" style={{ height: 16, width: "60%", borderRadius: 6, marginBottom: 8 }} />
+              <div className="orbiter-shimmer" style={{ height: 12, width: "80%", borderRadius: 5, marginBottom: 20 }} />
+              <div className="orbiter-shimmer" style={{ height: 32, borderRadius: 8 }} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Collections Grid */
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "14px" }}>
+          {collections.map((col) => {
+            const hovered = hoveredId === col.id;
+            return (
+              <div
+                key={col.id}
+                onMouseEnter={() => setHoveredId(col.id)}
+                onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  width: "100%", padding: "8px",
-                  borderRadius: "8px",
-                  background: `${col.color}14`,
-                  border: `1px solid ${col.color}30`,
-                  color: col.color,
-                  fontSize: "12px", fontWeight: 600, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = `${col.color}24`;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = `${col.color}14`;
+                  background: hovered ? `${col.color}08` : "rgba(255,255,255,0.025)",
+                  border: `1px solid ${hovered ? `${col.color}45` : "rgba(255,255,255,0.07)"}`,
+                  borderLeft: `4px solid ${col.color}`,
+                  borderRadius: "14px",
+                  padding: "20px",
+                  cursor: "pointer",
+                  transition: "all 0.18s ease",
+                  transform: hovered ? "translateY(-2px)" : "none",
+                  boxShadow: hovered ? `0 8px 24px ${col.color}18` : "none",
                 }}
               >
-                Open →
-              </button>
-            </div>
-          );
-        })}
+                {/* Name + description */}
+                <div style={{ marginBottom: "14px" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#e8e8f0", marginBottom: "4px" }}>
+                    {col.name}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
+                    {col.description || ""}
+                  </div>
+                </div>
 
-        {collections.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 0", color: "rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: "36px", marginBottom: "12px" }}>📁</div>
-            <p style={{ fontSize: "15px", fontWeight: 600, color: "#e8e8f0", margin: "0 0 6px" }}>No collections yet</p>
-            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: 0 }}>Create your first collection to group contacts</p>
-          </div>
-        )}
-      </div>
+                {/* Member count */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginBottom: "16px" }}>
+                  <span
+                    style={{
+                      fontSize: "11px", fontWeight: 600,
+                      color: col.color,
+                      background: `${col.color}14`,
+                      border: `1px solid ${col.color}30`,
+                      borderRadius: "5px",
+                      padding: "2px 8px",
+                    }}
+                  >
+                    {col.member_count} member{col.member_count !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                {/* Open button */}
+                <button
+                  onClick={() => openCollection(col)}
+                  style={{
+                    width: "100%", padding: "8px",
+                    borderRadius: "8px",
+                    background: `${col.color}14`,
+                    border: `1px solid ${col.color}30`,
+                    color: col.color,
+                    fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                    fontFamily: "Inter, sans-serif",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = `${col.color}24`;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = `${col.color}14`;
+                  }}
+                >
+                  Open →
+                </button>
+              </div>
+            );
+          })}
+
+          {collections.length === 0 && (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 0" }}>
+              <div style={{ fontSize: "36px", marginBottom: "12px" }}>📁</div>
+              <p style={{ fontSize: "15px", fontWeight: 600, color: "#e8e8f0", margin: "0 0 8px" }}>No collections yet</p>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: 0, maxWidth: "360px", display: "inline-block", lineHeight: 1.6 }}>
+                Group your contacts into collections. Add VCs, potential clients, or anyone you&apos;re actively working with.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Collection panel slide-over */}
-      {selectedCollection && (
+      {(selectedCollection || detailLoading) && (
         <>
           <div
             onClick={closePanel}
@@ -426,7 +397,7 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
             style={{
               position: "fixed", top: 0, right: 0, bottom: 0, width: "440px",
               background: "linear-gradient(180deg, #0f0f1a 0%, #0c0c18 100%)",
-              borderLeft: `1px solid ${selectedCollection.color}30`,
+              borderLeft: `1px solid ${selectedCollection ? selectedCollection.color + "30" : "rgba(99,102,241,0.2)"}`,
               zIndex: 2001, overflowY: "auto", padding: "28px",
               boxShadow: "-16px 0 64px rgba(0,0,0,0.7)",
               animation: "slideInPanel 0.3s cubic-bezier(0.22,1,0.36,1) both",
@@ -449,211 +420,187 @@ export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) =>
               }}
             >✕</button>
 
-            {/* Color accent stripe */}
-            <div
-              style={{
-                position: "absolute", top: 0, left: 0, right: 0, height: "3px",
-                background: `linear-gradient(90deg, ${selectedCollection.color}, transparent)`,
-              }}
-            />
-
-            {/* Collection name (editable) */}
-            <div style={{ marginBottom: "8px", paddingTop: "8px" }}>
-              {editingName ? (
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <input
-                    autoFocus
-                    value={panelName}
-                    onChange={(e) => setPanelName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") savePanelName(); if (e.key === "Escape") setEditingName(false); }}
-                    style={{
-                      flex: 1, fontSize: "18px", fontWeight: 700, background: "rgba(255,255,255,0.06)",
-                      border: `1px solid ${selectedCollection.color}50`,
-                      borderRadius: "8px", padding: "6px 10px", color: "#e8e8f0",
-                      fontFamily: "Inter, sans-serif", outline: "none",
-                    }}
-                  />
-                  <button onClick={savePanelName} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", background: `${selectedCollection.color}20`, border: `1px solid ${selectedCollection.color}40`, color: selectedCollection.color, cursor: "pointer" }}>Save</button>
-                </div>
-              ) : (
+            {detailLoading ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "8px" }}>
+                <div className="orbiter-shimmer" style={{ height: 22, width: "55%", borderRadius: 7 }} />
+                <div className="orbiter-shimmer" style={{ height: 14, width: "70%", borderRadius: 5 }} />
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "10px 12px", display: "flex", gap: 12 }}>
+                    <div className="orbiter-shimmer" style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div className="orbiter-shimmer" style={{ height: 13, width: "50%", borderRadius: 5, marginBottom: 6 }} />
+                      <div className="orbiter-shimmer" style={{ height: 10, width: "70%", borderRadius: 4 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : selectedCollection ? (
+              <>
+                {/* Color accent stripe */}
                 <div
-                  onClick={() => setEditingName(true)}
-                  title="Click to edit"
-                  style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "text" }}
-                >
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+                    background: `linear-gradient(90deg, ${selectedCollection.color}, transparent)`,
+                  }}
+                />
+
+                {/* Collection name */}
+                <div style={{ marginBottom: "8px", paddingTop: "8px" }}>
                   <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#e8e8f0", margin: 0 }}>
                     {selectedCollection.name}
                   </h3>
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>✏</span>
                 </div>
-              )}
-            </div>
 
-            {/* Description (editable) */}
-            <div style={{ marginBottom: "20px" }}>
-              {editingDesc ? (
-                <div style={{ display: "flex", gap: "6px" }}>
-                  <input
-                    autoFocus
-                    value={panelDesc}
-                    onChange={(e) => setPanelDesc(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") savePanelDesc(); if (e.key === "Escape") setEditingDesc(false); }}
-                    style={{
-                      flex: 1, fontSize: "12px", background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px",
-                      padding: "5px 10px", color: "#e8e8f0", fontFamily: "Inter, sans-serif", outline: "none",
-                    }}
-                  />
-                  <button onClick={savePanelDesc} style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "6px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>OK</button>
-                </div>
-              ) : (
-                <div
-                  onClick={() => setEditingDesc(true)}
-                  title="Click to edit"
-                  style={{ cursor: "text", display: "flex", alignItems: "center", gap: "4px" }}
-                >
+                {/* Description */}
+                <div style={{ marginBottom: "20px" }}>
                   <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
-                    {selectedCollection.description || "Add a description…"}
+                    {selectedCollection.description || "No description"}
                   </span>
-                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.15)" }}>✏</span>
                 </div>
-              )}
-            </div>
 
-            {/* Members header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: `${selectedCollection.color}80` }}>
-                Members ({selectedCollection.members.length})
-              </div>
-              <button
-                onClick={() => setShowAddMember((v) => !v)}
-                style={{
-                  fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px",
-                  background: `${selectedCollection.color}14`,
-                  border: `1px solid ${selectedCollection.color}30`,
-                  color: selectedCollection.color, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                + Add Member
-              </button>
-            </div>
-
-            {/* Add member search */}
-            {showAddMember && (
-              <div style={{ marginBottom: "14px" }}>
-                <input
-                  type="text"
-                  autoFocus
-                  value={addMemberQuery}
-                  onChange={(e) => setAddMemberQuery(e.target.value)}
-                  placeholder="Search to add…"
-                  style={{
-                    width: "100%", boxSizing: "border-box",
-                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: "8px", padding: "8px 12px", color: "#e8e8f0",
-                    fontSize: "12px", fontFamily: "Inter, sans-serif", outline: "none",
-                    marginBottom: "8px",
-                  }}
-                />
-                {addMemberLoading && (
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>Searching…</div>
-                )}
-                {addMemberResults.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    {addMemberResults.map((r) => (
-                      <button
-                        key={r.master_person_id}
-                        onClick={() => handleAddMember(r)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: "10px",
-                          width: "100%", textAlign: "left",
-                          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
-                          borderRadius: "8px", padding: "8px 10px", cursor: "pointer",
-                          fontFamily: "Inter, sans-serif",
-                          transition: "background 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.08)"; }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
-                      >
-                        <Avatar name={r.full_name} size={28} borderRadius="7px" />
-                        <div>
-                          <div style={{ fontSize: "12px", fontWeight: 600, color: "#e8e8f0" }}>{r.full_name}</div>
-                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)" }}>
-                            {r.master_person?.current_title || ""}
-                            {r.master_person?.master_company?.company_name ? ` · ${r.master_person.master_company.company_name}` : ""}
-                          </div>
-                        </div>
-                        <span style={{ marginLeft: "auto", fontSize: "10px", color: selectedCollection.color, fontWeight: 600 }}>Add +</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Member list */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {selectedCollection.members.map((member) => (
-                <div
-                  key={member.id}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-                    borderRadius: "10px", padding: "10px 12px",
-                  }}
-                >
-                  <Avatar name={member.name} size={36} borderRadius="9px" />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#e8e8f0", marginBottom: "1px" }}>
-                      {member.name}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {member.title}{member.company ? ` · ${member.company}` : ""}
-                    </div>
+                {/* Members header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: `${selectedCollection.color}80` }}>
+                    Members ({selectedCollection.members.length})
                   </div>
                   <button
-                    onClick={() => handleRemoveMember(member.id)}
+                    onClick={() => setShowAddMember((v) => !v)}
                     style={{
-                      fontSize: "10px", padding: "3px 8px", borderRadius: "5px",
-                      background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                      color: "rgba(239,68,68,0.7)", cursor: "pointer", fontFamily: "Inter, sans-serif",
-                      flexShrink: 0,
+                      fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px",
+                      background: `${selectedCollection.color}14`,
+                      border: `1px solid ${selectedCollection.color}30`,
+                      color: selectedCollection.color, cursor: "pointer",
+                      fontFamily: "Inter, sans-serif",
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; }}
                   >
-                    Remove
+                    + Add Member
                   </button>
                 </div>
-              ))}
-              {selectedCollection.members.length === 0 && (
-                <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: "13px" }}>
-                  No members yet. Add some above.
-                </div>
-              )}
-            </div>
 
-            {/* Footer */}
-            <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <button
-                onClick={() => { closePanel(); onSwitchTab("Copilot"); }}
-                style={{
-                  width: "100%", padding: "11px",
-                  borderRadius: "10px",
-                  background: "rgba(99,102,241,0.1)",
-                  border: "1px solid rgba(99,102,241,0.25)",
-                  color: "#a5b4fc",
-                  fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.18)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.1)"; }}
-              >
-                💬 Ask Copilot about this collection
-              </button>
-            </div>
+                {/* Add member search */}
+                {showAddMember && (
+                  <div style={{ marginBottom: "14px" }}>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={addMemberQuery}
+                      onChange={(e) => setAddMemberQuery(e.target.value)}
+                      placeholder="Search to add…"
+                      style={{
+                        width: "100%", boxSizing: "border-box",
+                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+                        borderRadius: "8px", padding: "8px 12px", color: "#e8e8f0",
+                        fontSize: "12px", fontFamily: "Inter, sans-serif", outline: "none",
+                        marginBottom: "8px",
+                      }}
+                    />
+                    {addMemberLoading && (
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", padding: "4px 0" }}>Searching…</div>
+                    )}
+                    {addMemberResults.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {addMemberResults.map((r) => (
+                          <button
+                            key={r.master_person_id}
+                            onClick={() => handleAddMember(r)}
+                            disabled={addingMember === r.master_person_id}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              width: "100%", textAlign: "left",
+                              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+                              borderRadius: "8px", padding: "8px 10px", cursor: addingMember === r.master_person_id ? "wait" : "pointer",
+                              fontFamily: "Inter, sans-serif",
+                              transition: "background 0.15s ease",
+                              opacity: addingMember === r.master_person_id ? 0.6 : 1,
+                            }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.08)"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
+                          >
+                            <Avatar name={r.full_name} size={28} borderRadius="7px" />
+                            <div>
+                              <div style={{ fontSize: "12px", fontWeight: 600, color: "#e8e8f0" }}>{r.full_name}</div>
+                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)" }}>
+                                {r.master_person?.current_title || ""}
+                                {r.master_person?.master_company?.company_name ? ` · ${r.master_person.master_company.company_name}` : ""}
+                              </div>
+                            </div>
+                            <span style={{ marginLeft: "auto", fontSize: "10px", color: selectedCollection.color, fontWeight: 600 }}>
+                              {addingMember === r.master_person_id ? "…" : "Add +"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Member list */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {selectedCollection.members.map((member) => (
+                    <div
+                      key={member.collection_node_id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "12px",
+                        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: "10px", padding: "10px 12px",
+                      }}
+                    >
+                      <Avatar name={member.name} size={36} borderRadius="9px" />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#e8e8f0", marginBottom: "1px" }}>
+                          {member.name}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {member.current_title || ""}{member.company_name ? ` · ${member.company_name}` : ""}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveMember(member)}
+                        disabled={removingMember === member.master_person_id}
+                        style={{
+                          fontSize: "10px", padding: "3px 8px", borderRadius: "5px",
+                          background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+                          color: "rgba(239,68,68,0.7)", cursor: removingMember === member.master_person_id ? "wait" : "pointer",
+                          fontFamily: "Inter, sans-serif",
+                          flexShrink: 0,
+                          opacity: removingMember === member.master_person_id ? 0.5 : 1,
+                        }}
+                        onMouseEnter={(e) => { if (removingMember !== member.master_person_id) (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; }}
+                      >
+                        {removingMember === member.master_person_id ? "…" : "Remove"}
+                      </button>
+                    </div>
+                  ))}
+                  {selectedCollection.members.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: "13px" }}>
+                      No members yet. Add some above.
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <button
+                    onClick={() => { closePanel(); onSwitchTab("Copilot"); }}
+                    style={{
+                      width: "100%", padding: "11px",
+                      borderRadius: "10px",
+                      background: "rgba(99,102,241,0.1)",
+                      border: "1px solid rgba(99,102,241,0.25)",
+                      color: "#a5b4fc",
+                      fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                      fontFamily: "Inter, sans-serif",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.18)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.1)"; }}
+                  >
+                    💬 Ask Copilot about this collection
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
         </>
       )}

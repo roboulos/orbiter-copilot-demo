@@ -73,7 +73,7 @@ export function LeverageLoopCard({
       let personId = masterPersonId;
       if (!personId) {
         const name = targetPerson.split("—")[0].trim();
-        const results = await searchPersons(name, 1);
+        const results = await searchPersons(name, "network", 1);
         if (results.items.length > 0) personId = results.items[0].master_person_id;
       }
       if (!personId) { setSending(false); return; }

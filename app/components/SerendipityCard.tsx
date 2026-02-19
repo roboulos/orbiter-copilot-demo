@@ -132,7 +132,7 @@ export function SerendipityCard({
     try {
       let personId = masterPersonId;
       if (!personId) {
-        const results = await searchPersons(personA, 1);
+        const results = await searchPersons(personA, "network", 1);
         if (results.items.length > 0) personId = results.items[0].master_person_id;
       }
       await createOutcome({

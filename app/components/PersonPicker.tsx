@@ -7,12 +7,15 @@ import { Avatar } from "./Avatar";
 interface PersonResult {
   master_person_id: number;
   full_name: string;
+  in_my_network?: boolean;
   master_person: {
+    id?: number;
     name: string;
     avatar: string | null;
     current_title: string | null;
-    master_company?: { company_name: string } | null;
-  };
+    bio?: string | null;
+    master_company?: { id?: number; company_name: string; logo?: string | null } | null;
+  } | null;
 }
 
 interface PersonPickerProps {
@@ -140,9 +143,9 @@ function SelectedPersonChip({ person, onClear }: { person: PersonResult; onClear
           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
           marginTop: "1px",
         }}>
-          {person.master_person.current_title
+          {person.master_person?.current_title
             ? `${person.master_person.current_title}${person.master_person.master_company?.company_name ? ` · ${person.master_person.master_company.company_name}` : ""}`
-            : person.master_person.master_company?.company_name || "Context loaded"
+            : person.master_person?.master_company?.company_name || "Context loaded"
           }
         </div>
       </div>
@@ -197,7 +200,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
     if (q.length < 2) { setResults([]); return; }
     setLoading(true);
     try {
-      const data = await searchPersons(q, 8);
+      const data = await searchPersons(q, "network", 8);
       setResults(data.items || []);
       setIsOpen(true);
     } catch {
@@ -233,7 +236,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
       const context = await getPersonContext(person.master_person_id);
       onSelect(person, context);
     } catch {
-      onSelect(person, `name: ${person.full_name}\ntitle: ${person.master_person.current_title || "Unknown"}`);
+      onSelect(person, `name: ${person.full_name}\ntitle: ${person.master_person?.current_title || "Unknown"}`);
     } finally {
       setLoadingContext(false);
       setLoadingName("");
@@ -392,8 +395,8 @@ function DropdownItem({ person, onSelect, isLast }: { person: PersonResult; onSe
           {person.full_name}
         </div>
         <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {person.master_person.current_title || ""}
-          {person.master_person.master_company?.company_name
+          {person.master_person?.current_title || ""}
+          {person.master_person?.master_company?.company_name
             ? ` · ${person.master_person.master_company.company_name}`
             : ""}
         </div>

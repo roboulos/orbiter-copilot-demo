@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
-import { getHorizon, addHorizonTarget, removeHorizonTarget, getNetwork, type HorizonTarget } from "../lib/xano";
+import { getHorizon, addHorizonTargetByPersonId, removeHorizonTarget, type HorizonTarget } from "../lib/xano";
 import { PersonPicker } from "./PersonPicker";
 
 function formatDate(ts: number): string {
@@ -48,23 +48,23 @@ export function HorizonView({ onSwitchTab }: { onSwitchTab: (tab: string) => voi
     fetchTargets();
   }, [fetchTargets]);
 
-  const handleAddTarget = async (person: { master_person_id: number; full_name: string; master_person: { name: string; avatar: string | null; current_title: string | null; master_company?: { company_name: string } | null } }, _context: string) => {
+  const handleAddTarget = async (person: { master_person_id: number; full_name: string; in_my_network?: boolean; master_person: { id?: number; name: string; avatar: string | null; current_title: string | null; bio?: string | null; master_company?: { id?: number; company_name: string; logo?: string | null } | null } | null }, _context: string) => {
     setAddingTarget(true);
     setAddError(null);
     try {
-      const network = await getNetwork({ query: person.full_name, per_page: 10 });
-      const match = network.items.find(p => p.master_person_id === person.master_person_id);
-      if (!match?.node_uuid) {
-        setAddError("This person isn't in your network graph yet. Connect with them first to add to Horizon.");
-        return;
-      }
-      await addHorizonTarget(match.node_uuid);
+      await addHorizonTargetByPersonId(person.master_person_id);
       setAdding(false);
       setAddError(null);
       fetchTargets();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to add horizon target:", err);
-      setAddError("Failed to add target. Please try again.");
+      // Check for 400 (already targeted)
+      const errMsg = err instanceof Error ? err.message : String(err);
+      if (errMsg.includes("400") || errMsg.toLowerCase().includes("already")) {
+        setAddError("Already on your Horizon");
+      } else {
+        setAddError("Failed to add target. Please try again.");
+      }
     } finally {
       setAddingTarget(false);
     }

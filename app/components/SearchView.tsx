@@ -2,20 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Avatar } from "./Avatar";
-import { xanoFetch, getPersonContext, createLeverageLoop, addHorizonTarget } from "../lib/xano";
-
-interface SearchPerson {
-  master_person_id: number;
-  full_name: string;
-  master_person: {
-    name: string;
-    avatar: string | null;
-    current_title: string | null;
-    master_company?: { company_name: string } | null;
-  };
-  node_uuid?: string | null;
-  status_connected?: string;
-}
+import {
+  getPersonContext,
+  createLeverageLoop,
+  searchPersons,
+  getConnectionPath,
+  addHorizonTargetByPersonId,
+  type SearchPerson,
+  type ConnectionPath,
+} from "../lib/xano";
 
 interface ProfilePanelPerson extends SearchPerson {
   last_activity_at?: number | null;
@@ -59,6 +54,41 @@ function SkeletonCard() {
   );
 }
 
+function ConnectionPathDisplay({ path }: { path: ConnectionPath }) {
+  if (!path.in_network && path.hop_count === 0) {
+    return (
+      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "7px", marginTop: "8px" }}>
+        Not connected yet
+      </div>
+    );
+  }
+
+  if (path.in_network && path.hop_count === 0) {
+    return (
+      <div style={{ fontSize: "11px", color: "#a5b4fc", padding: "8px 10px", background: "rgba(99,102,241,0.06)", borderRadius: "7px", marginTop: "8px" }}>
+        👤 In your network
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.55)", padding: "8px 10px", background: "rgba(99,102,241,0.05)", borderRadius: "7px", marginTop: "8px", lineHeight: 1.6, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px" }}>
+      <span style={{ color: "#a5b4fc", fontWeight: 600 }}>You</span>
+      {path.hops.map((hop, i) => (
+        <span key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ color: "rgba(255,255,255,0.25)" }}>→</span>
+          <span>
+            <span style={{ color: "#e8e8f0", fontWeight: 500 }}>{hop.name}</span>
+            {hop.title && <span style={{ color: "rgba(255,255,255,0.35)" }}>, {hop.title}</span>}
+          </span>
+        </span>
+      ))}
+      <span style={{ color: "rgba(255,255,255,0.25)" }}>→</span>
+      <span style={{ color: "#e8e8f0", fontWeight: 600 }}>{path.target.name}</span>
+    </div>
+  );
+}
+
 export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("network");
@@ -71,12 +101,14 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
   const [profileLoading, setProfileLoading] = useState(false);
   const [loopStates, setLoopStates] = useState<Record<number, "idle" | "loading" | "success" | "error">>({});
   const [trackStates, setTrackStates] = useState<Record<number, "idle" | "loading" | "success" | "error">>({});
+  const [pathStates, setPathStates] = useState<Record<number, "idle" | "loading" | "error">>({});
+  const [pathData, setPathData] = useState<Record<number, ConnectionPath>>({});
   const [panelLoopState, setPanelLoopState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [panelTrackState, setPanelTrackState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const doSearch = useCallback(async (q: string) => {
+  const doSearch = useCallback(async (q: string, searchMode: SearchMode) => {
     if (!q.trim()) {
       setResults([]);
       setHasSearched(false);
@@ -85,10 +117,7 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
     setLoading(true);
     setHasSearched(true);
     try {
-      const data = await xanoFetch<{
-        itemsReceived: number;
-        items: SearchPerson[];
-      }>("/person-search", { params: { query: q, limit: "20" } });
+      const data = await searchPersons(q, searchMode, 20);
       setResults(data.items || []);
     } catch (err) {
       console.error("Search failed:", err);
@@ -101,12 +130,12 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      doSearch(query);
+      doSearch(query, mode);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, doSearch]);
+  }, [query, mode, doSearch]);
 
   const handleChipClick = (chip: string) => {
     setQuery(chip);
@@ -144,19 +173,37 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
   }, []);
 
   const handleTrack = useCallback(async (person: SearchPerson) => {
-    if (!person.node_uuid) {
-      setTrackStates((s) => ({ ...s, [person.master_person_id]: "error" }));
-      return;
-    }
     setTrackStates((s) => ({ ...s, [person.master_person_id]: "loading" }));
     try {
-      await addHorizonTarget(person.node_uuid);
+      await addHorizonTargetByPersonId(person.master_person_id);
       setTrackStates((s) => ({ ...s, [person.master_person_id]: "success" }));
       setTimeout(() => setTrackStates((s) => ({ ...s, [person.master_person_id]: "idle" })), 2000);
     } catch {
       setTrackStates((s) => ({ ...s, [person.master_person_id]: "error" }));
     }
   }, []);
+
+  const handlePath = useCallback(async (person: SearchPerson, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const id = person.master_person_id;
+    // Toggle off if already showing
+    if (pathData[id]) {
+      setPathData((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+    setPathStates((s) => ({ ...s, [id]: "loading" }));
+    try {
+      const data = await getConnectionPath(id);
+      setPathData((prev) => ({ ...prev, [id]: data }));
+      setPathStates((s) => ({ ...s, [id]: "idle" }));
+    } catch {
+      setPathStates((s) => ({ ...s, [id]: "error" }));
+    }
+  }, [pathData]);
 
   const handlePanelLeverageLoop = useCallback(async () => {
     if (!selectedPerson) return;
@@ -174,13 +221,10 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
   }, [selectedPerson]);
 
   const handlePanelTrack = useCallback(async () => {
-    if (!selectedPerson || !selectedPerson.node_uuid) {
-      setPanelTrackState("error");
-      return;
-    }
+    if (!selectedPerson) return;
     setPanelTrackState("loading");
     try {
-      await addHorizonTarget(selectedPerson.node_uuid);
+      await addHorizonTargetByPersonId(selectedPerson.master_person_id);
       setPanelTrackState("success");
       setTimeout(() => setPanelTrackState("idle"), 2000);
     } catch {
@@ -353,6 +397,8 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
             const mc = mp?.master_company;
             const loopState = loopStates[person.master_person_id] || "idle";
             const trackState = trackStates[person.master_person_id] || "idle";
+            const pathState = pathStates[person.master_person_id] || "idle";
+            const personPath = pathData[person.master_person_id];
             const hovered = hoveredId === person.master_person_id;
 
             return (
@@ -401,13 +447,16 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
                       flexShrink: 0,
                     }}
                   >
-                    {isUniverse ? "🌐 Universe" : "👤 In network"}
+                    {isUniverse ? "🌐 Universe" : (person.in_my_network ? "👤 In network" : "🔗 Extended")}
                   </span>
                 </div>
 
+                {/* Connection path display */}
+                {personPath && <ConnectionPathDisplay path={personPath} />}
+
                 {/* Action buttons */}
                 <div
-                  style={{ display: "flex", gap: "6px" }}
+                  style={{ display: "flex", gap: "6px", marginTop: personPath ? "8px" : "0" }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -428,6 +477,25 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
                     }}
                   >
                     {loopState === "loading" ? "…" : loopState === "success" ? "✓ Done" : loopState === "error" ? "⚠ Err" : "⚡ Loop"}
+                  </button>
+                  <button
+                    onClick={(e) => handlePath(person, e)}
+                    disabled={pathState === "loading"}
+                    style={{
+                      flex: 1,
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      padding: "6px 8px",
+                      borderRadius: "7px",
+                      background: personPath ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.05)",
+                      border: personPath ? "1px solid rgba(99,102,241,0.35)" : "1px solid rgba(255,255,255,0.09)",
+                      color: personPath ? "#a5b4fc" : pathState === "error" ? "#ef4444" : "rgba(255,255,255,0.5)",
+                      cursor: pathState === "loading" ? "wait" : "pointer",
+                      fontFamily: "Inter, sans-serif",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {pathState === "loading" ? "…" : "🔗 Path"}
                   </button>
                   <button
                     onClick={() => handleTrack(person)}
