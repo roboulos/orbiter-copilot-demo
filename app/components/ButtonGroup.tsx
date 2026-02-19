@@ -20,20 +20,45 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
   const handleSelect = (value: string) => {
     setSelected(value);
     
-    // Send message through Crayon by triggering input
-    // Find the message input and programmatically send the value
-    const input = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
-    const sendButton = document.querySelector('button[type="submit"], button:has(img[alt*="Send"])') as HTMLButtonElement;
+    console.log('[ButtonGroup] Button clicked, value:', value);
+    
+    // Multiple selector strategies to find Crayon's input
+    const input = 
+      document.querySelector('textarea[placeholder*="Type"]') ||
+      document.querySelector('textarea[placeholder*="message"]') ||
+      document.querySelector('textarea') ||
+      document.querySelector('input[type="text"]');
+    
+    console.log('[ButtonGroup] Found input:', input);
+    
+    // Multiple selector strategies to find send button
+    const sendButton =
+      document.querySelector('button[type="submit"]') ||
+      document.querySelector('button[aria-label*="Send"]') ||
+      Array.from(document.querySelectorAll('button')).find(btn => 
+        btn.textContent?.toLowerCase().includes('send') ||
+        btn.querySelector('svg') // Send buttons often have SVG icons
+      );
+    
+    console.log('[ButtonGroup] Found send button:', sendButton);
     
     if (input && sendButton) {
       // Set the value
-      input.value = value;
-      // Trigger input event so Crayon sees the change
+      (input as HTMLTextAreaElement | HTMLInputElement).value = value;
+      
+      // Trigger multiple events to ensure Crayon sees the change
       input.dispatchEvent(new Event('input', { bubbles: true }));
-      // Click send button
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // Small delay then click send
       setTimeout(() => {
-        sendButton.click();
-      }, 100);
+        console.log('[ButtonGroup] Clicking send button');
+        (sendButton as HTMLButtonElement).click();
+      }, 150);
+    } else {
+      console.error('[ButtonGroup] Could not find input or send button');
+      console.log('[ButtonGroup] All textareas:', document.querySelectorAll('textarea'));
+      console.log('[ButtonGroup] All buttons:', document.querySelectorAll('button'));
     }
     
     // Also call onSelect if provided
