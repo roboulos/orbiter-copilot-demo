@@ -40,8 +40,8 @@ const DEFAULT_STARTERS = [
     prompt: "Serendipity match: We just brought on a fractional CFO who specializes in SaaS Series A financials. She needs deal flow. Find the best person in my network to introduce her to right now.",
   },
   {
-    displayText: "👤 Contact Profile — Select someone above, then click this",
-    prompt: "Pull up the contact profile for the person I've selected. Show me our relationship context, bond strength, and what I should do next.",
+    displayText: "📅 Meeting Prep — Select someone above and get ready to meet them",
+    prompt: "Meeting prep: give me a meeting prep card for the person I've selected. Include a summary, 3 talking points with openers, things to listen for, and any landmines to avoid.",
   },
 ];
 
@@ -61,6 +61,10 @@ function getPersonStarters(person: SelectedPerson) {
     {
       displayText: `✨ Serendipity — Who should ${name} meet in my network?`,
       prompt: `Serendipity match for ${name} — ${title} at ${company}. Who in my network would be most valuable for them to meet right now? Find the highest-potential introduction I could make.`,
+    },
+    {
+      displayText: `📅 Meeting Prep — Get ready to meet ${name}`,
+      prompt: `Meeting prep for ${name} — ${title} at ${company}. Give me a full meeting prep card: summary of who they are, 3 talking points with openers and why they care, things to listen for in the conversation, and any landmines I should avoid.`,
     },
     {
       displayText: `🎯 Outcome — Get a warm intro through ${name}`,

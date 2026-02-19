@@ -233,17 +233,45 @@ export async function getPersonContext(masterPersonId: number): Promise<string> 
  * { "response": [ { "name": "card_name", "templateProps": { ... } } ] }
  * ──────────────────────────────────────────────────────────────────────────────
  */
+// Card schema injection — appended to person_context so Claude sees it even if
+// the Xano system prompt doesn't include it yet.
+const MEETING_PREP_SCHEMA = `
+--- ADDITIONAL CARD SCHEMA ---
+You also support a "meeting_prep_card". Use it when the user asks to prepare for a meeting,
+get meeting prep, or says things like "prep for", "prepare me for", "before I meet", "meeting with".
+Schema:
+{
+  "name": "meeting_prep_card",
+  "templateProps": {
+    "personName": string,
+    "personTitle": string,
+    "personCompany": string,
+    "summary": "2-3 sentence overview of who they are and why this meeting matters",
+    "talkingPoints": [{ "topic": string, "opener": string, "whyTheyCare": string }],
+    "listenFor": ["string — signals or things worth noting"],
+    "landmines": ["string — topics or mistakes to avoid"],
+    "sharedContext": "optional — what you have in common",
+    "masterPersonId": number
+  }
+}
+`;
+
 export async function chat(
   prompt: string,
   personContext?: string,
   history?: Array<{ role: string; content: string }>,
   masterPersonId?: number
 ) {
+  // Inject meeting prep schema into context so the LLM always knows about it
+  const enrichedContext = personContext
+    ? `${personContext}\n${MEETING_PREP_SCHEMA}`
+    : MEETING_PREP_SCHEMA.trim();
+
   return xanoFetch<{ raw: string; model: string }>("/chat", {
     method: "POST",
     body: {
       prompt,
-      ...(personContext ? { person_context: personContext } : {}),
+      person_context: enrichedContext,
       ...(masterPersonId ? { master_person_id: masterPersonId } : {}),
       ...(history?.length ? { history } : {}),
     },
