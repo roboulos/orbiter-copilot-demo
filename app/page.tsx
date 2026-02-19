@@ -476,7 +476,7 @@ export default function Home() {
 
         {activeTab === "Network"     && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
         {activeTab === "Search"      && <TabPanel key="search"><SearchView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
-        {activeTab === "Outcomes"    && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Outcomes"    && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
         {activeTab === "Horizon"     && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Collections" && <TabPanel key="collections"><CollectionsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
         {activeTab === "Insights"    && <TabPanel key="insights"><InsightsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}

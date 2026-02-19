@@ -44,7 +44,21 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString();
 }
 
-export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
+type SelectPersonPayload = {
+  master_person_id: number;
+  full_name: string;
+  in_my_network?: boolean;
+  master_person: {
+    id?: number;
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    bio?: string | null;
+    master_company?: { id?: number; company_name: string; logo?: string | null } | null;
+  } | null;
+};
+
+export function OutcomesView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab: string) => void; onSelectPerson?: (person: SelectPersonPayload) => void }) {
   const [items, setItems] = useState<OutcomeItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -398,7 +412,7 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
                                   ⚡ This loop was submitted. To get a personalized draft message, ask Copilot about this person.
                                 </p>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                                  onClick={(e) => { e.stopPropagation(); if (onSelectPerson && o.master_person && o.master_person_id) { onSelectPerson({ master_person_id: o.master_person_id, full_name: o.master_person.name, in_my_network: true, master_person: { id: o.master_person.id, name: o.master_person.name, avatar: o.master_person.avatar, current_title: o.master_person.current_title, master_company: o.master_person.master_company ?? null } }); } else { onSwitchTab("Copilot"); } }}
                                   style={{
                                     fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
                                     background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
@@ -450,7 +464,7 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
                                 {o.request_context}
                               </p>
                               <button
-                                onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                                onClick={(e) => { e.stopPropagation(); if (onSelectPerson && o.master_person && o.master_person_id) { onSelectPerson({ master_person_id: o.master_person_id, full_name: o.master_person.name, in_my_network: true, master_person: { id: o.master_person.id, name: o.master_person.name, avatar: o.master_person.avatar, current_title: o.master_person.current_title, master_company: o.master_person.master_company ?? null } }); } else { onSwitchTab("Copilot"); } }}
                                 style={{
                                   fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
                                   background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
@@ -488,7 +502,7 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
                           )}
                           {o.status === "suggestion" && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                              onClick={(e) => { e.stopPropagation(); if (onSelectPerson && o.master_person && o.master_person_id) { onSelectPerson({ master_person_id: o.master_person_id, full_name: o.master_person.name, in_my_network: true, master_person: { id: o.master_person.id, name: o.master_person.name, avatar: o.master_person.avatar, current_title: o.master_person.current_title, master_company: o.master_person.master_company ?? null } }); } else { onSwitchTab("Copilot"); } }}
                               style={{
                                 fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
                                 background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)",
