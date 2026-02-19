@@ -27,6 +27,7 @@ import { RichWelcomeScreen } from "./components/RichWelcomeScreen";
 import { LoadingIndicator } from "./components/LoadingIndicator";
 import { ErrorCard } from "./components/ErrorCard";
 import { chat, dispatch } from "./lib/xano";
+import { orbiterTheme } from "./lib/theme";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
@@ -338,7 +339,8 @@ function CopilotModal({
                   processMessage={processMessage}
                   agentName="Orbiter Copilot"
                   responseTemplates={templates}
-                  theme={{ mode: "dark" }}
+                  theme={orbiterTheme}
+                  messageLoadingComponent={() => <LoadingIndicator />}
                   welcomeMessage={{
                     title: personName
                       ? `What do you want to do with ${personName}?`
