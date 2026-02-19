@@ -4,13 +4,26 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Avatar } from "./Avatar";
 import {
   getPersonContext,
-  createLeverageLoop,
   searchPersons,
   getConnectionPath,
   addHorizonTargetByPersonId,
   type SearchPerson,
   type ConnectionPath,
 } from "../lib/xano";
+
+type SelectPersonPayload = {
+  master_person_id: number;
+  full_name: string;
+  in_my_network?: boolean;
+  master_person: {
+    id?: number;
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    bio?: string | null;
+    master_company?: { id?: number; company_name: string; logo?: string | null } | null;
+  } | null;
+};
 
 interface ProfilePanelPerson extends SearchPerson {
   last_activity_at?: number | null;
@@ -89,7 +102,7 @@ function ConnectionPathDisplay({ path }: { path: ConnectionPath }) {
   );
 }
 
-export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
+export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab: string) => void; onSelectPerson?: (person: SelectPersonPayload) => void }) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("network");
   const [results, setResults] = useState<SearchPerson[]>([]);
@@ -158,19 +171,19 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
     }
   }, []);
 
-  const handleLeverageLoop = useCallback(async (person: SearchPerson) => {
-    setLoopStates((s) => ({ ...s, [person.master_person_id]: "loading" }));
-    try {
-      await createLeverageLoop({
+  const handleLeverageLoop = useCallback((person: SearchPerson) => {
+    if (onSelectPerson) {
+      onSelectPerson({
         master_person_id: person.master_person_id,
-        request_panel_title: `Leverage Loop: ${person.full_name}`,
-        request_context: "Run a leverage loop for this contact — who in my network should I introduce them to and why?",
+        full_name: person.full_name,
+        in_my_network: person.in_my_network,
+        master_person: person.master_person,
       });
-      setLoopStates((s) => ({ ...s, [person.master_person_id]: "success" }));
-    } catch {
-      setLoopStates((s) => ({ ...s, [person.master_person_id]: "error" }));
+    } else {
+      onSwitchTab("Copilot");
     }
-  }, []);
+    setLoopStates((s) => ({ ...s, [person.master_person_id]: "success" }));
+  }, [onSelectPerson, onSwitchTab]);
 
   const handleTrack = useCallback(async (person: SearchPerson) => {
     setTrackStates((s) => ({ ...s, [person.master_person_id]: "loading" }));
@@ -205,20 +218,20 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
     }
   }, [pathData]);
 
-  const handlePanelLeverageLoop = useCallback(async () => {
+  const handlePanelLeverageLoop = useCallback(() => {
     if (!selectedPerson) return;
-    setPanelLoopState("loading");
-    try {
-      await createLeverageLoop({
+    if (onSelectPerson) {
+      onSelectPerson({
         master_person_id: selectedPerson.master_person_id,
-        request_panel_title: `Leverage Loop: ${selectedPerson.full_name}`,
-        request_context: "Run a leverage loop for this contact.",
+        full_name: selectedPerson.full_name,
+        in_my_network: selectedPerson.in_my_network,
+        master_person: selectedPerson.master_person,
       });
-      setPanelLoopState("success");
-    } catch {
-      setPanelLoopState("error");
+    } else {
+      onSwitchTab("Copilot");
     }
-  }, [selectedPerson]);
+    setSelectedPerson(null);
+  }, [selectedPerson, onSelectPerson, onSwitchTab]);
 
   const handlePanelTrack = useCallback(async () => {
     if (!selectedPerson) return;
@@ -536,7 +549,18 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
                     {trackState === "loading" ? "…" : trackState === "success" ? "✓ Added" : "🔭 Track"}
                   </button>
                   <button
-                    onClick={() => onSwitchTab("Copilot")}
+                    onClick={() => {
+                      if (onSelectPerson) {
+                        onSelectPerson({
+                          master_person_id: person.master_person_id,
+                          full_name: person.full_name,
+                          in_my_network: person.in_my_network,
+                          master_person: person.master_person,
+                        });
+                      } else {
+                        onSwitchTab("Copilot");
+                      }
+                    }}
                     style={{
                       flex: 1,
                       fontSize: "10px",
@@ -644,52 +668,51 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              {/* Ask Copilot CTA */}
               <button
                 onClick={handlePanelLeverageLoop}
-                disabled={panelLoopState === "loading"}
                 style={{
-                  flex: 1, padding: "10px 0", borderRadius: "10px",
-                  background: panelLoopState === "success" ? "rgba(52,211,153,0.15)" : "linear-gradient(135deg, #4f46e5, #7c3aed)",
-                  border: panelLoopState === "success" ? "1px solid rgba(52,211,153,0.35)" : "none",
-                  color: panelLoopState === "success" ? "#34d399" : "white",
-                  fontSize: "12px", fontWeight: 600, cursor: panelLoopState === "loading" ? "wait" : "pointer",
+                  width: "100%", padding: "10px", borderRadius: "10px",
+                  background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)",
+                  color: "#a5b4fc", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                   fontFamily: "Inter, sans-serif",
-                  boxShadow: panelLoopState === "success" ? "none" : "0 4px 16px rgba(79,70,229,0.3)",
-                  opacity: panelLoopState === "loading" ? 0.7 : 1,
                 }}
               >
-                {panelLoopState === "loading" ? "Creating…" : panelLoopState === "success" ? "✓ Loop Created!" : "⚡ Leverage Loop"}
+                🔮 Ask Copilot about {selectedPerson?.full_name?.split(" ")[0] || "this person"} →
               </button>
-              <button
-                onClick={handlePanelTrack}
-                disabled={panelTrackState === "loading"}
-                style={{
-                  flex: 1, padding: "10px 0", borderRadius: "10px",
-                  background: panelTrackState === "success" ? "rgba(52,211,153,0.1)" : "rgba(99,102,241,0.08)",
-                  border: panelTrackState === "success" ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(99,102,241,0.22)",
-                  color: panelTrackState === "success" ? "#34d399" : panelTrackState === "error" ? "#fbbf24" : "#a5b4fc",
-                  fontSize: "12px", fontWeight: 500, cursor: panelTrackState === "loading" ? "wait" : "pointer",
-                  fontFamily: "Inter, sans-serif",
-                  opacity: panelTrackState === "loading" ? 0.7 : 1,
-                }}
-              >
-                {panelTrackState === "loading" ? "Adding…" : panelTrackState === "success" ? "🔭 Tracked!" : "🔭 Track"}
-              </button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={handlePanelLeverageLoop}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: "10px",
+                    background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                    border: "none",
+                    color: "white",
+                    fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                    fontFamily: "Inter, sans-serif",
+                    boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+                  }}
+                >
+                  ⚡ Leverage Loop
+                </button>
+                <button
+                  onClick={handlePanelTrack}
+                  disabled={panelTrackState === "loading"}
+                  style={{
+                    flex: 1, padding: "10px 0", borderRadius: "10px",
+                    background: panelTrackState === "success" ? "rgba(52,211,153,0.1)" : "rgba(99,102,241,0.08)",
+                    border: panelTrackState === "success" ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(99,102,241,0.22)",
+                    color: panelTrackState === "success" ? "#34d399" : panelTrackState === "error" ? "#fbbf24" : "#a5b4fc",
+                    fontSize: "12px", fontWeight: 500, cursor: panelTrackState === "loading" ? "wait" : "pointer",
+                    fontFamily: "Inter, sans-serif",
+                    opacity: panelTrackState === "loading" ? 0.7 : 1,
+                  }}
+                >
+                  {panelTrackState === "loading" ? "Adding…" : panelTrackState === "success" ? "🔭 Tracked!" : "🔭 Track"}
+                </button>
+              </div>
             </div>
-            {panelLoopState === "success" && (
-              <button
-                onClick={() => { setSelectedPerson(null); onSwitchTab("Outcomes"); }}
-                style={{
-                  width: "100%", marginTop: "8px", padding: "8px",
-                  borderRadius: "8px", background: "rgba(52,211,153,0.08)",
-                  border: "1px solid rgba(52,211,153,0.2)", color: "#34d399",
-                  fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif",
-                }}
-              >
-                View in Outcomes →
-              </button>
-            )}
           </div>
         </>
       )}

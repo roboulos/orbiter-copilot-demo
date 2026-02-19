@@ -60,7 +60,22 @@ const PRESET_COLORS = [
   { label: "Pink", value: "#ec4899" },
 ];
 
-export function CollectionsView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
+type SelectPersonPayload = {
+  master_person_id: number;
+  full_name: string;
+  in_my_network?: boolean;
+  master_person: {
+    id?: number;
+    name: string;
+    avatar: string | null;
+    current_title: string | null;
+    bio?: string | null;
+    master_company?: { id?: number; company_name: string; logo?: string | null } | null;
+  } | null;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function CollectionsView({ onSwitchTab, onSelectPerson: _onSelectPerson }: { onSwitchTab: (tab: string) => void; onSelectPerson?: (person: SelectPersonPayload) => void }) {
   const [collections, setCollections] = useState<CollectionDetail[]>(MOCK_COLLECTIONS);
   const [selectedCollection, setSelectedCollection] = useState<CollectionDetail | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);

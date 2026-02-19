@@ -207,6 +207,15 @@ export default function Home() {
     masterPersonIdRef.current = undefined;
   }, []);
 
+  const handleSelectPersonFromView = useCallback((person: SelectedPerson) => {
+    setSelectedPerson(person);
+    personContextRef.current = person.master_person?.current_title
+      ? `name: ${person.master_person?.name || person.full_name}\ntitle: ${person.master_person.current_title}`
+      : `name: ${person.master_person?.name || person.full_name}`;
+    masterPersonIdRef.current = person.master_person_id;
+    setActiveTab("Copilot");
+  }, []);
+
   const processMessage = useCallback(
     async ({ messages, abortController }: {
       threadId: string;
@@ -465,11 +474,11 @@ export default function Home() {
           </div>
         </div>
 
-        {activeTab === "Network"     && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
-        {activeTab === "Search"      && <TabPanel key="search"><SearchView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Network"     && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
+        {activeTab === "Search"      && <TabPanel key="search"><SearchView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
         {activeTab === "Outcomes"    && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Horizon"     && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
-        {activeTab === "Collections" && <TabPanel key="collections"><CollectionsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Collections" && <TabPanel key="collections"><CollectionsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} onSelectPerson={handleSelectPersonFromView} /></TabPanel>}
         {activeTab === "Insights"    && <TabPanel key="insights"><InsightsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Docs"        && <TabPanel key="docs"><DocsView /></TabPanel>}
       </div>

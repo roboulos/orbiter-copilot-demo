@@ -5,6 +5,15 @@ import { Avatar } from "./Avatar";
 import { getOutcomes, createOutcome, dispatchOutcomeItem, archiveOutcome, type OutcomeItem } from "../lib/xano";
 
 type CopilotMode = "outcome" | "loop" | "serendipity";
+
+function extractDraftMessage(context: string): string | null {
+  const match = context.match(/Draft message:\s*([\s\S]+?)(?:\n\n|$)/);
+  return match ? match[1].trim() : null;
+}
+
+function isGenericLoopContext(context: string): boolean {
+  return context.includes("Run a leverage loop for this contact");
+}
 type Status = "draft" | "processing" | "suggestion" | "submitted" | "archived";
 
 const STATUS_CONFIG: Record<Status, { color: string; bg: string; border: string; dot: string }> = {
@@ -378,7 +387,81 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
                         marginTop: "14px", paddingTop: "14px",
                         borderTop: "1px solid rgba(255,255,255,0.06)",
                       }}>
-                        {o.request_context && (
+                        {o.request_context && o.status === "submitted" && o.copilot_mode === "loop" ? (() => {
+                          if (isGenericLoopContext(o.request_context)) {
+                            return (
+                              <div style={{
+                                background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)",
+                                borderRadius: "10px", padding: "12px 14px", marginBottom: "14px",
+                              }}>
+                                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 10px", lineHeight: "1.6" }}>
+                                  ⚡ This loop was submitted. To get a personalized draft message, ask Copilot about this person.
+                                </p>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                                  style={{
+                                    fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                    background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
+                                    color: "#a5b4fc", cursor: "pointer",
+                                  }}
+                                >
+                                  Open in Copilot →
+                                </button>
+                              </div>
+                            );
+                          }
+                          const draft = extractDraftMessage(o.request_context);
+                          if (draft) {
+                            return (
+                              <div style={{ marginBottom: "14px" }}>
+                                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "0 0 8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                  Draft Message
+                                </p>
+                                <div style={{
+                                  background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)",
+                                  borderRadius: "10px", padding: "12px 14px", marginBottom: "10px",
+                                }}>
+                                  <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", margin: 0, lineHeight: "1.6", fontStyle: "italic" }}>
+                                    &ldquo;{draft}&rdquo;
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(draft).catch(() => {});
+                                  }}
+                                  style={{
+                                    fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                    background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)",
+                                    color: "#34d399", cursor: "pointer",
+                                  }}
+                                >
+                                  📋 Copy Message
+                                </button>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div style={{ marginBottom: "14px" }}>
+                              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "0 0 8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                Context
+                              </p>
+                              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 10px", lineHeight: "1.6" }}>
+                                {o.request_context}
+                              </p>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                                style={{
+                                  fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                  background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
+                                  color: "#a5b4fc", cursor: "pointer",
+                                }}
+                              >
+                                💬 Ask Copilot to draft a message →
+                              </button>
+                            </div>
+                          );
+                        })() : o.request_context && (
                           <>
                             <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "0 0 8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                               Context
