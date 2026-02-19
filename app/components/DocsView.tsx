@@ -111,19 +111,19 @@ function OverviewSection({ onImageClick }: { onImageClick: (url: string) => void
       {/* Quick stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "40px" }}>
         {[
-          { n: "4", label: "Card Types", sub: "Outcome · Loop · Serendipity · Contact" },
-          { n: "4", label: "Tab Views", sub: "Copilot · Network · Outcomes · Horizon" },
+          { n: "5", label: "Card Types", sub: "Outcome · Loop · Serendipity · Contact · Meeting Prep" },
+          { n: "8", label: "Tab Views", sub: "Copilot · Network · Search · Outcomes · Horizon · Collections · Insights · Docs" },
           { n: "3", label: "Copilot Modes", sub: "Outcomes · Leverage Loop · Serendipity" },
-          { n: "1", label: "API Route", sub: "Anthropic Claude via manual SSE" },
+          { n: "12", label: "Xano Endpoints", sub: "All in Robert API group api:Bd_dCiOz" },
         ].map(s => (
           <StatCard key={s.n + s.label} n={s.n} label={s.label} sub={s.sub} />
         ))}
       </div>
 
       <CalloutBox icon="🎯" title="Purpose of this demo">
-        This is a working proof-of-concept of what the Orbiter Copilot could look like with full generative UI.
-        Dennis has CrayonAI (Thesys C1) wired up but barely touched — this demo shows what's possible when you
-        lean fully into it. All 4 card types stream in real-time from Claude. No mocks.
+        A working proof-of-concept of Orbiter Copilot with full generative UI. 5 card types stream
+        real-time from Claude Sonnet 4. 8 tabs with live data, recharts analytics, and real Xano backend.
+        No mocks except Collections (endpoints pending). This is what world-class relationship intelligence UX looks like.
       </CalloutBox>
     </div>
   );
@@ -140,6 +140,14 @@ function TodayRecapSection({ onImageClick }: { onImageClick: (url: string) => vo
     { hash: "6806474", msg: "World-class premium experience — orbital SVG, animated arcs, glow states" },
     { hash: "617fd3b", msg: "Standalone mode + PersonPicker rewrite + dynamic starters + all view upgrades" },
     { hash: "0288b28", msg: "Fix sidebar CSS class → .crayon-shell-sidebar-container; full-width layout" },
+    { hash: "f1de1ec", msg: "Feb 18 Recap tab + whiteboard added to Docs" },
+    { hash: "f9c7879", msg: "Fix: Vercel env vars set via API — NEXT_PUBLIC_XANO_API_URL now live" },
+    { hash: "182b4c1", msg: "Wire network node click, leverage loop, track, outcome actions, horizon pipeline" },
+    { hash: "f41f1ed", msg: "PersonPicker type unification + endpoint wiring improvements" },
+    { hash: "6d358aa", msg: "Meeting Prep card, Search tab, Collections tab — 1,629 lines added" },
+    { hash: "5b69846", msg: "Insights tab (recharts analytics), Horizon fix, Collections mock, skeleton states" },
+    { hash: "59c474a", msg: "Meeting Prep starter prompts + 5th person-context starter" },
+    { hash: "74f70fa", msg: "Meeting Prep schema live in Xano system prompt — frontend injection removed" },
   ];
 
   const meetingPoints = [
@@ -157,14 +165,20 @@ function TodayRecapSection({ onImageClick }: { onImageClick: (url: string) => vo
     { title: "World-Class Animation System", desc: "12 keyframe animations in globals.css: orbital SVG rings (12s/18s/26s), animated arc connector between people, pulsing glow states, bond strength bar, scan rings", color: "#06b6d4" },
     { title: "Sidebar Removed", desc: "Standalone mode + .crayon-shell-sidebar-container hidden → clean full-width layout. Copilot chat fills the entire panel with no visual noise.", color: "#10b981" },
     { title: "Profile Panel + YAML Parsing", desc: "Network 'View' button opens slide-over panel. js-yaml parses raw YAML string into structured About / Skills pills / Work History timeline / Roles tags", color: "#f59e0b" },
-    { title: "Dynamic Conversation Starters", desc: "getPersonStarters(person) generates 4 personalized starters using contact's name, title, company. Tab switch uses fadeUp crossfade.", color: "#ec4899" },
+    { title: "Dynamic Conversation Starters", desc: "getPersonStarters(person) generates 5 personalized starters using contact's name, title, company — now includes Meeting Prep. Tab switch uses fadeUp crossfade.", color: "#ec4899" },
+    { title: "📅 Meeting Prep Card (Card #5)", desc: "New card type added to Xano system prompt. Triggered by 'prep for my meeting with...'. Outputs: summary, 3 talking points with openers + why they care, listen-for signals, and landmines to avoid. Confirmed working live.", color: "#f43f5e" },
+    { title: "📊 Insights Tab — Recharts Analytics", desc: "Full analytics dashboard: bond strength bar chart, 8-week activity area chart, top industries horizontal bars, relationship pipeline funnel (from live Horizon data), 4 stat cards. All dark-themed, responsive.", color: "#0ea5e9" },
+    { title: "🔍 Search Tab", desc: "Natural language search across your network. 'My Network' vs 'Orbiter Universe' toggle. Falls back to /person-search gracefully if semantic search endpoint not live. Example prompts: 'VCs who back dev tools', 'Who do I know at OpenAI?'", color: "#8b5cf6" },
+    { title: "📁 Collections Tab", desc: "Group contacts around a theme. 3 demo collections: 🚀 Seed Investors, 🤝 Potential Partners, 🎤 Conference Crew. 'Ask Copilot' button per collection opens Copilot with a targeted prompt. Xano CRUD endpoints ready to wire.", color: "#10b981" },
+    { title: "Horizon Fix — Smart Add Target", desc: "Horizon 'Add Target' now searches /network first to find node_uuid, then calls /horizon-target. Falls back to /horizon-target-by-person-id. Phantom error on load fixed — only shows after a real failure.", color: "#f59e0b" },
+    { title: "Skeleton Loading States", desc: "All tabs show shimmer skeleton loaders while fetching data. No more blank screens on first load. @keyframes shimmer animation in globals.css.", color: "#64748b" },
   ];
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
       <SectionHeader
         title="February 18, 2026 — Full Day Recap"
-        subtitle="9 AM code access meeting with the Orbiter team + 7 commits shipped to Vercel. Everything that changed today."
+        subtitle="9 AM code access meeting + 15 commits shipped across the full day. 5 card types, 8 tabs, recharts analytics, Meeting Prep, Search, Collections — all live."
         emoji="📅"
       />
 
@@ -227,8 +241,11 @@ function TodayRecapSection({ onImageClick }: { onImageClick: (url: string) => vo
         ))}
       </div>
 
-      <CalloutBox icon="🎯" title="What's Next (March 2 deadline)">
-        All core card types are working with real Orbiter data. Next priorities: test ContactCard + SerendipityCard with live starters, continue evolving the chat experience, and integrate with the real Orbiter codebase using the newly granted GitHub access. Mark wants world-class — we keep going.
+      <CalloutBox icon="🎯" title="Current State — Feb 19 (March 2 deadline)">
+        All 5 card types confirmed working. 8 tabs live with real Xano data. Insights analytics dashboard shipped.
+        Meeting Prep card is card #5 in the Xano system prompt — triggered by natural language, confirmed via API test.
+        Remaining: wire Collections to real Xano endpoints, build /search + /connection-path endpoints, canvas node click fix.
+        Mark's bigger asks still ahead: Natural Language Search (universe mode), Travel broadcasting, Moonshot mode.
       </CalloutBox>
     </div>
   );
@@ -440,6 +457,36 @@ function DecisionsSection() {
       impact: "Medium",
       color: "#f59e0b",
     },
+    {
+      title: "Recharts for Insights analytics",
+      why: "Only chart library installed. React-native, fully responsive, dark-theme compatible with custom tooltips. ResponsiveContainer wraps all charts. No D3 knowledge required — clean declarative JSX.",
+      impact: "Medium",
+      color: "#0ea5e9",
+    },
+    {
+      title: "Mock data for Collections",
+      why: "Collections Xano endpoints (/collections, /collection CRUD) not yet built. Rather than block the demo, ship rich mock data that makes Collections look real. 5 endpoint schemas are fully typed and ready to wire.",
+      impact: "Medium",
+      color: "#8b5cf6",
+    },
+    {
+      title: "Meeting Prep schema in Xano system prompt (not frontend)",
+      why: "Initially injected via person_context from frontend as a workaround. Mark's other AI added it natively to the Xano /chat system prompt as card #5. Frontend injection removed. Clean separation — LLM owns card logic, frontend owns rendering.",
+      impact: "High",
+      color: "#f43f5e",
+    },
+    {
+      title: "Graceful search fallback: /search → /person-search",
+      why: "Semantic /search endpoint doesn't exist in Xano yet. xano.ts tries /search first, catches 404/error, falls back to /person-search. Universe mode shows a 'coming soon' banner but still returns network results so the UI never breaks.",
+      impact: "Medium",
+      color: "#10b981",
+    },
+    {
+      title: "Horizon Add Target: network lookup for node_uuid",
+      why: "/horizon-target-by-person-id may not exist. Instead: search /network with the person's name, match by master_person_id or name, extract node_uuid, call /horizon-target. Falls back to by-person-id if not found. Zero dead ends.",
+      impact: "High",
+      color: "#f59e0b",
+    },
   ];
 
   return (
@@ -499,19 +546,39 @@ function ResourcesSection() {
         ]} />
       </div>
 
+      <CalloutBox icon="✅" title="Live vs Mocked — Current Status">
+        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", lineHeight: 2 }}>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Copilot chat (5 card types streaming from Claude Sonnet 4 via OpenRouter)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Network graph + contact cards (real Xano /network endpoint)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Outcomes (real /outcomes, /outcome, dispatch, archive)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Horizon targets (real /horizon, /horizon-target)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Leverage Loops (real /leverage-loop, /leverage-loop/:id/dispatch)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Person context (real /person-context/:id → YAML → Claude system message)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Search network (falls back to /person-search)</div>
+          <div><span style={{ color: "#34d399" }}>✅ LIVE</span> — Insights analytics (recharts + real network data)</div>
+          <div><span style={{ color: "#fbbf24" }}>⚠️ MOCK</span> — Collections (demo data: Seed Investors, Potential Partners, Conference Crew — Xano endpoints pending)</div>
+          <div><span style={{ color: "#fbbf24" }}>⚠️ MOCK</span> — Search universe mode (shows network results with "coming soon" banner)</div>
+          <div><span style={{ color: "#f87171" }}>🔲 TODO</span> — Connection path (/connection-path endpoint not yet in Xano)</div>
+          <div><span style={{ color: "#f87171" }}>🔲 TODO</span> — Canvas node click (graph direct click doesn't open panel — use "View →" cards instead)</div>
+        </div>
+      </CalloutBox>
+
       <CalloutBox icon="📁" title="Key Files in the Repo">
         <div style={{ fontFamily: "monospace", fontSize: "12px", color: "rgba(255,255,255,0.5)", lineHeight: 2 }}>
-          <div><span style={{ color: "#a5b4fc" }}>app/api/chat/route.ts</span> — Claude → SSE streaming, 4-mode system prompt</div>
-          <div><span style={{ color: "#a5b4fc" }}>app/page.tsx</span> — 4-tab layout, CrayonChat wiring, starters</div>
-          <div><span style={{ color: "#a5b4fc" }}>app/globals.css</span> — Layout fixes, textarea min-height, dark theme</div>
+          <div><span style={{ color: "#a5b4fc" }}>app/lib/xano.ts</span> — All Xano API helpers, types, auth token caching</div>
+          <div><span style={{ color: "#a5b4fc" }}>app/page.tsx</span> — 8-tab layout, CrayonChat wiring, starters, PersonPicker</div>
+          <div><span style={{ color: "#a5b4fc" }}>app/globals.css</span> — 12 keyframe animations, layout fixes, dark theme</div>
           <div><span style={{ color: "#6ee7b7" }}>app/components/OutcomeCard.tsx</span> — Goal editor with save state</div>
-          <div><span style={{ color: "#6ee7b7" }}>app/components/LeverageLoopCard.tsx</span> — Message draft + send flow</div>
+          <div><span style={{ color: "#6ee7b7" }}>app/components/LeverageLoopCard.tsx</span> — Message draft + dispatch flow</div>
           <div><span style={{ color: "#6ee7b7" }}>app/components/SerendipityCard.tsx</span> — Intro draft with Steps</div>
           <div><span style={{ color: "#6ee7b7" }}>app/components/ContactCard.tsx</span> — Bond score, action checklist</div>
-          <div><span style={{ color: "#fbbf24" }}>app/components/Avatar.tsx</span> — DiceBear utility + Avatar component</div>
+          <div><span style={{ color: "#6ee7b7" }}>app/components/MeetingPrepCard.tsx</span> — Talking points, landmines, listen-for</div>
+          <div><span style={{ color: "#fbbf24" }}>app/components/InsightsView.tsx</span> — Recharts analytics dashboard</div>
+          <div><span style={{ color: "#fbbf24" }}>app/components/SearchView.tsx</span> — NL search, network/universe toggle</div>
+          <div><span style={{ color: "#fbbf24" }}>app/components/CollectionsView.tsx</span> — Collections with mock data</div>
           <div><span style={{ color: "#fbbf24" }}>app/components/NetworkGraph.tsx</span> — Canvas force-directed graph</div>
-          <div><span style={{ color: "#fbbf24" }}>app/components/NetworkView.tsx</span> — Contact grid + graph tab</div>
-          <div><span style={{ color: "#fbbf24" }}>app/components/OutcomesView.tsx</span> — Saved goals board tab</div>
+          <div><span style={{ color: "#fbbf24" }}>app/components/NetworkView.tsx</span> — Contact grid + profile panels</div>
+          <div><span style={{ color: "#fbbf24" }}>app/components/OutcomesView.tsx</span> — Outcomes board with dispatch</div>
           <div><span style={{ color: "#fbbf24" }}>app/components/HorizonView.tsx</span> — 4-stage pipeline tab</div>
         </div>
       </CalloutBox>
