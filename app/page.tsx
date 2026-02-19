@@ -738,10 +738,33 @@ export default function Home() {
       const history = messages
         .slice(0, -1)
         .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({
-          role: m.role,
-          content: typeof m.message === "string" ? m.message : JSON.stringify(m.message),
-        }))
+        .map((m) => {
+          // User messages are always strings
+          if (m.role === "user") {
+            return {
+              role: m.role,
+              content: typeof m.message === "string" ? m.message : String(m.message ?? ""),
+            };
+          }
+          // Assistant messages: extract only text, skip template/card data
+          if (typeof m.message === "string") {
+            return { role: m.role, content: m.message };
+          }
+          // CrayonChat may store assistant messages as arrays or objects with text + template parts
+          try {
+            const msg = m.message as unknown;
+            if (Array.isArray(msg)) {
+              const textParts = msg
+                .filter((item: Record<string, unknown>) => item.type === "text" && item.text)
+                .map((item: Record<string, unknown>) => item.text as string);
+              return { role: m.role, content: textParts.join(" ") || "I provided a card response." };
+            }
+            if (msg && typeof msg === "object" && "text" in msg) {
+              return { role: m.role, content: String((msg as Record<string, unknown>).text) };
+            }
+          } catch { /* fall through */ }
+          return { role: m.role, content: "I provided a card response." };
+        })
         .filter((m) => m.content.length > 0);
 
       // Store conversation history for dispatch
