@@ -178,35 +178,49 @@ html, body {
    ══════════════════════════════════════════════════════ */
 
 .crayon-shell-thread-message-agent {
+  display: flex !important;
+  justify-content: flex-start !important;
   align-items: flex-start !important;
+  margin-right: auto !important;
+  max-width: 75% !important;
   animation: cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
-}
-
-.crayon-shell-thread-message-user {
-  animation: slideInRight 0.25s ease both !important;
 }
 
 .crayon-shell-thread-message-agent__content {
   max-width: 100% !important;
   overflow: visible !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 18px 18px 18px 4px !important;
+  padding: 10px 14px !important;
 }
 
 .crayon-shell-thread-message-agent__avatar {
   flex-shrink: 0 !important;
   margin-top: 4px !important;
+  margin-right: 10px !important;
 }
 
 /* ══════════════════════════════════════════════════════
-   USER MESSAGES
+   USER MESSAGES - RIGHT ALIGNED (like iMessage)
    ══════════════════════════════════════════════════════ */
+
+.crayon-shell-thread-message-user {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin-left: auto !important;
+  max-width: 75% !important;
+  animation: slideInRight 0.25s ease both !important;
+}
 
 .crayon-shell-thread-message-user__content {
   background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.12)) !important;
   color: #e8e8f0 !important;
   border: 1px solid rgba(99,102,241,0.22) !important;
-  border-radius: 16px 16px 4px 16px !important;
+  border-radius: 18px 18px 4px 18px !important;
   font-size: 13px !important;
   backdrop-filter: blur(8px) !important;
+  padding: 10px 14px !important;
 }
 
 /* ══════════════════════════════════════════════════════

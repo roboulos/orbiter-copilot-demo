@@ -16,6 +16,7 @@ import { InsightsView } from "./components/InsightsView";
 import { MeetingPrepCard } from "./components/MeetingPrepCard";
 import { PersonPicker } from "./components/PersonPicker";
 import { ForkInTheRoad } from "./components/ForkInTheRoad";
+import { ButtonGroup } from "./components/ButtonGroup";
 import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -25,6 +26,7 @@ const templates = [
   { name: "contact_card",       Component: ContactCard       },
   { name: "serendipity_card",   Component: SerendipityCard   },
   { name: "meeting_prep_card",  Component: MeetingPrepCard   },
+  { name: "button_group",       Component: ButtonGroup       },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
