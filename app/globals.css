@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────
-   Orbiter Copilot — Global Overrides
+   Orbiter Copilot — Global Overrides  (World-Class Edition)
    ───────────────────────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; }
@@ -10,59 +10,213 @@ html, body {
   background: #0a0a0f;
 }
 
-/* ─── Layout: CrayonChat fills its flex parent ─── */
+/* ══════════════════════════════════════════════════════
+   KEYFRAME LIBRARY
+   ══════════════════════════════════════════════════════ */
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);     }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.75); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes arcDraw {
+  from { stroke-dashoffset: 300; opacity: 0; }
+  to   { stroke-dashoffset: 0;   opacity: 1; }
+}
+
+@keyframes sparkFloat {
+  0%   { transform: translateY(0px) scale(1);    opacity: 1; }
+  50%  { transform: translateY(-8px) scale(1.2); opacity: 0.8; }
+  100% { transform: translateY(0px) scale(1);    opacity: 1; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(239,68,68,0.15); }
+  50%      { box-shadow: 0 0 28px rgba(239,68,68,0.40), 0 0 48px rgba(239,68,68,0.12); }
+}
+
+@keyframes borderGlowPurple {
+  0%, 100% { box-shadow: 0 4px 24px rgba(139,92,246,0.07); }
+  50%      { box-shadow: 0 4px 32px rgba(139,92,246,0.22), 0 0 48px rgba(139,92,246,0.08); }
+}
+
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+  40%           { transform: scale(1); opacity: 1;   }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0);   }
+}
+
+@keyframes successPop {
+  0%   { transform: scale(0.9); opacity: 0; }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════════
+   LAYOUT
+   ══════════════════════════════════════════════════════ */
+
 .crayon-shell-container {
   height: 100% !important;
   background: #0a0a0f !important;
 }
 
-/* ─── Conversation starter hover — fix dark mode distortion ─── */
-.crayon-shell-conversation-starter-item-long {
-  border-left: 2px solid transparent !important;
-  border-radius: 10px !important;
-  transition: background-color 0.12s ease, border-color 0.12s ease !important;
-}
-.crayon-shell-conversation-starter-item-long:hover {
-  background-color: rgba(99, 102, 241, 0.09) !important;
-  transform: none !important;
-  filter: none !important;
-  border-left: 2px solid rgba(99, 102, 241, 0.4) !important;
-}
-.crayon-shell-conversation-starter-item-long:active {
-  background-color: rgba(99, 102, 241, 0.15) !important;
-  transform: none !important;
-}
-.crayon-shell-conversation-starter-item-long:hover .crayon-shell-conversation-starter-item-long__arrow {
-  color: rgba(99, 102, 241, 0.8) !important;
+/* ══════════════════════════════════════════════════════
+   WELCOME SCREEN — Premium
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-desktop-welcome-screen {
+  padding-top: 48px !important;
 }
 
-/* ─── Dark theme colors ─── */
-.crayon-shell-thread-message-user__content {
-  background-color: rgba(99, 102, 241, 0.18) !important;
+.crayon-shell-welcome-screen__title {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
   color: #e8e8f0 !important;
-  border: 1px solid rgba(99, 102, 241, 0.25) !important;
+  line-height: 1.25 !important;
+  background: linear-gradient(135deg, #e8e8f0 30%, #a5b4fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  animation: fadeUp 0.5s ease both !important;
 }
+
+.crayon-shell-welcome-screen__description {
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  color: rgba(255,255,255,0.38) !important;
+  max-width: 380px !important;
+  animation: fadeUp 0.55s 0.06s ease both !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   CONVERSATION STARTERS
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-conversation-starter-item-long {
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 12px !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+  animation: fadeUp 0.4s ease both !important;
+}
+
+.crayon-shell-conversation-starter-item-long:nth-child(1) { animation-delay: 0.08s !important; }
+.crayon-shell-conversation-starter-item-long:nth-child(2) { animation-delay: 0.14s !important; }
+.crayon-shell-conversation-starter-item-long:nth-child(3) { animation-delay: 0.20s !important; }
+.crayon-shell-conversation-starter-item-long:nth-child(4) { animation-delay: 0.26s !important; }
+
+.crayon-shell-conversation-starter-item-long:hover {
+  background-color: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.1) !important;
+}
+
+.crayon-shell-conversation-starter-item-long:active {
+  background-color: rgba(99, 102, 241, 0.13) !important;
+  transform: translateY(0) !important;
+}
+
+.crayon-shell-conversation-starter-item-long:hover .crayon-shell-conversation-starter-item-long__arrow {
+  color: rgba(99, 102, 241, 0.8) !important;
+  transform: translateX(2px) !important;
+  transition: transform 0.12s ease !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAT MESSAGES — Card entrance animations
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-thread-message-agent {
+  align-items: flex-start !important;
+  animation: cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
+}
+
+.crayon-shell-thread-message-user {
+  animation: slideInRight 0.25s ease both !important;
+}
+
+.crayon-shell-thread-message-agent__content {
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.crayon-shell-thread-message-agent__avatar {
+  flex-shrink: 0 !important;
+  margin-top: 4px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   USER MESSAGES
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-thread-message-user__content {
+  background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.12)) !important;
+  color: #e8e8f0 !important;
+  border: 1px solid rgba(99,102,241,0.22) !important;
+  border-radius: 16px 16px 4px 16px !important;
+  font-size: 13px !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   COMPOSER — Premium
+   ══════════════════════════════════════════════════════ */
 
 .crayon-shell-desktop-welcome-composer {
   background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  border-radius: 16px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .crayon-shell-thread-composer__input-wrapper {
   background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  border-radius: 16px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-.crayon-shell-welcome-screen__title {
-  color: #e8e8f0 !important;
-  font-size: 22px !important;
-}
-.crayon-shell-welcome-screen__description {
-  color: rgba(255, 255, 255, 0.45) !important;
-  max-width: 360px !important;
+.crayon-shell-desktop-welcome-composer:focus-within {
+  border-color: rgba(99,102,241,0.42) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
 }
 
-/* ─── Textarea — min-height so it's always clickable (CrayonChat starts at 0px) ─── */
+.crayon-shell-thread-composer:focus-within .crayon-shell-thread-composer__input-wrapper {
+  border-color: rgba(99,102,241,0.42) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
+}
+
 .crayon-shell-desktop-welcome-composer__input,
 .crayon-shell-thread-composer__input {
   color: #e8e8f0 !important;
@@ -70,120 +224,170 @@ html, body {
   min-height: 24px !important;
   height: auto !important;
   resize: none !important;
-}
-.crayon-shell-desktop-welcome-composer__input::placeholder,
-.crayon-shell-thread-composer__input::placeholder {
-  color: rgba(255, 255, 255, 0.25) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
 }
 
-/* ─── Chat messages area — smooth scroll, cards never clipped ─── */
+.crayon-shell-desktop-welcome-composer__input::placeholder,
+.crayon-shell-thread-composer__input::placeholder {
+  color: rgba(255,255,255,0.2) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SUBMIT BUTTON — Brand gradient + hover glow
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-composer-submit-button {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border-radius: 10px !important;
+  border: none !important;
+  transition: opacity 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+
+.crayon-shell-composer-submit-button:not(:disabled):hover {
+  opacity: 0.9 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.45) !important;
+}
+
+.crayon-shell-composer-submit-button:not(:disabled):active {
+  transform: scale(0.97) !important;
+}
+
+.crayon-shell-composer-submit-button:disabled {
+  background: rgba(255,255,255,0.08) !important;
+  transform: none !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   AGENT TEXT MESSAGES
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-thread-message-agent__text {
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  color: rgba(255,255,255,0.80) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   THINKING/LOADING INDICATOR — Custom typing dots
+   ══════════════════════════════════════════════════════ */
+
+.crayon-shell-thread-message-agent__loading {
+  color: rgba(99,102,241,0.6) !important;
+}
+
+/* Override default loading with custom dots if possible */
+[class*="loading-dots"] span,
+[class*="typing"] span {
+  animation: typing 1.4s infinite ease-in-out !important;
+  background: rgba(99,102,241,0.7) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SCROLL AREA
+   ══════════════════════════════════════════════════════ */
+
 .crayon-shell-thread-messages-list,
 [class*="thread-messages"],
 [class*="messages-list"] {
   overflow-y: auto !important;
   scroll-behavior: smooth !important;
-  padding-bottom: 24px !important;
+  padding-bottom: 32px !important;
 }
 
-/* ─── Template card wrapper — constrain width, don't overflow ─── */
-.crayon-shell-thread-message-agent__content {
-  max-width: 100% !important;
-  overflow: visible !important;
-}
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════ */
 
-/* ─── Agent message row — allow wrapping tall cards ─── */
-.crayon-shell-thread-message-agent {
-  align-items: flex-start !important;
-}
-
-/* ─── Agent avatar ─── */
-.crayon-shell-thread-message-agent__avatar {
-  flex-shrink: 0 !important;
-  margin-top: 4px !important;
-}
-
-/* ─── Welcome screen — tighter vertical rhythm ─── */
-.crayon-shell-desktop-welcome-screen {
-  padding-top: 40px !important;
-}
-.crayon-shell-welcome-screen__title {
-  font-size: 20px !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  color: #e8e8f0 !important;
-}
-.crayon-shell-welcome-screen__description {
-  font-size: 13px !important;
-  line-height: 1.65 !important;
-  color: rgba(255,255,255,0.4) !important;
-  max-width: 380px !important;
-}
-
-/* ─── Chat composer — polished ─── */
-.crayon-shell-desktop-welcome-composer,
-.crayon-shell-thread-composer {
-  border-radius: 14px !important;
-  border-color: rgba(99,102,241,0.18) !important;
-}
-.crayon-shell-desktop-welcome-composer:focus-within,
-.crayon-shell-thread-composer:focus-within {
-  border-color: rgba(99,102,241,0.4) !important;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.08) !important;
-}
-
-/* ─── Submit button — brand gradient ─── */
-.crayon-shell-composer-submit-button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-  border-radius: 10px !important;
-  border: none !important;
-}
-.crayon-shell-composer-submit-button:disabled {
-  background: rgba(255,255,255,0.08) !important;
-}
-
-/* ─── AI message text ─── */
-.crayon-shell-thread-message-agent__text {
-  font-size: 13px !important;
-  line-height: 1.65 !important;
-  color: rgba(255,255,255,0.82) !important;
-}
-
-/* ─── User message bubble ─── */
-.crayon-shell-thread-message-user__content {
-  border-radius: 14px 14px 4px 14px !important;
-  font-size: 13px !important;
-}
-
-/* ─── Thinking indicator ─── */
-.crayon-shell-thread-message-agent__loading {
-  color: rgba(99,102,241,0.5) !important;
-}
-
-/* ─── Sidebar / history ─── */
 .crayon-shell-sidebar {
-  background: rgba(10, 10, 15, 0.95) !important;
+  background: rgba(10, 10, 15, 0.97) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(16px) !important;
 }
+
 .crayon-shell-sidebar-thread-item {
   border-radius: 8px !important;
-  color: rgba(255,255,255,0.5) !important;
+  color: rgba(255,255,255,0.45) !important;
   font-size: 11px !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
 }
+
 .crayon-shell-sidebar-thread-item:hover,
 .crayon-shell-sidebar-thread-item[data-active="true"] {
   background: rgba(99, 102, 241, 0.1) !important;
   color: #a5b4fc !important;
 }
 
-/* ─── New Chat button ─── */
 .crayon-shell-new-thread-button {
   font-size: 12px !important;
   border-radius: 8px !important;
-  border-color: rgba(99,102,241,0.3) !important;
-  color: rgba(255,255,255,0.6) !important;
+  border-color: rgba(99,102,241,0.28) !important;
+  color: rgba(255,255,255,0.55) !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
 }
 
-/* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 4px; }
+.crayon-shell-new-thread-button:hover {
+  background: rgba(99,102,241,0.1) !important;
+  color: #a5b4fc !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SCROLLBAR — Premium thin
+   ══════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar          { width: 3px; height: 3px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: rgba(99,102,241,0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.45); }
+
+/* ══════════════════════════════════════════════════════
+   CARD UTILITY CLASSES — Applied from TSX
+   ══════════════════════════════════════════════════════ */
+
+.orbiter-card-enter {
+  animation: cardEntrance 0.4s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+.orbiter-btn {
+  transition: opacity 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+
+.orbiter-btn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.orbiter-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  opacity: 0.92;
+}
+
+.orbiter-btn:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+/* Glow pulse on high-urgency cards */
+.orbiter-urgent {
+  animation: borderGlow 2.5s ease-in-out infinite !important;
+}
+
+/* Serendipity spark float */
+.orbiter-spark {
+  animation: sparkFloat 2.8s ease-in-out infinite !important;
+}
+
+.orbiter-spark-delay-1 { animation-delay: 0.4s !important; }
+.orbiter-spark-delay-2 { animation-delay: 0.9s !important; }
+
+/* Success pop */
+.orbiter-success-pop {
+  animation: successPop 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
+}
+
+/* Shimmer loading */
+.orbiter-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% auto;
+  animation: shimmer 1.8s linear infinite;
+}

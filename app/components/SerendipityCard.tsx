@@ -1,32 +1,109 @@
 "use client";
 
-import { useState } from "react";
-import { Steps, StepsItem } from "@crayonai/react-ui";
+import { useState, useEffect } from "react";
 import { Avatar } from "./Avatar";
 import { createOutcome, searchPersons } from "../lib/xano";
 
 interface SerendipityCardProps {
-  personA: string;          // person in your network
+  personA: string;
   personARole: string;
   personACompany: string;
-  personB: string;          // suggested connection for personA
+  personB: string;
   personBRole: string;
   personBCompany: string;
-  whyTheyMatch: string;     // the serendipitous insight
-  sharedContext: string[];  // 2-3 things they have in common
-  suggestedIntro: string;   // draft intro message you could send
+  whyTheyMatch: string;
+  sharedContext: string[];
+  suggestedIntro: string;
   confidence: "high" | "medium" | "speculative";
   masterPersonId?: number;
 }
 
 const confidenceConfig = {
-  high:        { label: "High resonance", color: "#34d399", dot: "#10b981" },
-  medium:      { label: "Good match", color: "#fbbf24", dot: "#f59e0b" },
-  speculative: { label: "Moonshot match", color: "#a78bfa", dot: "#8b5cf6" },
+  high:        { label: "High resonance", color: "#34d399", dot: "#10b981", glow: "rgba(52,211,153,0.35)", arcColor: "#34d399", pct: 92 },
+  medium:      { label: "Good match",     color: "#fbbf24", dot: "#f59e0b", glow: "rgba(245,158,11,0.35)",  arcColor: "#fbbf24", pct: 68 },
+  speculative: { label: "Moonshot match", color: "#a78bfa", dot: "#8b5cf6", glow: "rgba(139,92,246,0.40)",  arcColor: "#a78bfa", pct: 45 },
 };
 
-function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+// Animated SVG connection arc between two avatars
+function ConnectionArc({ color, pct }: { color: string; pct: number }) {
+  const [animated, setAnimated] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setAnimated(true), 120); return () => clearTimeout(t); }, []);
+
+  // Arc path: horizontal spline with upward bow
+  const W = 110, H = 40;
+  const d = `M 10,${H} Q ${W / 2},4 ${W - 10},${H}`;
+  const total = 200;
+  const dash = animated ? total : 0;
+
+  return (
+    <div style={{ width: W, height: H, flexShrink: 0, position: "relative" }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} overflow="visible">
+        {/* Track */}
+        <path d={d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Animated fill */}
+        <path
+          d={d}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray={`${total} ${total}`}
+          strokeDashoffset={total - dash}
+          style={{
+            transition: animated ? "stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)" : "none",
+            filter: `drop-shadow(0 0 4px ${color})`,
+          }}
+        />
+        {/* Moving spark along the path */}
+        {animated && (
+          <circle r="3" fill={color} style={{ filter: `drop-shadow(0 0 5px ${color})` }}>
+            <animateMotion dur="3s" repeatCount="indefinite" path={d} />
+          </circle>
+        )}
+      </svg>
+
+      {/* Strength label below arc */}
+      <div style={{
+        position: "absolute",
+        bottom: -14,
+        left: "50%",
+        transform: "translateX(-50%)",
+        fontSize: "9px",
+        fontWeight: 700,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        color: color,
+        opacity: 0.75,
+        whiteSpace: "nowrap",
+      }}>
+        {pct}% match
+      </div>
+    </div>
+  );
+}
+
+// Floating spark particles in the connector zone
+function SparkParticles({ color }: { color: string }) {
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+      {[...Array(3)].map((_, i) => (
+        <div
+          key={i}
+          className={`orbiter-spark${i > 0 ? ` orbiter-spark-delay-${i}` : ""}`}
+          style={{
+            position: "absolute",
+            width: 3,
+            height: 3,
+            borderRadius: "50%",
+            background: color,
+            boxShadow: `0 0 6px ${color}`,
+            top: `${20 + i * 18}%`,
+            left: `${30 + i * 15}%`,
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function SerendipityCard({
@@ -47,6 +124,7 @@ export function SerendipityCard({
   const [editingIntro, setEditingIntro] = useState(false);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleMakeIntro = async () => {
     if (sending || sent) return;
@@ -55,9 +133,7 @@ export function SerendipityCard({
       let personId = masterPersonId;
       if (!personId) {
         const results = await searchPersons(personA, 1);
-        if (results.items.length > 0) {
-          personId = results.items[0].master_person_id;
-        }
+        if (results.items.length > 0) personId = results.items[0].master_person_id;
       }
       await createOutcome({
         copilot_mode: "serendipity",
@@ -73,203 +149,263 @@ export function SerendipityCard({
     }
   };
 
+  const handleCopy = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(introMsg);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div
+      className="orbiter-card-enter"
       style={{
-        background: "linear-gradient(160deg, #0f0f1a 0%, #13131f 100%)",
-        border: "1px solid rgba(139, 92, 246, 0.22)",
-        borderRadius: "16px",
-        padding: "20px",
-        margin: "4px 0",
+        background: "linear-gradient(160deg, #0e0e1b 0%, #13131f 55%, #0c0c18 100%)",
+        border: `1px solid ${sent ? "rgba(52,211,153,0.3)" : "rgba(139,92,246,0.22)"}`,
+        borderRadius: "18px",
+        padding: "22px",
+        margin: "6px 0",
         fontFamily: "Inter, sans-serif",
-        boxShadow: "0 4px 24px rgba(139,92,246,0.07)",
         position: "relative",
         overflow: "hidden",
+        transition: "border-color 0.4s ease",
+        boxShadow: sent
+          ? "0 4px 32px rgba(52,211,153,0.12)"
+          : "0 4px 32px rgba(139,92,246,0.09), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
-      {/* Top glow */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "50%",
-          height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.5), transparent)",
-        }}
-      />
+      {/* Ambient glow blobs */}
+      <div style={{
+        position: "absolute", top: -60, right: -40,
+        width: 180, height: 180,
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", bottom: -40, left: -30,
+        width: 120, height: 120,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Top glow line */}
+      <div style={{
+        position: "absolute", top: 0, left: "50%",
+        transform: "translateX(-50%)",
+        width: "55%", height: "1px",
+        background: `linear-gradient(90deg, transparent, ${cfg.arcColor}66, transparent)`,
+      }} />
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div
-            style={{
-              background: "linear-gradient(135deg, #7c3aed, #a855f7)",
-              borderRadius: "7px",
-              padding: "4px 11px",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "white",
-            }}
-          >
-            ✨ Serendipity
-          </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+        <div style={{
+          background: "linear-gradient(135deg, #5b21b6, #7c3aed, #a855f7)",
+          borderRadius: "8px",
+          padding: "4px 12px",
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "white",
+          boxShadow: "0 2px 12px rgba(124,58,237,0.35)",
+        }}>
+          ✨ Serendipity
         </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <div
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: cfg.dot,
-              boxShadow: `0 0 8px ${cfg.dot}`,
-            }}
-          />
-          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", fontWeight: 500 }}>
+          <div style={{
+            width: "6px", height: "6px", borderRadius: "50%",
+            background: cfg.dot,
+            boxShadow: `0 0 10px ${cfg.glow}`,
+            animation: "glowPulse 2.4s ease-in-out infinite",
+          }} />
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
             {cfg.label}
           </span>
         </div>
       </div>
 
-      {/* People matcher */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          marginBottom: "16px",
-        }}
-      >
+      {/* ─── CONNECTION VISUALIZATION ─────────────────── */}
+      <div style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "0",
+        marginBottom: "28px",
+        position: "relative",
+        padding: "4px 0",
+      }}>
         {/* Person A */}
         <div style={{ flex: 1, textAlign: "center" }}>
-          <div style={{ margin: "0 auto 6px", width: 40, display: "flex", justifyContent: "center" }}>
-            <Avatar name={personA} size={40} borderRadius="50%" style={{ boxShadow: "0 4px 12px rgba(99,102,241,0.35)" }} />
+          <div style={{
+            margin: "0 auto 8px",
+            width: 48,
+            display: "flex",
+            justifyContent: "center",
+          }}>
+            <div style={{ position: "relative" }}>
+              <Avatar name={personA} size={48} borderRadius="50%"
+                style={{ boxShadow: "0 4px 20px rgba(99,102,241,0.4)" }} />
+              {/* Ring */}
+              <div style={{
+                position: "absolute", inset: -3,
+                borderRadius: "50%",
+                border: "1px solid rgba(99,102,241,0.3)",
+                pointerEvents: "none",
+              }} />
+            </div>
           </div>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "#e8e8f0" }}>{personA}</div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>{personARole}</div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{personACompany}</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#e8e8f0", letterSpacing: "-0.01em" }}>
+            {personA}
+          </div>
+          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.42)", marginTop: "2px", lineHeight: 1.4 }}>
+            {personARole}
+          </div>
+          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)" }}>
+            {personACompany}
+          </div>
         </div>
 
-        {/* Spark connector */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-          <div style={{ fontSize: "20px" }}>✨</div>
-          <div
-            style={{
-              fontSize: "9px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "rgba(139,92,246,0.6)",
-            }}
-          >
-            Should meet
-          </div>
+        {/* Arc connector */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          paddingTop: "4px",
+          gap: "16px",
+          position: "relative",
+          flexShrink: 0,
+        }}>
+          <ConnectionArc color={cfg.arcColor} pct={cfg.pct} />
         </div>
 
         {/* Person B */}
         <div style={{ flex: 1, textAlign: "center" }}>
-          <div style={{ margin: "0 auto 6px", width: 40, display: "flex", justifyContent: "center" }}>
-            <Avatar name={personB} size={40} borderRadius="50%" style={{ boxShadow: "0 4px 12px rgba(16,185,129,0.35)" }} />
+          <div style={{
+            margin: "0 auto 8px",
+            width: 48,
+            display: "flex",
+            justifyContent: "center",
+          }}>
+            <div style={{ position: "relative" }}>
+              <Avatar name={personB} size={48} borderRadius="50%"
+                style={{ boxShadow: `0 4px 20px ${cfg.glow}` }} />
+              <div style={{
+                position: "absolute", inset: -3,
+                borderRadius: "50%",
+                border: `1px solid ${cfg.arcColor}55`,
+                pointerEvents: "none",
+              }} />
+            </div>
           </div>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "#e8e8f0" }}>{personB}</div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>{personBRole}</div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{personBCompany}</div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#e8e8f0", letterSpacing: "-0.01em" }}>
+            {personB}
+          </div>
+          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.42)", marginTop: "2px", lineHeight: 1.4 }}>
+            {personBRole}
+          </div>
+          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)" }}>
+            {personBCompany}
+          </div>
         </div>
       </div>
 
       {/* Why they match */}
-      <div
-        style={{
-          background: "rgba(139,92,246,0.07)",
-          borderLeft: "3px solid rgba(139,92,246,0.4)",
-          borderRadius: "0 10px 10px 0",
-          padding: "11px 14px",
-          marginBottom: "14px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.09em",
-            textTransform: "uppercase",
-            color: "rgba(167,139,250,0.7)",
-            marginBottom: "5px",
-          }}
-        >
+      <div style={{
+        background: "rgba(139,92,246,0.07)",
+        borderLeft: "3px solid rgba(139,92,246,0.45)",
+        borderRadius: "0 12px 12px 0",
+        padding: "12px 16px",
+        marginBottom: "16px",
+      }}>
+        <div style={{
+          fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em",
+          textTransform: "uppercase", color: "rgba(167,139,250,0.7)",
+          marginBottom: "6px",
+        }}>
           Why Orbiter surfaced this
         </div>
-        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.78)", lineHeight: 1.55 }}>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.80)", lineHeight: 1.6 }}>
           {whyTheyMatch}
         </div>
       </div>
 
-      {/* Shared context steps */}
+      {/* Shared context — pill tags */}
       {sharedContext.length > 0 && (
-        <div style={{ marginBottom: "14px" }}>
-          <div
-            style={{
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.09em",
-              textTransform: "uppercase",
-              color: "rgba(167,139,250,0.65)",
-              marginBottom: "10px",
-            }}
-          >
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{
+            fontSize: "10px", fontWeight: 700, letterSpacing: "0.09em",
+            textTransform: "uppercase", color: "rgba(167,139,250,0.65)",
+            marginBottom: "10px",
+          }}>
             What they share
           </div>
-          <Steps>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
             {sharedContext.map((point, i) => (
-              <StepsItem key={i} title={point} details="" number={i + 1} />
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(139,92,246,0.09)",
+                  border: "1px solid rgba(139,92,246,0.22)",
+                  borderRadius: "100px",
+                  padding: "4px 12px",
+                  fontSize: "11px",
+                  color: "rgba(167,139,250,0.85)",
+                  fontWeight: 500,
+                  animation: `fadeUp 0.35s ${0.05 * i}s ease both`,
+                }}
+              >
+                <span style={{
+                  width: 4, height: 4, borderRadius: "50%",
+                  background: cfg.dot, flexShrink: 0,
+                  boxShadow: `0 0 5px ${cfg.dot}`,
+                }} />
+                {point}
+              </div>
             ))}
-          </Steps>
+          </div>
         </div>
       )}
 
       {/* Draft intro message */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          borderRadius: "10px",
-          padding: "12px 14px",
-          border: editingIntro ? "1px solid rgba(139,92,246,0.3)" : "1px solid rgba(255,255,255,0.06)",
-          marginBottom: "14px",
-          transition: "border-color 0.15s ease",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "8px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "rgba(167,139,250,0.65)",
-            }}
-          >
-            💬 Draft intro you can send
+      <div style={{
+        background: "rgba(255,255,255,0.025)",
+        borderRadius: "12px",
+        padding: "14px 16px",
+        border: editingIntro
+          ? "1px solid rgba(139,92,246,0.35)"
+          : "1px solid rgba(255,255,255,0.06)",
+        marginBottom: "16px",
+        transition: "border-color 0.18s ease",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: "10px",
+        }}>
+          <div style={{
+            fontSize: "10px", fontWeight: 700, letterSpacing: "0.09em",
+            textTransform: "uppercase", color: "rgba(167,139,250,0.65)",
+          }}>
+            💬 Draft intro
           </div>
           <button
             onClick={() => setEditingIntro(!editingIntro)}
             style={{
-              background: "none",
-              border: "none",
-              color: "rgba(139,92,246,0.6)",
+              background: editingIntro ? "rgba(139,92,246,0.12)" : "none",
+              border: editingIntro ? "1px solid rgba(139,92,246,0.3)" : "none",
+              color: "rgba(139,92,246,0.7)",
               fontSize: "11px",
+              fontWeight: 500,
               cursor: "pointer",
-              padding: 0,
+              padding: editingIntro ? "2px 8px" : "0",
+              borderRadius: "6px",
               fontFamily: "Inter, sans-serif",
+              transition: "all 0.15s ease",
             }}
           >
             {editingIntro ? "Done" : "Edit"}
@@ -284,92 +420,93 @@ export function SerendipityCard({
             style={{
               width: "100%",
               fontSize: "13px",
-              color: "rgba(255,255,255,0.78)",
+              color: "rgba(255,255,255,0.82)",
               background: "transparent",
               border: "none",
               outline: "none",
               fontFamily: "Inter, sans-serif",
               resize: "vertical",
-              lineHeight: 1.6,
+              lineHeight: 1.65,
               padding: 0,
               boxSizing: "border-box",
             }}
           />
         ) : (
-          <div
-            style={{
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.65)",
-              lineHeight: 1.65,
-              fontStyle: "italic",
-              borderLeft: "2px solid rgba(139,92,246,0.25)",
-              paddingLeft: "10px",
-            }}
-          >
+          <div style={{
+            fontSize: "13px",
+            color: "rgba(255,255,255,0.68)",
+            lineHeight: 1.7,
+            borderLeft: "2px solid rgba(139,92,246,0.3)",
+            paddingLeft: "12px",
+            fontStyle: "italic",
+          }}>
             "{introMsg}"
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div
-        style={{
-          paddingTop: "12px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          gap: "8px",
-        }}
-      >
+      {/* Footer CTA */}
+      <div style={{
+        paddingTop: "14px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        display: "flex",
+        gap: "8px",
+      }}>
         <button
           onClick={handleMakeIntro}
           disabled={sending}
+          className={sent ? "orbiter-success-pop" : "orbiter-btn orbiter-btn-primary"}
           style={{
             flex: 2,
-            padding: "9px 0",
+            padding: "10px 0",
             background: sent
               ? "rgba(52,211,153,0.1)"
               : "linear-gradient(135deg, #7c3aed, #a855f7)",
             border: sent ? "1px solid rgba(52,211,153,0.3)" : "none",
-            borderRadius: "9px",
+            borderRadius: "10px",
             color: sent ? "#34d399" : "white",
             fontSize: "13px",
             fontWeight: 600,
             cursor: sending ? "wait" : "pointer",
-            transition: "all 0.2s ease",
             opacity: sending ? 0.7 : 1,
+            fontFamily: "Inter, sans-serif",
+            letterSpacing: "0.01em",
           }}
         >
-          {sent ? "Intro Sent" : sending ? "Sending..." : "Make the Intro"}
+          {sent ? "✓ Intro Queued" : sending ? "Sending…" : "Make the Intro"}
         </button>
         <button
-          onClick={() => {
-            if (navigator.clipboard) navigator.clipboard.writeText(introMsg);
-          }}
+          onClick={handleCopy}
+          className="orbiter-btn"
           style={{
             flex: 1,
-            padding: "9px 0",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "9px",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "13px",
+            padding: "10px 0",
+            background: copied ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.05)",
+            border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.09)"}`,
+            borderRadius: "10px",
+            color: copied ? "#34d399" : "rgba(255,255,255,0.5)",
+            fontSize: "12px",
             fontWeight: 500,
             cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
+            transition: "all 0.2s ease",
           }}
         >
-          Copy
+          {copied ? "Copied!" : "Copy"}
         </button>
         <button
+          className="orbiter-btn"
           style={{
             flex: 1,
-            padding: "9px 0",
+            padding: "10px 0",
             background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "9px",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "13px",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: "10px",
+            color: "rgba(255,255,255,0.4)",
+            fontSize: "12px",
             fontWeight: 500,
             cursor: "pointer",
+            fontFamily: "Inter, sans-serif",
           }}
         >
           Skip

@@ -62,12 +62,15 @@ export function OutcomeCard({
 
   return (
     <div
+      className="orbiter-card-enter"
       style={{
-        background: "linear-gradient(160deg, #0f0f1a 0%, #13131f 60%, #0d0d18 100%)",
+        background: saved
+          ? "linear-gradient(160deg, #0c1a14 0%, #0f1f17 60%, #0b1812 100%)"
+          : "linear-gradient(160deg, #0f0f1a 0%, #13131f 60%, #0d0d18 100%)",
         border: `1px solid ${saved ? "rgba(52,211,153,0.35)" : "rgba(99, 102, 241, 0.28)"}`,
-        borderRadius: "16px",
-        padding: "20px",
-        margin: "4px 0",
+        borderRadius: "18px",
+        padding: "22px",
+        margin: "6px 0",
         boxShadow: saved
           ? "0 4px 24px rgba(52,211,153,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"
           : "0 4px 24px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.04)",
@@ -115,19 +118,39 @@ export function OutcomeCard({
 
         {/* Network scan pulse */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <div
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
+          <div style={{ position: "relative", width: 10, height: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {matchStrength === "building" && (
+              <>
+                <div style={{
+                  position: "absolute", inset: -4,
+                  borderRadius: "50%",
+                  border: `1px solid ${strength.dot}44`,
+                  animation: "scanPulse 2s ease-out infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: -7,
+                  borderRadius: "50%",
+                  border: `1px solid ${strength.dot}22`,
+                  animation: "scanPulse 2s 0.4s ease-out infinite",
+                }} />
+              </>
+            )}
+            <div style={{
+              width: "7px", height: "7px", borderRadius: "50%",
               background: strength.dot,
-              boxShadow: `0 0 8px ${strength.glow}`,
-              animation: matchStrength === "building" ? "pulse 2s infinite" : "none",
-            }}
-          />
+              boxShadow: `0 0 10px ${strength.glow}`,
+              animation: "glowPulse 2.2s ease-in-out infinite",
+            }} />
+          </div>
           <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", fontWeight: 500 }}>
             {strength.label}
           </span>
+          <style>{`
+            @keyframes scanPulse {
+              0%   { transform: scale(1);   opacity: 0.8; }
+              100% { transform: scale(2.5); opacity: 0; }
+            }
+          `}</style>
         </div>
       </div>
 
@@ -221,32 +244,27 @@ export function OutcomeCard({
           <>
             <button
               onClick={handleSave}
+              className="orbiter-btn"
               style={{
-                flex: 2,
-                padding: "9px 0",
+                flex: 2, padding: "10px 0",
                 background: "linear-gradient(135deg, #059669, #10b981)",
-                border: "none",
-                borderRadius: "9px",
-                color: "white",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
+                border: "none", borderRadius: "10px",
+                color: "white", fontSize: "13px", fontWeight: 600,
+                cursor: "pointer", fontFamily: "Inter, sans-serif",
               }}
             >
               ✓ Save Changes
             </button>
             <button
               onClick={() => setEditing(false)}
+              className="orbiter-btn"
               style={{
-                flex: 1,
-                padding: "9px 0",
+                flex: 1, padding: "10px 0",
                 background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "9px",
-                color: "rgba(255,255,255,0.5)",
-                fontSize: "13px",
-                fontWeight: 500,
-                cursor: "pointer",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: "10px",
+                color: "rgba(255,255,255,0.5)", fontSize: "12px",
+                fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif",
               }}
             >
               Cancel
@@ -257,36 +275,33 @@ export function OutcomeCard({
             <button
               onClick={handleSaveToOrbiter}
               disabled={saving}
+              className={saved ? "orbiter-success-pop" : "orbiter-btn orbiter-btn-primary"}
               style={{
-                flex: 2,
-                padding: "9px 0",
+                flex: 2, padding: "10px 0",
                 background: saved
                   ? "rgba(52,211,153,0.12)"
                   : "linear-gradient(135deg, #6366f1, #8b5cf6)",
                 border: saved ? "1px solid rgba(52,211,153,0.3)" : "none",
-                borderRadius: "9px",
+                borderRadius: "10px",
                 color: saved ? "#34d399" : "white",
-                fontSize: "13px",
-                fontWeight: 600,
+                fontSize: "13px", fontWeight: 600,
                 cursor: saving ? "wait" : "pointer",
-                transition: "all 0.2s ease",
                 opacity: saving ? 0.7 : 1,
+                fontFamily: "Inter, sans-serif", letterSpacing: "0.01em",
               }}
             >
-              {saved ? "Saved to Orbiter" : saving ? "Saving..." : "Save to Orbiter"}
+              {saved ? "✓ Saved to Orbiter" : saving ? "Saving…" : "Save to Orbiter"}
             </button>
             <button
               onClick={() => setEditing(true)}
+              className="orbiter-btn"
               style={{
-                flex: 1,
-                padding: "9px 0",
+                flex: 1, padding: "10px 0",
                 background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "9px",
-                color: "rgba(255,255,255,0.55)",
-                fontSize: "13px",
-                fontWeight: 500,
-                cursor: "pointer",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: "10px",
+                color: "rgba(255,255,255,0.5)", fontSize: "12px",
+                fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif",
               }}
             >
               Edit
