@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
-import { getOutcomes, createOutcome, type OutcomeItem } from "../lib/xano";
+import { getOutcomes, createOutcome, dispatchOutcome, archiveOutcome, type OutcomeItem } from "../lib/xano";
 
 type CopilotMode = "outcome" | "loop" | "serendipity";
 type Status = "draft" | "processing" | "suggestion" | "submitted" | "archived";
@@ -35,7 +35,7 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString();
 }
 
-export function OutcomesView() {
+export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
   const [items, setItems] = useState<OutcomeItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,6 +44,7 @@ export function OutcomesView() {
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContext, setNewContext] = useState("");
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const fetchItems = useCallback(async (mode: string) => {
     setLoading(true);
@@ -78,6 +79,32 @@ export function OutcomesView() {
       fetchItems(activeFilter);
     } catch (err) {
       console.error("Failed to create outcome:", err);
+    }
+  };
+
+  const handleDispatch = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActionLoading(id);
+    try {
+      await dispatchOutcome(id);
+      await fetchItems(activeFilter);
+    } catch (err) {
+      console.error("Failed to dispatch outcome:", err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleArchive = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActionLoading(id);
+    try {
+      await archiveOutcome(id);
+      await fetchItems(activeFilter);
+    } catch (err) {
+      console.error("Failed to archive outcome:", err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -325,18 +352,64 @@ export function OutcomesView() {
                       </span>
                     </div>
 
-                    {/* Expanded: context */}
-                    {expanded && o.request_context && (
+                    {/* Expanded: context + actions */}
+                    {expanded && (
                       <div style={{
                         marginTop: "14px", paddingTop: "14px",
                         borderTop: "1px solid rgba(255,255,255,0.06)",
                       }}>
-                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "0 0 8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Context
-                        </p>
-                        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: 0, lineHeight: "1.6" }}>
-                          {o.request_context}
-                        </p>
+                        {o.request_context && (
+                          <>
+                            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "0 0 8px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              Context
+                            </p>
+                            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: "1.6" }}>
+                              {o.request_context}
+                            </p>
+                          </>
+                        )}
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          {(o.status === "draft" || o.status === "processing") && (
+                            <button
+                              onClick={(e) => handleDispatch(o.id, e)}
+                              disabled={actionLoading === o.id}
+                              style={{
+                                fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                background: "linear-gradient(135deg, #4f46e5, #7c3aed)", border: "none",
+                                color: "white", cursor: actionLoading === o.id ? "wait" : "pointer",
+                                opacity: actionLoading === o.id ? 0.7 : 1,
+                              }}
+                            >
+                              {actionLoading === o.id ? "Dispatching…" : "⚡ Dispatch"}
+                            </button>
+                          )}
+                          {o.status === "suggestion" && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSwitchTab("Copilot"); }}
+                              style={{
+                                fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
+                                background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)",
+                                color: "#34d399", cursor: "pointer",
+                              }}
+                            >
+                              🔍 Find Paths
+                            </button>
+                          )}
+                          {o.status !== "archived" && (
+                            <button
+                              onClick={(e) => handleArchive(o.id, e)}
+                              disabled={actionLoading === o.id}
+                              style={{
+                                fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
+                                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                                color: "rgba(255,255,255,0.4)", cursor: actionLoading === o.id ? "wait" : "pointer",
+                                opacity: actionLoading === o.id ? 0.7 : 1,
+                              }}
+                            >
+                              🗄 Archive
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

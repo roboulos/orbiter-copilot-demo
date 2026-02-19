@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
-import { getHorizon, addHorizonTarget, type HorizonTarget } from "../lib/xano";
+import { getHorizon, addHorizonTarget, removeHorizonTarget, getNetwork, type HorizonTarget } from "../lib/xano";
 import { PersonPicker } from "./PersonPicker";
 
 function formatDate(ts: number): string {
@@ -17,7 +17,10 @@ function formatDate(ts: number): string {
   return d.toLocaleDateString();
 }
 
-export function HorizonView() {
+const PIPELINE_STAGES = ["Identified", "Warming", "Active", "Connected"] as const;
+type PipelineStage = typeof PIPELINE_STAGES[number];
+
+export function HorizonView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
   const [targets, setTargets] = useState<HorizonTarget[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -25,6 +28,8 @@ export function HorizonView() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
   const [addingTarget, setAddingTarget] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
   const fetchTargets = useCallback(async () => {
     setLoading(true);
@@ -45,21 +50,36 @@ export function HorizonView() {
 
   const handleAddTarget = async (person: { master_person_id: number; full_name: string; master_person: { name: string; avatar: string | null; current_title: string | null; master_company?: { company_name: string } | null } }, _context: string) => {
     setAddingTarget(true);
+    setAddError(null);
     try {
-      const { getNetwork } = await import("../lib/xano");
-      const network = await getNetwork({ query: person.full_name, per_page: 5 });
+      const network = await getNetwork({ query: person.full_name, per_page: 10 });
       const match = network.items.find(p => p.master_person_id === person.master_person_id);
       if (!match?.node_uuid) {
-        console.error("Could not find node_uuid for person");
+        setAddError("This person isn't in your network graph yet. Connect with them first to add to Horizon.");
         return;
       }
       await addHorizonTarget(match.node_uuid);
       setAdding(false);
+      setAddError(null);
       fetchTargets();
     } catch (err) {
       console.error("Failed to add horizon target:", err);
+      setAddError("Failed to add target. Please try again.");
     } finally {
       setAddingTarget(false);
+    }
+  };
+
+  const handleRemove = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRemovingId(id);
+    try {
+      await removeHorizonTarget(id);
+      await fetchTargets();
+    } catch (err) {
+      console.error("Failed to remove horizon target:", err);
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -107,6 +127,11 @@ export function HorizonView() {
               Adding target...
             </p>
           )}
+          {addError && (
+            <p style={{ fontSize: "12px", color: "#fbbf24", margin: "10px 0 0", lineHeight: 1.5 }}>
+              ⚠ {addError}
+            </p>
+          )}
           <button
             onClick={() => setAdding(false)}
             style={{
@@ -120,32 +145,28 @@ export function HorizonView() {
         </div>
       )}
 
-      {/* Stats */}
+      {/* Pipeline board */}
       <div style={{
-        display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", marginBottom: "24px",
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "24px",
       }}>
-        <div style={{
-          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(99,102,241,0.25)",
-          borderRadius: "12px", padding: "14px 16px",
-        }}>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#6366f1", marginBottom: "2px" }}>
-            {total}
-          </div>
-          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-            Total Targets
-          </div>
-        </div>
-        <div style={{
-          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(52,211,153,0.25)",
-          borderRadius: "12px", padding: "14px 16px",
-        }}>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#34d399", marginBottom: "2px" }}>
-            {targets.filter(t => t.master_person?.current_title).length}
-          </div>
-          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-            With Title
-          </div>
-        </div>
+        {PIPELINE_STAGES.map((stage, idx) => {
+          const stageColors = ["#6366f1", "#a78bfa", "#fbbf24", "#34d399"];
+          const stageCounts = targets.length > 0 && idx === 0 ? targets.length : 0; // All default to Identified
+          const color = stageColors[idx];
+          return (
+            <div key={stage} style={{
+              background: "rgba(255,255,255,0.03)", border: `1px solid ${color}40`,
+              borderRadius: "12px", padding: "14px 16px",
+            }}>
+              <div style={{ fontSize: "22px", fontWeight: 700, color, marginBottom: "2px" }}>
+                {stageCounts}
+              </div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+                {stage}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Target list */}
@@ -283,19 +304,24 @@ export function HorizonView() {
                           </>
                         )}
                         <div style={{ display: "flex", gap: "8px" }}>
-                          <button onClick={e => e.stopPropagation()} style={{
+                          <button onClick={e => { e.stopPropagation(); onSwitchTab("Copilot"); }} style={{
                             fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",
                             background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none",
                             color: "white", cursor: "pointer",
                           }}>
                             Get intro path
                           </button>
-                          <button onClick={e => e.stopPropagation()} style={{
-                            fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
-                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                            color: "rgba(255,255,255,0.4)", cursor: "pointer",
-                          }}>
-                            Remove
+                          <button
+                            onClick={(e) => handleRemove(t.id, e)}
+                            disabled={removingId === t.id}
+                            style={{
+                              fontSize: "11px", fontWeight: 500, padding: "7px 14px", borderRadius: "8px",
+                              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+                              color: "#f87171", cursor: removingId === t.id ? "wait" : "pointer",
+                              opacity: removingId === t.id ? 0.6 : 1,
+                            }}
+                          >
+                            {removingId === t.id ? "Removing…" : "Remove"}
                           </button>
                         </div>
                       </div>

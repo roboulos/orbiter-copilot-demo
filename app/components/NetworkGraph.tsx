@@ -85,7 +85,11 @@ function buildGraphData(contacts: NetworkPerson[]): { nodes: Node[]; edges: Edge
   return { nodes, edges };
 }
 
-export function NetworkGraph() {
+interface NetworkGraphProps {
+  onNodeClick?: (personId: number) => void;
+}
+
+export function NetworkGraph({ onNodeClick }: NetworkGraphProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
@@ -254,6 +258,18 @@ export function NetworkGraph() {
     setHoveredNode(hit || null);
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!onNodeClick) return;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mx = e.clientX - rect.left - dimensions.w / 2;
+    const my = e.clientY - rect.top - dimensions.h / 2;
+    const hit = nodesRef.current.find(n => Math.hypot(n.x - mx, n.y - my) < n.size + 6);
+    if (hit && !hit.isCenter && hit.id.startsWith("c")) {
+      onNodeClick(parseInt(hit.id.slice(1), 10));
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -292,6 +308,7 @@ export function NetworkGraph() {
         ref={canvasRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoveredNode(null)}
+        onClick={handleClick}
         style={{ display: "block", cursor: hoveredNode ? "pointer" : "default" }}
       />
 

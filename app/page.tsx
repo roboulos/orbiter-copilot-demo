@@ -434,9 +434,9 @@ export default function Home() {
           </div>
         </div>
 
-        {activeTab === "Network"  && <TabPanel key="network"><NetworkView /></TabPanel>}
-        {activeTab === "Outcomes" && <TabPanel key="outcomes"><OutcomesView /></TabPanel>}
-        {activeTab === "Horizon"  && <TabPanel key="horizon"><HorizonView /></TabPanel>}
+        {activeTab === "Network"  && <TabPanel key="network"><NetworkView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Outcomes" && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Horizon"  && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Docs"     && <TabPanel key="docs"><DocsView /></TabPanel>}
       </div>
     </div>

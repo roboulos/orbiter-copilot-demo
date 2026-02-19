@@ -242,3 +242,15 @@ export async function addHorizonTarget(node_uuid: string) {
     body: { node_uuid },
   });
 }
+
+export async function removeHorizonTarget(id: number) {
+  return xanoFetch(`/horizon-target/${id}`, { method: "DELETE", body: {} });
+}
+
+export async function dispatchOutcome(id: number) {
+  return xanoFetch<OutcomeItem>(`/outcome/${id}/dispatch`, { method: "PATCH", body: {} });
+}
+
+export async function archiveOutcome(id: number) {
+  return xanoFetch<OutcomeItem>(`/outcome/${id}`, { method: "PATCH", body: { status: "archived" } });
+}

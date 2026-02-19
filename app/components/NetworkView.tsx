@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
 import { NetworkGraph } from "./NetworkGraph";
-import { getNetwork, getPersonContext, type NetworkPerson } from "../lib/xano";
+import { getNetwork, getPersonContext, createLeverageLoop, addHorizonTarget, type NetworkPerson } from "../lib/xano";
 
 // Parse the YAML profile string into structured sections
 function parseProfileYaml(raw: string): {
@@ -140,7 +140,7 @@ function formatLastActivity(ts: number | null): string {
   return `${Math.floor(daysAgo / 365)}y ago`;
 }
 
-export function NetworkView() {
+export function NetworkView({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) {
   const [contacts, setContacts] = useState<NetworkPerson[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -152,11 +152,15 @@ export function NetworkView() {
   const [selectedContact, setSelectedContact] = useState<NetworkPerson | null>(null);
   const [profileContext, setProfileContext] = useState<string>("");
   const [profileLoading, setProfileLoading] = useState(false);
+  const [loopState, setLoopState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [trackState, setTrackState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const handleViewContact = useCallback(async (contact: NetworkPerson) => {
     setSelectedContact(contact);
     setProfileContext("");
     setProfileLoading(true);
+    setLoopState("idle");
+    setTrackState("idle");
     try {
       const ctx = await getPersonContext(contact.master_person_id);
       setProfileContext(ctx);
@@ -166,6 +170,42 @@ export function NetworkView() {
       setProfileLoading(false);
     }
   }, []);
+
+  const handleNodeClick = useCallback((personId: number) => {
+    const contact = contacts.find(c => c.id === personId);
+    if (contact) handleViewContact(contact);
+  }, [contacts, handleViewContact]);
+
+  const handleLeverageLoop = useCallback(async () => {
+    if (!selectedContact) return;
+    setLoopState("loading");
+    try {
+      await createLeverageLoop({
+        master_person_id: selectedContact.master_person_id,
+        request_panel_title: `Leverage Loop: ${selectedContact.full_name}`,
+        request_context: "Run a leverage loop for this contact — who in my network should I introduce them to and why?",
+      });
+      setLoopState("success");
+    } catch {
+      setLoopState("error");
+    }
+  }, [selectedContact]);
+
+  const handleTrack = useCallback(async () => {
+    if (!selectedContact) return;
+    if (!selectedContact.node_uuid) {
+      setTrackState("error");
+      return;
+    }
+    setTrackState("loading");
+    try {
+      await addHorizonTarget(selectedContact.node_uuid);
+      setTrackState("success");
+      setTimeout(() => setTrackState("idle"), 2000);
+    } catch {
+      setTrackState("error");
+    }
+  }, [selectedContact]);
 
   const fetchContacts = useCallback(async (q: string, p: number) => {
     setLoading(true);
@@ -258,7 +298,7 @@ export function NetworkView() {
       </div>
 
       {/* Network Graph */}
-      <NetworkGraph />
+      <NetworkGraph onNodeClick={handleNodeClick} />
 
       {/* Filter pills */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
@@ -652,29 +692,65 @@ export function NetworkView() {
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <button
-                className="orbiter-btn orbiter-btn-primary"
-                style={{
-                  flex: 1, padding: "11px 0", borderRadius: "10px",
-                  background: "linear-gradient(135deg, #4f46e5, #7c3aed)", border: "none",
-                  color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif", boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
-                }}
-              >
-                ⚡ Leverage Loop
-              </button>
-              <button
-                className="orbiter-btn"
-                style={{
-                  flex: 1, padding: "11px 0", borderRadius: "10px",
-                  background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)",
-                  color: "#a5b4fc", fontSize: "12px", fontWeight: 500, cursor: "pointer",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                🔭 Track
-              </button>
+            <div style={{ display: "flex", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)", flexDirection: "column" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  className="orbiter-btn orbiter-btn-primary"
+                  onClick={handleLeverageLoop}
+                  disabled={loopState === "loading"}
+                  style={{
+                    flex: 1, padding: "11px 0", borderRadius: "10px",
+                    background: loopState === "success" ? "rgba(52,211,153,0.15)" : "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                    border: loopState === "success" ? "1px solid rgba(52,211,153,0.35)" : "none",
+                    color: loopState === "success" ? "#34d399" : "white",
+                    fontSize: "12px", fontWeight: 600, cursor: loopState === "loading" ? "wait" : "pointer",
+                    fontFamily: "Inter, sans-serif", boxShadow: loopState === "success" ? "none" : "0 4px 16px rgba(79,70,229,0.3)",
+                    opacity: loopState === "loading" ? 0.7 : 1,
+                  }}
+                >
+                  {loopState === "loading" ? "Creating…" : loopState === "error" ? "⚠ Failed" : "⚡ Leverage Loop"}
+                </button>
+                <button
+                  className="orbiter-btn"
+                  onClick={handleTrack}
+                  disabled={trackState === "loading"}
+                  style={{
+                    flex: 1, padding: "11px 0", borderRadius: "10px",
+                    background: trackState === "success" ? "rgba(52,211,153,0.1)" : "rgba(99,102,241,0.08)",
+                    border: trackState === "success" ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(99,102,241,0.22)",
+                    color: trackState === "success" ? "#34d399" : trackState === "error" ? "#fbbf24" : "#a5b4fc",
+                    fontSize: "12px", fontWeight: 500, cursor: trackState === "loading" ? "wait" : "pointer",
+                    fontFamily: "Inter, sans-serif",
+                    opacity: trackState === "loading" ? 0.7 : 1,
+                  }}
+                >
+                  {trackState === "loading" ? "Adding…" : trackState === "success" ? "🔭 Added to Horizon!" : trackState === "error" && !selectedContact?.node_uuid ? "⚠ Not in graph yet" : trackState === "error" ? "⚠ Failed" : "🔭 Track"}
+                </button>
+              </div>
+              {loopState === "success" && (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)",
+                  borderRadius: "8px", padding: "10px 12px",
+                }}>
+                  <span style={{ fontSize: "12px", color: "#34d399", fontWeight: 500 }}>⚡ Loop created! View in Outcomes →</span>
+                  <button
+                    onClick={() => { setSelectedContact(null); onSwitchTab("Outcomes"); }}
+                    style={{
+                      fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px",
+                      background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)",
+                      color: "#34d399", cursor: "pointer",
+                    }}
+                  >
+                    View →
+                  </button>
+                </div>
+              )}
+              {loopState === "error" && (
+                <div style={{ fontSize: "12px", color: "#ef4444", padding: "6px 0" }}>
+                  Failed to create leverage loop. Please try again.
+                </div>
+              )}
             </div>
           </div>
         </>
