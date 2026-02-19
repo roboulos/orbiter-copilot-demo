@@ -81,6 +81,8 @@ export function OutcomesView() {
     }
   };
 
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+
   const counts = {
     outcome: items.filter((o) => o.copilot_mode === "outcome").length,
     loop: items.filter((o) => o.copilot_mode === "loop").length,
@@ -102,14 +104,18 @@ export function OutcomesView() {
 
         <button
           onClick={() => setCreating(!creating)}
+          className="orbiter-btn"
           style={{
             display: "flex", alignItems: "center", gap: "6px",
             fontSize: "12px", fontWeight: 600, padding: "8px 16px", borderRadius: "10px",
-            background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.35)",
-            color: "#a5b4fc", cursor: "pointer",
+            background: creating
+              ? "rgba(99,102,241,0.08)"
+              : "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
+            border: "1px solid rgba(99,102,241,0.35)",
+            color: "#a5b4fc", cursor: "pointer", fontFamily: "Inter, sans-serif",
           }}
         >
-          <span>+</span> New Outcome
+          <span>{creating ? "✕" : "+"}</span> {creating ? "Cancel" : "New Outcome"}
         </button>
       </div>
 
@@ -204,8 +210,27 @@ export function OutcomesView() {
 
       {/* Items list */}
       {loading && items.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
-          Loading...
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "14px", padding: "18px 20px",
+              animation: `fadeUp 0.4s ${i * 0.06}s ease both`,
+            }}>
+              <div style={{ display: "flex", gap: "14px" }}>
+                <div className="orbiter-shimmer" style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 5 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                    <div className="orbiter-shimmer" style={{ height: 20, width: 80, borderRadius: 5 }} />
+                    <div className="orbiter-shimmer" style={{ height: 20, width: 70, borderRadius: 5 }} />
+                    <div className="orbiter-shimmer" style={{ height: 20, width: 60, borderRadius: 5, marginLeft: "auto" }} />
+                  </div>
+                  <div className="orbiter-shimmer" style={{ height: 13, width: "85%", borderRadius: 6, marginBottom: 6 }} />
+                  <div className="orbiter-shimmer" style={{ height: 13, width: "55%", borderRadius: 6 }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
@@ -221,11 +246,24 @@ export function OutcomesView() {
             return (
               <div
                 key={o.id}
+                onMouseEnter={() => setHoveredId(o.id)}
+                onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  background: "rgba(255,255,255,0.025)",
-                  border: `1px solid ${o.status === "suggestion" ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.07)"}`,
+                  background: hoveredId === o.id
+                    ? (o.status === "suggestion" ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.04)")
+                    : "rgba(255,255,255,0.025)",
+                  border: `1px solid ${
+                    hoveredId === o.id
+                      ? (o.status === "suggestion" ? "rgba(52,211,153,0.35)" : "rgba(99,102,241,0.25)")
+                      : (o.status === "suggestion" ? "rgba(52,211,153,0.18)" : "rgba(255,255,255,0.07)")
+                  }`,
                   borderRadius: "14px", padding: "18px 20px", cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "all 0.18s ease",
+                  transform: hoveredId === o.id ? "translateY(-1px)" : "none",
+                  boxShadow: hoveredId === o.id
+                    ? (o.status === "suggestion" ? "0 6px 20px rgba(52,211,153,0.08)" : "0 6px 20px rgba(99,102,241,0.08)")
+                    : "none",
+                  animation: `fadeUp 0.35s ${0.04 * (items.indexOf(o))}s ease both`,
                 }}
                 onClick={() => setExpandedId(expanded ? null : o.id)}
               >

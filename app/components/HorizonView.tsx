@@ -22,6 +22,7 @@ export function HorizonView() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
   const [addingTarget, setAddingTarget] = useState(false);
 
@@ -149,8 +150,29 @@ export function HorizonView() {
 
       {/* Target list */}
       {loading && targets.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
-          Loading...
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.025)", border: "1px solid rgba(99,102,241,0.12)",
+              borderRadius: "14px", padding: "16px 18px",
+              animation: `fadeUp 0.4s ${i * 0.07}s ease both`,
+            }}>
+              <div style={{ display: "flex", gap: "14px" }}>
+                <div className="orbiter-shimmer" style={{ width: 40, height: 40, borderRadius: "10px", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "8px", alignItems: "center" }}>
+                    <div className="orbiter-shimmer" style={{ height: 14, width: "40%", borderRadius: 5 }} />
+                    <div className="orbiter-shimmer" style={{ height: 11, width: "50%", borderRadius: 4 }} />
+                    <div className="orbiter-shimmer" style={{ height: 11, width: "15%", borderRadius: 4, marginLeft: "auto" }} />
+                  </div>
+                  <div style={{ display: "flex", gap: "5px" }}>
+                    <div className="orbiter-shimmer" style={{ height: 18, width: 70, borderRadius: 4 }} />
+                    <div className="orbiter-shimmer" style={{ height: 18, width: 55, borderRadius: 4 }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : targets.length === 0 ? (
         <div style={{
@@ -193,11 +215,16 @@ export function HorizonView() {
             return (
               <div
                 key={t.id}
+                onMouseEnter={() => setHoveredId(t.id)}
+                onMouseLeave={() => setHoveredId(null)}
                 style={{
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(99,102,241,0.15)",
+                  background: hoveredId === t.id ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.025)",
+                  border: `1px solid ${hoveredId === t.id ? "rgba(99,102,241,0.28)" : "rgba(99,102,241,0.13)"}`,
                   borderRadius: "14px", padding: "16px 18px", cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "all 0.18s ease",
+                  transform: hoveredId === t.id ? "translateY(-1px)" : "none",
+                  boxShadow: hoveredId === t.id ? "0 6px 20px rgba(99,102,241,0.1)" : "none",
+                  animation: `fadeUp 0.35s ease both`,
                 }}
                 onClick={() => setExpandedId(expanded ? null : t.id)}
               >

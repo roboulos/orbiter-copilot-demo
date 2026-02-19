@@ -285,8 +285,28 @@ export function NetworkView() {
 
       {/* Contact grid */}
       {loading && contacts.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(255,255,255,0.3)", fontSize: "13px" }}>
-          Loading your network...
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "12px" }}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "14px", padding: "18px 20px",
+              animation: `fadeUp 0.4s ${i * 0.05}s ease both`,
+            }}>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "14px" }}>
+                <div className="orbiter-shimmer" style={{ width: 40, height: 40, borderRadius: "10px", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="orbiter-shimmer" style={{ height: 14, borderRadius: 6, marginBottom: 6, width: "60%" }} />
+                  <div className="orbiter-shimmer" style={{ height: 11, borderRadius: 6, width: "80%" }} />
+                </div>
+              </div>
+              <div className="orbiter-shimmer" style={{ height: 22, borderRadius: 6, marginBottom: 14 }} />
+              <div className="orbiter-shimmer" style={{ height: 3, borderRadius: 3, marginBottom: 14 }} />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div className="orbiter-shimmer" style={{ height: 20, borderRadius: 4, width: "45%" }} />
+                <div className="orbiter-shimmer" style={{ height: 26, borderRadius: 7, width: "20%" }} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <>
@@ -307,15 +327,21 @@ export function NetworkView() {
                   onMouseEnter={() => setHoveredId(c.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   style={{
-                    background: hoveredId === c.id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.025)",
+                    background: hoveredId === c.id
+                      ? (connected ? "rgba(52,211,153,0.04)" : "rgba(99,102,241,0.06)")
+                      : "rgba(255,255,255,0.025)",
                     border: connected
-                      ? "1px solid rgba(52,211,153,0.2)"
-                      : "1px solid rgba(255,255,255,0.07)",
+                      ? `1px solid ${hoveredId === c.id ? "rgba(52,211,153,0.35)" : "rgba(52,211,153,0.18)"}`
+                      : `1px solid ${hoveredId === c.id ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.07)"}`,
                     borderRadius: "14px",
                     padding: "18px 20px",
                     cursor: "pointer",
-                    transition: "all 0.15s ease",
+                    transition: "all 0.18s ease",
                     position: "relative",
+                    transform: hoveredId === c.id ? "translateY(-2px)" : "none",
+                    boxShadow: hoveredId === c.id
+                      ? (connected ? "0 8px 24px rgba(52,211,153,0.12)" : "0 8px 24px rgba(99,102,241,0.12)")
+                      : "none",
                   }}
                 >
                   {connected && (
@@ -393,18 +419,23 @@ export function NetworkView() {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleViewContact(c); }}
+                      className="orbiter-btn"
                       style={{
                         fontSize: "11px",
-                        fontWeight: 500,
-                        padding: "5px 12px",
+                        fontWeight: 600,
+                        padding: "5px 14px",
                         borderRadius: "7px",
-                        background: connected ? "rgba(52,211,153,0.12)" : "rgba(99,102,241,0.1)",
-                        border: connected ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(99,102,241,0.2)",
+                        background: connected
+                          ? "linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.1))"
+                          : "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))",
+                        border: connected ? "1px solid rgba(52,211,153,0.3)" : "1px solid rgba(99,102,241,0.3)",
                         color: connected ? "#34d399" : "#a5b4fc",
                         cursor: "pointer",
+                        fontFamily: "Inter, sans-serif",
+                        letterSpacing: "0.02em",
                       }}
                     >
-                      View
+                      View →
                     </button>
                   </div>
                 </div>
@@ -456,10 +487,18 @@ export function NetworkView() {
           />
           <div style={{
             position: "fixed", top: 0, right: 0, bottom: 0, width: "420px",
-            background: "#0f0f1a", borderLeft: "1px solid rgba(99,102,241,0.2)",
+            background: "linear-gradient(180deg, #0f0f1a 0%, #0c0c18 100%)",
+            borderLeft: "1px solid rgba(99,102,241,0.2)",
             zIndex: 2001, overflowY: "auto", padding: "28px",
-            boxShadow: "-8px 0 40px rgba(0,0,0,0.6)",
+            boxShadow: "-16px 0 64px rgba(0,0,0,0.7), -4px 0 24px rgba(99,102,241,0.06)",
+            animation: "slideInPanel 0.3s cubic-bezier(0.22,1,0.36,1) both",
           }}>
+          <style>{`
+            @keyframes slideInPanel {
+              from { transform: translateX(40px); opacity: 0; }
+              to   { transform: translateX(0);    opacity: 1; }
+            }
+          `}</style>
             <button onClick={() => setSelectedContact(null)} style={{
               position: "absolute", top: "16px", right: "16px",
               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
@@ -504,10 +543,35 @@ export function NetworkView() {
             </div>
 
             {profileLoading ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "8px 0" }}>
-                {[1,2,3].map(i => (
-                  <div key={i} style={{ height: "14px", borderRadius: "6px", background: "rgba(255,255,255,0.06)", width: i === 1 ? "100%" : i === 2 ? "80%" : "60%", animation: "pulse 1.5s infinite" }} />
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px", padding: "4px 0" }}>
+                {/* About section skeleton */}
+                <div>
+                  <div className="orbiter-shimmer" style={{ height: 10, width: "25%", borderRadius: 4, marginBottom: 10 }} />
+                  <div className="orbiter-shimmer" style={{ height: 12, width: "100%", borderRadius: 6, marginBottom: 5 }} />
+                  <div className="orbiter-shimmer" style={{ height: 12, width: "90%", borderRadius: 6, marginBottom: 5 }} />
+                  <div className="orbiter-shimmer" style={{ height: 12, width: "70%", borderRadius: 6 }} />
+                </div>
+                {/* Skills skeleton */}
+                <div>
+                  <div className="orbiter-shimmer" style={{ height: 10, width: "20%", borderRadius: 4, marginBottom: 10 }} />
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {[65, 90, 55, 75, 80].map((w, i) => (
+                      <div key={i} className="orbiter-shimmer" style={{ height: 22, width: w, borderRadius: 6 }} />
+                    ))}
+                  </div>
+                </div>
+                {/* Work history skeleton */}
+                <div>
+                  <div className="orbiter-shimmer" style={{ height: 10, width: "28%", borderRadius: 4, marginBottom: 10 }} />
+                  {[1, 2, 3].map(i => (
+                    <div key={i} style={{ display: "flex", gap: "12px", marginBottom: "12px", paddingLeft: "16px" }}>
+                      <div style={{ flex: 1 }}>
+                        <div className="orbiter-shimmer" style={{ height: 13, width: "75%", borderRadius: 5, marginBottom: 4 }} />
+                        <div className="orbiter-shimmer" style={{ height: 11, width: "55%", borderRadius: 4 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : profileContext ? (() => {
               const profile = parseProfileYaml(profileContext);
@@ -588,20 +652,28 @@ export function NetworkView() {
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
-              <button style={{
-                flex: 1, padding: "10px", borderRadius: "10px",
-                background: "linear-gradient(135deg, #4f46e5, #7c3aed)", border: "none",
-                color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer",
-              }}>
-                ⚡ Create Leverage Loop
+            <div style={{ display: "flex", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <button
+                className="orbiter-btn orbiter-btn-primary"
+                style={{
+                  flex: 1, padding: "11px 0", borderRadius: "10px",
+                  background: "linear-gradient(135deg, #4f46e5, #7c3aed)", border: "none",
+                  color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                  fontFamily: "Inter, sans-serif", boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+                }}
+              >
+                ⚡ Leverage Loop
               </button>
-              <button style={{
-                flex: 1, padding: "10px", borderRadius: "10px",
-                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500, cursor: "pointer",
-              }}>
-                🔭 Add to Horizon
+              <button
+                className="orbiter-btn"
+                style={{
+                  flex: 1, padding: "11px 0", borderRadius: "10px",
+                  background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)",
+                  color: "#a5b4fc", fontSize: "12px", fontWeight: 500, cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                🔭 Track
               </button>
             </div>
           </div>
