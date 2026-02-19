@@ -188,7 +188,11 @@ export default function Home() {
   useEffect(() => {
     const handler = ((e: CustomEvent<{ tab: Tab }>) => setActiveTab(e.detail.tab)) as EventListener;
     window.addEventListener("orbiter:switch-tab", handler);
-    return () => window.removeEventListener("orbiter:switch-tab", handler);
+    window.addEventListener("orbiter:switch-tab-after-action", handler);
+    return () => {
+      window.removeEventListener("orbiter:switch-tab", handler);
+      window.removeEventListener("orbiter:switch-tab-after-action", handler);
+    };
   }, []);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {

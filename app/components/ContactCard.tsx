@@ -125,6 +125,7 @@ export function ContactCard({
         ...(personId ? { master_person_id: personId } : {}),
       });
       setAdded(true);
+      window.dispatchEvent(new CustomEvent("orbiter:switch-tab", { detail: { tab: "Outcomes" } }));
     } catch (err) {
       console.error("Failed to add to outcome:", err);
     } finally {
