@@ -171,6 +171,7 @@ function CopilotModal({
 
       {/* Modal container - centered card */}
       <div
+        className="copilot-modal-container"
         style={{
           position: "fixed",
           top: "50%",

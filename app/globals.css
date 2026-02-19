@@ -669,3 +669,106 @@ html, body {
   background-size: 200% auto;
   animation: shimmer 1.8s linear infinite;
 }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE RESPONSIVE STYLES
+   ══════════════════════════════════════════════════════ */
+
+/* Tablet and below (< 768px) */
+@media (max-width: 768px) {
+  .copilot-modal-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    border-radius: 0 !important;
+  }
+
+  .copilot-modal-container > div {
+    border-radius: 0 !important;
+  }
+
+  /* Make buttons touch-friendly */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Reduce font sizes slightly */
+  body {
+    font-size: 14px;
+  }
+
+  /* Stack quick action cards */
+  .quick-action-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Phone (< 480px) */
+@media (max-width: 480px) {
+  /* Further reduce padding */
+  .copilot-modal-container {
+    padding: 8px !important;
+  }
+
+  /* Make text more readable */
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 16px !important;
+  }
+
+  /* Touch-friendly spacing */
+  .button-group button {
+    padding: 14px 18px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* Landscape phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .copilot-modal-container {
+    height: 100vh !important;
+  }
+
+  /* Reduce welcome screen icon size */
+  .welcome-icon {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 24px !important;
+  }
+}
+
+/* High DPI displays (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Crisp borders */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Dark mode preference (system) */
+@media (prefers-color-scheme: dark) {
+  /* Already dark by default, but ensure consistency */
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
