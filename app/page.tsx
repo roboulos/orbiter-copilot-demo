@@ -253,7 +253,7 @@ export default function Home() {
 
       {/* Person picker — shown when Copilot tab is active */}
       {activeTab === "Copilot" && (
-        <div style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.04)", flexShrink: 0, position: "relative", zIndex: 500 }}>
+        <div style={{ padding: "10px 8px", borderBottom: "1px solid rgba(255,255,255,0.04)", flexShrink: 0, position: "relative", zIndex: 1200 }}>
           <PersonPicker
             onSelect={handlePersonSelect}
             selectedPerson={selectedPerson}

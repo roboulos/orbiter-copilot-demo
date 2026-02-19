@@ -167,21 +167,27 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
           {/* Backdrop to close on outside click */}
           <div
             onClick={() => { setIsOpen(false); setQuery(""); setResults([]); }}
-            style={{ position: "fixed", inset: 0, zIndex: 999 }}
+            style={{ position: "fixed", inset: 0, zIndex: 9998 }}
           />
           <div
           style={{
-            position: "absolute",
-            top: "calc(100% + 4px)",
-            left: 0,
-            right: 0,
+            position: "fixed",
+            top: containerRef.current
+              ? containerRef.current.getBoundingClientRect().bottom + 4
+              : 0,
+            left: containerRef.current
+              ? containerRef.current.getBoundingClientRect().left
+              : 0,
+            width: containerRef.current
+              ? containerRef.current.getBoundingClientRect().width
+              : "auto",
             background: "#13131f",
             border: "1px solid rgba(99,102,241,0.2)",
             borderRadius: "10px",
             maxHeight: "300px",
             overflowY: "auto",
-            zIndex: 1000,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            zIndex: 9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
           }}
         >
           {results.map((person) => (

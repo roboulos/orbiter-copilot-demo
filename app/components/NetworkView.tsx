@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
 import { NetworkGraph } from "./NetworkGraph";
-import { getNetwork, type NetworkPerson } from "../lib/xano";
+import { getNetwork, getPersonContext, type NetworkPerson } from "../lib/xano";
 
 const FILTERS = ["All contacts", "Connected", "Has title", "Has company"];
 
@@ -67,6 +67,23 @@ export function NetworkView() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [pageTotal, setPageTotal] = useState(1);
+  const [selectedContact, setSelectedContact] = useState<NetworkPerson | null>(null);
+  const [profileContext, setProfileContext] = useState<string>("");
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const handleViewContact = useCallback(async (contact: NetworkPerson) => {
+    setSelectedContact(contact);
+    setProfileContext("");
+    setProfileLoading(true);
+    try {
+      const ctx = await getPersonContext(contact.master_person_id);
+      setProfileContext(ctx);
+    } catch {
+      setProfileContext("");
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
 
   const fetchContacts = useCallback(async (q: string, p: number) => {
     setLoading(true);
@@ -293,6 +310,7 @@ export function NetworkView() {
                       )}
                     </div>
                     <button
+                      onClick={(e) => { e.stopPropagation(); handleViewContact(c); }}
                       style={{
                         fontSize: "11px",
                         fontWeight: 500,
@@ -344,6 +362,114 @@ export function NetworkView() {
               </button>
             </div>
           )}
+        </>
+      )}
+
+      {/* Profile slide-over panel */}
+      {selectedContact && (
+        <>
+          <div
+            onClick={() => setSelectedContact(null)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 2000, backdropFilter: "blur(4px)" }}
+          />
+          <div style={{
+            position: "fixed", top: 0, right: 0, bottom: 0, width: "420px",
+            background: "#0f0f1a", borderLeft: "1px solid rgba(99,102,241,0.2)",
+            zIndex: 2001, overflowY: "auto", padding: "28px",
+            boxShadow: "-8px 0 40px rgba(0,0,0,0.6)",
+          }}>
+            <button onClick={() => setSelectedContact(null)} style={{
+              position: "absolute", top: "16px", right: "16px",
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "8px", color: "rgba(255,255,255,0.4)", cursor: "pointer",
+              fontSize: "14px", padding: "4px 10px",
+            }}>✕</button>
+
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", marginBottom: "20px" }}>
+              <Avatar name={selectedContact.full_name} size={52} borderRadius="14px" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "17px", fontWeight: 700, color: "#e8e8f0", marginBottom: "4px" }}>
+                  {selectedContact.full_name}
+                </div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                  {selectedContact.master_person?.current_title || ""}
+                  {selectedContact.master_person?.master_company?.company_name
+                    ? ` · ${selectedContact.master_person.master_company.company_name}`
+                    : ""}
+                </div>
+                <div style={{ marginTop: "8px" }}>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 600, padding: "3px 9px", borderRadius: "5px",
+                    background: selectedContact.status_connected === "connected" ? "rgba(52,211,153,0.12)" : "rgba(99,102,241,0.1)",
+                    border: selectedContact.status_connected === "connected" ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(99,102,241,0.2)",
+                    color: selectedContact.status_connected === "connected" ? "#34d399" : "#a5b4fc",
+                  }}>
+                    {selectedContact.status_connected === "connected" ? "🔗 Connected" : "👤 In network"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: "10px", padding: "12px 14px", marginBottom: "16px",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>Last Touch</span>
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>
+                {formatLastActivity(selectedContact.last_activity_at)}
+              </span>
+            </div>
+
+            {profileLoading ? (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(99,102,241,0.6)", fontSize: "13px" }}>
+                Loading profile...
+              </div>
+            ) : profileContext ? (
+              <div>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(99,102,241,0.6)", marginBottom: "10px" }}>
+                  📋 Profile
+                </div>
+                <div style={{
+                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "10px", padding: "14px",
+                }}>
+                  {profileContext.split("\n").filter(Boolean).map((line, i) => (
+                    <div key={i} style={{
+                      fontSize: "12px",
+                      color: line.match(/^[a-z_]+:/i) ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.75)",
+                      lineHeight: 1.7,
+                      paddingLeft: line.startsWith("-") ? "8px" : "0",
+                      fontWeight: line.match(/^[a-z_]+:/i) ? 600 : 400,
+                    }}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.25)", fontSize: "13px" }}>
+                No additional profile data available.
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
+              <button style={{
+                flex: 1, padding: "10px", borderRadius: "10px",
+                background: "linear-gradient(135deg, #4f46e5, #7c3aed)", border: "none",
+                color: "white", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+              }}>
+                ⚡ Create Leverage Loop
+              </button>
+              <button style={{
+                flex: 1, padding: "10px", borderRadius: "10px",
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500, cursor: "pointer",
+              }}>
+                🔭 Add to Horizon
+              </button>
+            </div>
+          </div>
         </>
       )}
     </div>
