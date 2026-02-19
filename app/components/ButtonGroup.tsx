@@ -22,66 +22,37 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
     
     console.log('[ButtonGroup] Button clicked, value:', value);
     
-    // Multiple selector strategies to find Crayon's input
+    // Find the input and set value
     const input = 
       document.querySelector('textarea[placeholder*="Type"]') ||
       document.querySelector('textarea[placeholder*="message"]') ||
-      document.querySelector('textarea') ||
-      document.querySelector('input[type="text"]');
-    
-    console.log('[ButtonGroup] Found input:', input);
-    
-    // Multiple selector strategies to find send button
-    const sendButton =
-      document.querySelector('button[type="submit"]') ||
-      document.querySelector('button[aria-label*="Send"]') ||
-      Array.from(document.querySelectorAll('button')).find(btn => 
-        btn.textContent?.toLowerCase().includes('send') ||
-        btn.querySelector('svg') // Send buttons often have SVG icons
-      );
-    
-    console.log('[ButtonGroup] Found send button:', sendButton);
+      document.querySelector('textarea');
     
     if (input) {
-      // Set the value using React-friendly approach
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype,
-        'value'
-      )?.set;
-      
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(input, value);
-      } else {
-        (input as HTMLTextAreaElement).value = value;
-      }
-      
-      // Trigger React's onChange
+      (input as HTMLTextAreaElement).value = value;
       input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      // Focus the input first
       input.focus();
-      
-      // Wait for React to update, then press Enter
-      setTimeout(() => {
-        console.log('[ButtonGroup] Pressing Enter to send');
-        const enterEvent = new KeyboardEvent('keydown', {
-          key: 'Enter',
-          code: 'Enter',
-          which: 13,
-          keyCode: 13,
-          bubbles: true,
-        });
-        input.dispatchEvent(enterEvent);
-      }, 200);
-    } else {
-      console.error('[ButtonGroup] Could not find input');
-      console.log('[ButtonGroup] All textareas:', document.querySelectorAll('textarea'));
     }
     
     // Also call onSelect if provided
     if (onSelect) {
       onSelect(value);
+    }
+  };
+
+  const handleSend = () => {
+    console.log('[ButtonGroup] Send button clicked');
+    
+    // Find and click the actual send button
+    const sendButton =
+      document.querySelector('button[type="submit"]') ||
+      Array.from(document.querySelectorAll('button')).find(btn => 
+        btn.querySelector('svg')
+      );
+    
+    if (sendButton) {
+      console.log('[ButtonGroup] Clicking send button');
+      (sendButton as HTMLButtonElement).click();
     }
   };
 
@@ -118,6 +89,37 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
           />
         ))}
       </div>
+
+      {selected && (
+        <button
+          onClick={handleSend}
+          style={{
+            marginTop: "8px",
+            padding: "12px 20px",
+            background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+            border: "1px solid rgba(99,102,241,0.4)",
+            borderRadius: "12px",
+            color: "#ffffff",
+            fontSize: "14px",
+            fontWeight: 600,
+            fontFamily: "Inter, sans-serif",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+            boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
+            animation: "fadeUp 0.2s ease both",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 16px rgba(99,102,241,0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.3)";
+          }}
+        >
+          Send Selection →
+        </button>
+      )}
     </div>
   );
 }
