@@ -320,6 +320,25 @@ export function SearchView({ onSwitchTab }: { onSwitchTab: (tab: string) => void
         ))}
       </div>
 
+      {/* Universe mode banner */}
+      {isUniverse && (
+        <div style={{
+          background: "rgba(14,165,233,0.06)",
+          border: "1px solid rgba(14,165,233,0.2)",
+          borderRadius: "10px",
+          padding: "10px 16px",
+          marginBottom: "16px",
+          fontSize: "12px",
+          color: "rgba(56,189,248,0.8)",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+        }}>
+          <span style={{ fontSize: "16px" }}>🌐</span>
+          <span>Universe search is coming soon — showing results from your network in the meantime.</span>
+        </div>
+      )}
+
       {/* Content area */}
       {!hasSearched && !loading ? (
         /* Empty state */
