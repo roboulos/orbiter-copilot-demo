@@ -336,11 +336,18 @@ html, body {
    STANDALONE MODE — Full-width, no sidebar
    ══════════════════════════════════════════════════════ */
 
-/* Hide any leftover sidebar in standalone mode */
-.crayon-shell-sidebar { display: none !important; }
+/* Hide sidebar — correct class name */
+.crayon-shell-sidebar-container { display: none !important; }
 
-/* Ensure thread list / history panel don't show */
-[class*="thread-list"] { display: none !important; }
+/* Hide mobile overlay that appears when sidebar slides */
+.crayon-shell-sidebar-container__overlay { display: none !important; }
+
+/* Copilot shell in standalone — override fixed width to fill parent */
+.crayon-copilot-shell-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  border: none !important;
+}
 
 /* Full-width standalone shell */
 [class*="standalone"] .crayon-shell-container,
