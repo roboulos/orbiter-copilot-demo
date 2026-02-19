@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
-import { getHorizon, addHorizonTargetByPersonId, removeHorizonTarget, type HorizonTarget } from "../lib/xano";
+import { getHorizon, addHorizonTarget, addHorizonTargetByPersonId, getNetwork, removeHorizonTarget, type HorizonTarget } from "../lib/xano";
 import { PersonPicker } from "./PersonPicker";
 
 function formatDate(ts: number): string {
@@ -52,16 +52,33 @@ export function HorizonView({ onSwitchTab }: { onSwitchTab: (tab: string) => voi
     setAddingTarget(true);
     setAddError(null);
     try {
-      await addHorizonTargetByPersonId(person.master_person_id);
+      // First try to find node_uuid via network search
+      const name = person.master_person?.name || person.full_name;
+      let nodeUuid: string | null = null;
+      try {
+        const networkData = await getNetwork({ query: name, per_page: 5 });
+        const match = networkData.items.find(
+          (n) => n.master_person_id === person.master_person_id || n.full_name.toLowerCase() === name.toLowerCase()
+        );
+        if (match?.node_uuid) nodeUuid = match.node_uuid;
+      } catch { /* ignore network search errors */ }
+
+      if (nodeUuid) {
+        await addHorizonTarget(nodeUuid);
+      } else {
+        // Fallback: try by person ID
+        await addHorizonTargetByPersonId(person.master_person_id);
+      }
       setAdding(false);
       setAddError(null);
       fetchTargets();
     } catch (err: unknown) {
       console.error("Failed to add horizon target:", err);
-      // Check for 400 (already targeted)
       const errMsg = err instanceof Error ? err.message : String(err);
       if (errMsg.includes("400") || errMsg.toLowerCase().includes("already")) {
         setAddError("Already on your Horizon");
+      } else if (errMsg.toLowerCase().includes("not found") || errMsg.includes("404")) {
+        setAddError("This person isn't in your network graph yet. Add them to your network first.");
       } else {
         setAddError("Failed to add target. Please try again.");
       }
@@ -96,7 +113,7 @@ export function HorizonView({ onSwitchTab }: { onSwitchTab: (tab: string) => voi
           </p>
         </div>
         <button
-          onClick={() => setAdding(!adding)}
+          onClick={() => { setAdding(!adding); if (!adding) setAddError(null); }}
           style={{
             display: "flex", alignItems: "center", gap: "6px",
             fontSize: "12px", fontWeight: 600, padding: "8px 16px", borderRadius: "10px",

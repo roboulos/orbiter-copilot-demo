@@ -25,6 +25,7 @@ export function OutcomeCard({
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [goal, setGoal] = useState(initialGoal);
   const [whyItMatters, setWhyItMatters] = useState(initialWhy);
   const [idealHelper, setIdealHelper] = useState(initialHelper);
@@ -63,21 +64,25 @@ export function OutcomeCard({
   return (
     <div
       className="orbiter-card-enter"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: saved
           ? "linear-gradient(160deg, #0c1a14 0%, #0f1f17 60%, #0b1812 100%)"
           : "linear-gradient(160deg, #0f0f1a 0%, #13131f 60%, #0d0d18 100%)",
-        border: `1px solid ${saved ? "rgba(52,211,153,0.35)" : "rgba(99, 102, 241, 0.28)"}`,
+        border: `1px solid ${saved ? "rgba(52,211,153,0.35)" : hovered ? "rgba(99,102,241,0.45)" : "rgba(99, 102, 241, 0.28)"}`,
         borderRadius: "18px",
         padding: "22px",
         margin: "6px 0",
         boxShadow: saved
           ? "0 4px 24px rgba(52,211,153,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"
+          : hovered
+          ? "0 0 0 1px rgba(99,102,241,0.4), 0 8px 32px rgba(0,0,0,0.4)"
           : "0 4px 24px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.04)",
         fontFamily: "Inter, sans-serif",
         position: "relative",
         overflow: "hidden",
-        transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+        transition: "all 0.2s ease",
       }}
     >
       {/* Top glow line */}
@@ -292,6 +297,25 @@ export function OutcomeCard({
             >
               {saved ? "✓ Saved to Orbiter" : saving ? "Saving…" : "Save to Orbiter"}
             </button>
+            {saved && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("orbiter:switch-tab", { detail: { tab: "Outcomes" } }))}
+                style={{
+                  padding: "10px 10px",
+                  background: "rgba(52,211,153,0.08)",
+                  border: "1px solid rgba(52,211,153,0.25)",
+                  borderRadius: "10px",
+                  color: "#34d399",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                View →
+              </button>
+            )}
             <button
               onClick={() => setEditing(true)}
               className="orbiter-btn"

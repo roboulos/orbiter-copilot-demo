@@ -83,9 +83,39 @@ export interface SearchPerson {
 }
 
 export async function searchPersons(q: string, mode: "network" | "universe" = "network", limit = 20) {
-  return xanoFetch<{ items: SearchPerson[] }>("/search", {
-    params: { q, mode, limit: String(limit) },
-  });
+  try {
+    return await xanoFetch<{ items: SearchPerson[] }>("/search", {
+      params: { q, mode, limit: String(limit) },
+    });
+  } catch {
+    // Fallback to /person-search if /search endpoint doesn't exist
+    try {
+      const data = await xanoFetch<{ items: Array<{
+        master_person_id: number;
+        full_name: string;
+        current_title?: string | null;
+        bio?: string | null;
+        master_company?: { id: number; company_name: string; logo: string | null } | null;
+      }> }>("/person-search", { params: { query: q, limit: String(limit) } });
+      return {
+        items: (data.items || []).map((p) => ({
+          master_person_id: p.master_person_id,
+          full_name: p.full_name,
+          in_my_network: true,
+          master_person: {
+            id: p.master_person_id,
+            name: p.full_name,
+            avatar: null,
+            current_title: p.current_title || null,
+            bio: p.bio || null,
+            master_company: p.master_company || null,
+          },
+        })) as SearchPerson[],
+      };
+    } catch {
+      return { items: [] as SearchPerson[] };
+    }
+  }
 }
 
 // ── Connection Path ──────────────────────────────────────
@@ -368,6 +398,14 @@ export async function removeHorizonTarget(id: number) {
 
 export async function dispatchOutcome(id: number) {
   return xanoFetch<OutcomeItem>(`/outcome/${id}/dispatch`, { method: "PATCH", body: {} });
+}
+
+// Dispatch an outcome item — routes to the correct endpoint based on copilot_mode
+export async function dispatchOutcomeItem(id: number, mode: string) {
+  if (mode === "loop") {
+    return xanoFetch<{ success: boolean }>(`/leverage-loop/${id}/dispatch`, { method: "PATCH", body: {} });
+  }
+  return xanoFetch<OutcomeItem>(`/outcome/${id}`, { method: "PATCH", body: { status: "submitted" } });
 }
 
 export async function archiveOutcome(id: number) {

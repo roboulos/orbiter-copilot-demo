@@ -693,6 +693,18 @@ export function NetworkView({ onSwitchTab }: { onSwitchTab: (tab: string) => voi
             )}
 
             <div style={{ display: "flex", gap: "8px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)", flexDirection: "column" }}>
+              {/* Ask Copilot CTA */}
+              <button
+                onClick={() => { setSelectedContact(null); onSwitchTab("Copilot"); }}
+                style={{
+                  width: "100%", padding: "10px", borderRadius: "10px",
+                  background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)",
+                  color: "#a5b4fc", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                  fontFamily: "Inter, sans-serif", marginBottom: "4px",
+                }}
+              >
+                💬 Ask Copilot about {selectedContact?.full_name?.split(" ")[0] || "this person"} →
+              </button>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
                   className="orbiter-btn orbiter-btn-primary"

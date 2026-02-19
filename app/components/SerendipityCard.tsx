@@ -125,6 +125,7 @@ export function SerendipityCard({
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const handleMakeIntro = async () => {
     if (sending || sent) return;
@@ -160,18 +161,22 @@ export function SerendipityCard({
   return (
     <div
       className="orbiter-card-enter"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: "linear-gradient(160deg, #0e0e1b 0%, #13131f 55%, #0c0c18 100%)",
-        border: `1px solid ${sent ? "rgba(52,211,153,0.3)" : "rgba(139,92,246,0.22)"}`,
+        border: `1px solid ${sent ? "rgba(52,211,153,0.3)" : hovered ? "rgba(139,92,246,0.45)" : "rgba(139,92,246,0.22)"}`,
         borderRadius: "18px",
         padding: "22px",
         margin: "6px 0",
         fontFamily: "Inter, sans-serif",
         position: "relative",
         overflow: "hidden",
-        transition: "border-color 0.4s ease",
+        transition: "all 0.2s ease",
         boxShadow: sent
           ? "0 4px 32px rgba(52,211,153,0.12)"
+          : hovered
+          ? "0 0 0 1px rgba(99,102,241,0.4), 0 8px 32px rgba(0,0,0,0.4)"
           : "0 4px 32px rgba(139,92,246,0.09), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
@@ -475,6 +480,25 @@ export function SerendipityCard({
         >
           {sent ? "✓ Intro Queued" : sending ? "Sending…" : "Make the Intro"}
         </button>
+        {sent && (
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("orbiter:switch-tab", { detail: { tab: "Outcomes" } }))}
+            style={{
+              padding: "10px 10px",
+              background: "rgba(52,211,153,0.08)",
+              border: "1px solid rgba(52,211,153,0.25)",
+              borderRadius: "10px",
+              color: "#34d399",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "Inter, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+          >
+            View →
+          </button>
+        )}
         <button
           onClick={handleCopy}
           className="orbiter-btn"

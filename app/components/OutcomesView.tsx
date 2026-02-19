@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Avatar } from "./Avatar";
-import { getOutcomes, createOutcome, dispatchOutcome, archiveOutcome, type OutcomeItem } from "../lib/xano";
+import { getOutcomes, createOutcome, dispatchOutcomeItem, archiveOutcome, type OutcomeItem } from "../lib/xano";
 
 type CopilotMode = "outcome" | "loop" | "serendipity";
 type Status = "draft" | "processing" | "suggestion" | "submitted" | "archived";
@@ -82,11 +82,11 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
     }
   };
 
-  const handleDispatch = async (id: number, e: React.MouseEvent) => {
+  const handleDispatch = async (id: number, mode: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setActionLoading(id);
     try {
-      await dispatchOutcome(id);
+      await dispatchOutcomeItem(id, mode);
       await fetchItems(activeFilter);
     } catch (err) {
       console.error("Failed to dispatch outcome:", err);
@@ -114,6 +114,12 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
     outcome: items.filter((o) => o.copilot_mode === "outcome").length,
     loop: items.filter((o) => o.copilot_mode === "loop").length,
     serendipity: items.filter((o) => o.copilot_mode === "serendipity").length,
+  };
+
+  const statusCounts = {
+    active: items.filter((o) => o.status !== "archived" && o.status !== "submitted").length,
+    dispatched: items.filter((o) => o.status === "submitted").length,
+    archived: items.filter((o) => o.status === "archived").length,
   };
 
   return (
@@ -145,6 +151,20 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
           <span>{creating ? "✕" : "+"}</span> {creating ? "Cancel" : "New Outcome"}
         </button>
       </div>
+
+      {/* Summary row */}
+      {!loading && items.length > 0 && (
+        <div style={{
+          display: "flex", gap: "16px", marginBottom: "20px",
+          fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: 500,
+        }}>
+          <span style={{ color: "#34d399" }}>{statusCounts.active} active</span>
+          <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+          <span style={{ color: "#fbbf24" }}>{statusCounts.dispatched} dispatched</span>
+          <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+          <span style={{ color: "rgba(255,255,255,0.3)" }}>{statusCounts.archived} archived</span>
+        </div>
+      )}
 
       {/* Create form */}
       {creating && (
@@ -371,7 +391,7 @@ export function OutcomesView({ onSwitchTab }: { onSwitchTab: (tab: string) => vo
                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                           {(o.status === "draft" || o.status === "processing") && (
                             <button
-                              onClick={(e) => handleDispatch(o.id, e)}
+                              onClick={(e) => handleDispatch(o.id, o.copilot_mode, e)}
                               disabled={actionLoading === o.id}
                               style={{
                                 fontSize: "11px", fontWeight: 600, padding: "7px 14px", borderRadius: "8px",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { CrayonChat } from "@crayonai/react-ui";
 import { OutcomeCard } from "./components/OutcomeCard";
 import { LeverageLoopCard } from "./components/LeverageLoopCard";
@@ -12,6 +12,7 @@ import { HorizonView } from "./components/HorizonView";
 import { DocsView } from "./components/DocsView";
 import { SearchView } from "./components/SearchView";
 import { CollectionsView } from "./components/CollectionsView";
+import { InsightsView } from "./components/InsightsView";
 import { MeetingPrepCard } from "./components/MeetingPrepCard";
 import { PersonPicker } from "./components/PersonPicker";
 import { chat } from "./lib/xano";
@@ -45,9 +46,9 @@ const DEFAULT_STARTERS = [
 ];
 
 function getPersonStarters(person: SelectedPerson) {
-  const name = person.master_person.name || person.full_name;
-  const title = person.master_person.current_title || "their current role";
-  const company = person.master_person.master_company?.company_name || "their company";
+  const name = person.master_person?.name || person.full_name;
+  const title = person.master_person?.current_title || "their current role";
+  const company = person.master_person?.master_company?.company_name || "their company";
   return [
     {
       displayText: `👤 Contact Profile — Deep-dive on ${name}`,
@@ -68,17 +69,20 @@ function getPersonStarters(person: SelectedPerson) {
   ];
 }
 
-type Tab = "Copilot" | "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Docs";
+type Tab = "Copilot" | "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
 
 interface SelectedPerson {
   master_person_id: number;
   full_name: string;
+  in_my_network?: boolean;
   master_person: {
+    id?: number;
     name: string;
     avatar: string | null;
     current_title: string | null;
-    master_company?: { company_name: string } | null;
-  };
+    bio?: string | null;
+    master_company?: { id?: number; company_name: string; logo?: string | null } | null;
+  } | null;
 }
 
 // Animated orbital SVG — ambient background for welcome screen
@@ -175,6 +179,13 @@ export default function Home() {
   const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(null);
   const personContextRef  = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
+
+  // Listen for cross-component tab switch events (from cards)
+  useEffect(() => {
+    const handler = ((e: CustomEvent<{ tab: Tab }>) => setActiveTab(e.detail.tab)) as EventListener;
+    window.addEventListener("orbiter:switch-tab", handler);
+    return () => window.removeEventListener("orbiter:switch-tab", handler);
+  }, []);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
     setSelectedPerson(person);
@@ -280,13 +291,13 @@ export default function Home() {
   const starters = selectedPerson ? getPersonStarters(selectedPerson) : DEFAULT_STARTERS;
 
   const welcomeTitle = selectedPerson
-    ? `What do you want to do with ${selectedPerson.master_person.name || selectedPerson.full_name}?`
+    ? `What do you want to do with ${selectedPerson.master_person?.name || selectedPerson.full_name}?`
     : "Your network is full of doors. Which one do you want to open?";
 
   const welcomeDescription = selectedPerson
-    ? `${selectedPerson.master_person.current_title || ""}${
-        selectedPerson.master_person.master_company?.company_name
-          ? ` at ${selectedPerson.master_person.master_company.company_name}`
+    ? `${selectedPerson.master_person?.current_title || ""}${
+        selectedPerson.master_person?.master_company?.company_name
+          ? ` at ${selectedPerson.master_person.master_company?.company_name}`
           : ""
       } — explore their profile, create a leverage loop, or find a serendipity match.`
     : "Search your network above, then tell Orbiter what you want to make happen.";
@@ -354,8 +365,8 @@ export default function Home() {
 
         {/* Nav tabs */}
         <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-          {(["Copilot", "Network", "Search", "Outcomes", "Horizon", "Collections", "Docs"] as Tab[]).map((tab) => {
-            const icons: Record<string, string> = { Search: "🔍 ", Collections: "📁 " };
+          {(["Copilot", "Network", "Search", "Outcomes", "Horizon", "Collections", "Insights", "Docs"] as Tab[]).map((tab) => {
+            const icons: Record<string, string> = { Search: "🔍 ", Collections: "📁 ", Insights: "📊 " };
             return (
               <ModeTab
                 key={tab}
@@ -451,6 +462,7 @@ export default function Home() {
         {activeTab === "Outcomes"    && <TabPanel key="outcomes"><OutcomesView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Horizon"     && <TabPanel key="horizon"><HorizonView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Collections" && <TabPanel key="collections"><CollectionsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
+        {activeTab === "Insights"    && <TabPanel key="insights"><InsightsView onSwitchTab={(tab) => setActiveTab(tab as Tab)} /></TabPanel>}
         {activeTab === "Docs"        && <TabPanel key="docs"><DocsView /></TabPanel>}
       </div>
     </div>

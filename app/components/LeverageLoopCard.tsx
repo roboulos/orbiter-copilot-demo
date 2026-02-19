@@ -65,6 +65,7 @@ export function LeverageLoopCard({
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const handleSend = async () => {
     if (sending || sent) return;
@@ -84,6 +85,8 @@ export function LeverageLoopCard({
       });
       await dispatchLeverageLoop(loop.id);
       setSent(true);
+      // Notify parent to switch to Outcomes tab
+      window.dispatchEvent(new CustomEvent("orbiter:switch-tab-after-action", { detail: { tab: "Outcomes" } }));
     } catch (err) {
       console.error("Failed to send leverage loop:", err);
     } finally {
@@ -102,20 +105,24 @@ export function LeverageLoopCard({
   return (
     <div
       className={`orbiter-card-enter${cfg.pulse && !sent ? " orbiter-urgent" : ""}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: sent
           ? "linear-gradient(160deg, #0c1a14 0%, #0f1f17 100%)"
           : "linear-gradient(160deg, #0f0f1a 0%, #13131f 55%, #0c0c18 100%)",
-        border: `1px solid ${sent ? "rgba(52,211,153,0.3)" : cfg.cardBorder}`,
+        border: `1px solid ${sent ? "rgba(52,211,153,0.3)" : hovered ? "rgba(99,102,241,0.45)" : cfg.cardBorder}`,
         borderRadius: "18px",
         padding: "22px",
         margin: "6px 0",
         fontFamily: "Inter, sans-serif",
         position: "relative",
         overflow: "hidden",
-        transition: "border-color 0.4s ease, background 0.4s ease",
+        transition: "all 0.2s ease",
         boxShadow: sent
           ? "0 4px 32px rgba(52,211,153,0.1)"
+          : hovered
+          ? "0 0 0 1px rgba(99,102,241,0.4), 0 8px 32px rgba(0,0,0,0.4)"
           : "0 4px 32px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
@@ -379,6 +386,25 @@ export function LeverageLoopCard({
         >
           {sent ? "✓ Sent via Orbiter" : sending ? "Sending…" : "Send Message"}
         </button>
+        {sent && (
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("orbiter:switch-tab", { detail: { tab: "Outcomes" } }))}
+            style={{
+              padding: "10px 12px",
+              background: "rgba(52,211,153,0.08)",
+              border: "1px solid rgba(52,211,153,0.25)",
+              borderRadius: "10px",
+              color: "#34d399",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "Inter, sans-serif",
+              whiteSpace: "nowrap",
+            }}
+          >
+            View in Outcomes →
+          </button>
+        )}
         <button
           onClick={handleCopy}
           className="orbiter-btn"
