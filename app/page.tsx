@@ -18,6 +18,7 @@ import { PersonPicker } from "./components/PersonPicker";
 import { ForkInTheRoad } from "./components/ForkInTheRoad";
 import { ButtonGroup } from "./components/ButtonGroup";
 import { ConfirmationModal } from "./components/ConfirmationModal";
+import { SubmitButton } from "./components/SubmitButton";
 import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -28,6 +29,7 @@ const templates = [
   { name: "serendipity_card",   Component: SerendipityCard   },
   { name: "meeting_prep_card",  Component: MeetingPrepCard   },
   { name: "button_group",       Component: ButtonGroup       },
+  { name: "submit_button",      Component: SubmitButton      },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
@@ -535,21 +537,32 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [showFork, setShowFork] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [dispatching, setDispatching] = useState(false);
+  const [dispatchSummary, setDispatchSummary] = useState("");
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    const handler = ((e: CustomEvent<{ tab: string }>) => {
+    const tabHandler = ((e: CustomEvent<{ tab: string }>) => {
       const t = e.detail.tab;
       if (t !== "Copilot" && t !== "Home") setActiveTab(t as Tab);
     }) as EventListener;
-    window.addEventListener("orbiter:switch-tab", handler);
-    window.addEventListener("orbiter:switch-tab-after-action", handler);
+
+    const dispatchHandler = ((e: CustomEvent<{ summary: string }>) => {
+      handleReadyToDispatch(e.detail.summary);
+    }) as EventListener;
+
+    window.addEventListener("orbiter:switch-tab", tabHandler);
+    window.addEventListener("orbiter:switch-tab-after-action", tabHandler);
+    window.addEventListener("orbiter:ready-to-dispatch", dispatchHandler);
+    
     return () => {
-      window.removeEventListener("orbiter:switch-tab", handler);
-      window.removeEventListener("orbiter:switch-tab-after-action", handler);
+      window.removeEventListener("orbiter:switch-tab", tabHandler);
+      window.removeEventListener("orbiter:switch-tab-after-action", tabHandler);
+      window.removeEventListener("orbiter:ready-to-dispatch", dispatchHandler);
     };
-  }, []);
+  }, [handleReadyToDispatch]);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
     setSelectedPerson(person);
@@ -582,6 +595,37 @@ export default function Home() {
 
   const handleChatStart = useCallback(() => {
     setShowFork(false);
+  }, []);
+
+  const handleReadyToDispatch = useCallback((summary: string) => {
+    setDispatchSummary(summary);
+    setShowConfirmation(true);
+  }, []);
+
+  const handleConfirmDispatch = useCallback(async () => {
+    setDispatching(true);
+    try {
+      // TODO: Call actual dispatch endpoint
+      // For now, just simulate a delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      // Success - close modal and reset
+      setDispatching(false);
+      setShowConfirmation(false);
+      setModalOpen(false);
+      handlePersonClear();
+      
+      // Could show a success toast here
+    } catch (error) {
+      console.error("Dispatch failed:", error);
+      setDispatching(false);
+      // Could show an error toast here
+    }
+  }, [handlePersonClear]);
+
+  const handleCancelDispatch = useCallback(() => {
+    setShowConfirmation(false);
+    setDispatchSummary("");
   }, []);
 
   const processMessage = useCallback(
@@ -865,6 +909,15 @@ export default function Home() {
         onChatStart={handleChatStart}
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
+      />
+
+      {/* ─── Confirmation Modal ───────────────────────────── */}
+      <ConfirmationModal
+        open={showConfirmation}
+        onClose={handleCancelDispatch}
+        onConfirm={handleConfirmDispatch}
+        summary={dispatchSummary}
+        dispatching={dispatching}
       />
     </div>
   );
