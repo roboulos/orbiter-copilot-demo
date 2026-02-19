@@ -35,7 +35,7 @@ function ContextLoader({ name }: { name: string }) {
       background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08))",
       border: "1px solid rgba(99,102,241,0.28)",
       borderRadius: "12px",
-      margin: "0 16px",
+      margin: "0 8px",
       position: "relative",
       overflow: "hidden",
     }}>
@@ -103,7 +103,7 @@ function SelectedPersonChip({ person, onClear }: { person: PersonResult; onClear
         background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08))",
         border: "1px solid rgba(99,102,241,0.3)",
         borderRadius: "12px",
-        margin: "0 16px",
+        margin: "0 8px",
         position: "relative",
         overflow: "hidden",
         animation: "fadeUp 0.25s ease both",
@@ -255,7 +255,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
 
   // Search state
   return (
-    <div ref={containerRef} style={{ position: "relative", margin: "0 16px" }}>
+    <div ref={containerRef} style={{ position: "relative", margin: "0 8px" }}>
       <div
         style={{
           display: "flex",
@@ -285,7 +285,7 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
           onKeyDown={(e) => {
             if (e.key === "Escape") { setIsOpen(false); setQuery(""); setResults([]); inputRef.current?.blur(); }
           }}
-          placeholder="Search your network to focus on someone…"
+          placeholder="Search people in your network…"
           style={{
             flex: 1,
             background: "none",

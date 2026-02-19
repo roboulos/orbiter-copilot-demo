@@ -249,7 +249,7 @@ function CopilotModal({
           }} />
 
           {/* Person picker */}
-          <div style={{ flex: 1, marginLeft: "4px" }}>
+          <div style={{ flex: 1, marginLeft: "16px" }}>
             <PersonPicker
               onSelect={onPersonSelect}
               selectedPerson={selectedPerson}
