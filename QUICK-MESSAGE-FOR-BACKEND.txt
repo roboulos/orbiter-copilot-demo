@@ -1,0 +1,57 @@
+Hey team,
+
+Frontend for the Orbiter Copilot demo is 100% done. Just need 2 things from backend for Thursday's demo:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ RETURN BUTTON OPTIONS (Instead of Text Only)
+
+When AI asks a question, return buttons:
+
+CURRENT (text only):
+{
+  "raw": "{\"response\":[{\"type\":\"text\",\"text\":\"What region?\"}]}"
+}
+
+NEEDED (text + buttons):
+{
+  "raw": "{\"response\":[{\"type\":\"text\",\"text\":\"What region of Costa Rica?\"},{\"name\":\"button_group\",\"templateProps\":{\"options\":[{\"label\":\"Pacific Coast\",\"value\":\"pacific\",\"emoji\":\"🏖️\"},{\"label\":\"Central Valley\",\"value\":\"central\",\"emoji\":\"🏔️\"},{\"label\":\"Caribbean Side\",\"value\":\"caribbean\",\"emoji\":\"🌴\"}]}}]}"
+}
+
+When user clicks [Pacific Coast] → frontend sends "pacific" as next message.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2️⃣ CREATE DISPATCH ENDPOINT
+
+POST /api/dispatch
+
+Request:
+{
+  "summary": "Find Costa Rica real estate connections...",
+  "context": {"outcome": "...", "region": "pacific"},
+  "person_id": null,
+  "conversation_history": [...]
+}
+
+Response:
+{
+  "success": true,
+  "dispatch_id": "disp_123"
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FULL DETAILS & EXAMPLES:
+See MESSAGE-FOR-BACKEND-TEAM.md in the repo
+Or BACKEND-INTEGRATION.md for complete spec
+
+TIMELINE:
+Need this weekend for testing
+Demo: Thursday Feb 27 @ 9 AM
+
+ESTIMATED WORK: 1-2 hours total
+
+Let me know if you have questions!
+
+- Robert
