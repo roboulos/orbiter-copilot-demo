@@ -1,0 +1,251 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useThreadActions, useThreadState } from "@crayonai/react-core";
+import { QuestionCard } from "./QuestionCard";
+import { ScanningCard } from "./ScanningCard";
+
+interface InterviewStep {
+  id: string;
+  question: string;
+  type: "question_card" | "scanning";
+  data?: unknown;
+}
+
+interface InterviewFlowProps {
+  topic: string;  // "costa-rica", "investor-intro", etc.
+  onComplete: (answers: Record<string, string>) => void;
+}
+
+export function InterviewFlow({ topic, onComplete }: InterviewFlowProps) {
+  const { appendMessages, processMessage } = useThreadActions();
+  const { isRunning, messages, error } = useThreadState();
+  
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  // Define interview steps based on topic
+  const getInterviewSteps = (topic: string): InterviewStep[] => {
+    if (topic === "costa-rica") {
+      return [
+        {
+          id: "region",
+          question: "Which region interests you?",
+          type: "question_card",
+          data: {
+            icon: "🏝️",
+            title: "Costa Rica Relocation",
+            description: "Let's find your perfect region",
+            buttons: [
+              { label: "Pacific Coast", value: "pacific", emoji: "🏖️", subtitle: "Guanacaste, Manuel Antonio" },
+              { label: "Central Valley", value: "central", emoji: "🏔️", subtitle: "San José, Escazú" },
+              { label: "Caribbean Coast", value: "caribbean", emoji: "🌴", subtitle: "Puerto Viejo, Limón" },
+              { label: "Still exploring", value: "exploring", emoji: "🗺️" },
+            ]
+          }
+        },
+        {
+          id: "scanning",
+          question: "",
+          type: "scanning",
+          data: {
+            title: "🔍 Scanning Your Network...",
+            status: "Finding connections in your region..."
+          }
+        },
+        {
+          id: "purpose",
+          question: "What's your main purpose?",
+          type: "question_card",
+          data: {
+            icon: "🏠",
+            title: "Investment Purpose",
+            description: "Tell us what you're planning",
+            buttons: [
+              { label: "Vacation Property", value: "vacation", emoji: "🏝️" },
+              { label: "Investment Rental", value: "investment", emoji: "💰" },
+              { label: "Full Relocation", value: "relocate", emoji: "🎯" },
+              { label: "Exploring Options", value: "exploring", emoji: "🤔" },
+            ]
+          }
+        },
+        {
+          id: "budget",
+          question: "What's your budget range?",
+          type: "question_card",
+          data: {
+            icon: "💰",
+            title: "Budget Range",
+            buttons: [
+              { label: "$200-300K", value: "low", emoji: "💵" },
+              { label: "$300-500K", value: "mid", emoji: "💰" },
+              { label: "$500K+", value: "high", emoji: "💎" },
+              { label: "Still researching", value: "unsure", emoji: "🤔" },
+            ]
+          }
+        },
+        {
+          id: "connections",
+          question: "Do you have existing connections in Costa Rica?",
+          type: "question_card",
+          data: {
+            icon: "🤝",
+            title: "Existing Connections",
+            buttons: [
+              { label: "Yes, show them", value: "yes", emoji: "✓" },
+              { label: "No, find some", value: "no", emoji: "🔍" },
+              { label: "Not sure", value: "unsure", emoji: "🤔" },
+            ]
+          }
+        },
+      ];
+    }
+    
+    // Default flow for other topics
+    return [];
+  };
+
+  const steps = getInterviewSteps(topic);
+
+  const handleAnswer = async (stepId: string, value: string, label: string) => {
+    // Record answer
+    const newAnswers = { ...answers, [stepId]: value };
+    setAnswers(newAnswers);
+
+    // Add user message
+    appendMessages({
+      id: crypto.randomUUID(),
+      role: "user",
+      message: label,
+      createdAt: new Date(),
+    });
+
+    // Move to next step
+    const nextStepIndex = currentStep + 1;
+    
+    if (nextStepIndex >= steps.length) {
+      // Interview complete
+      onComplete(newAnswers);
+    } else {
+      setCurrentStep(nextStepIndex);
+      
+      // Show next step
+      const nextStep = steps[nextStepIndex];
+      
+      if (nextStep.type === "scanning") {
+        // Show scanning card
+        appendMessages({
+          id: crypto.randomUUID(),
+          role: "agent",
+          message: {
+            template: "scanning_card",
+            data: nextStep.data
+          },
+          createdAt: new Date(),
+        });
+        
+        // Auto-advance after 2 seconds
+        setTimeout(() => {
+          setCurrentStep(nextStepIndex + 1);
+        }, 2000);
+      } else {
+        // Show next question
+        appendMessages({
+          id: crypto.randomUUID(),
+          role: "agent",
+          message: {
+            template: "question_card",
+            data: nextStep.data
+          },
+          createdAt: new Date(),
+        });
+      }
+    }
+  };
+
+  // Initialize first question
+  useEffect(() => {
+    if (steps.length > 0 && messages.length === 0) {
+      const firstStep = steps[0];
+      appendMessages({
+        id: crypto.randomUUID(),
+        role: "agent",
+        message: {
+          template: "question_card",
+          data: firstStep.data
+        },
+        createdAt: new Date(),
+      });
+    }
+  }, [steps, messages.length, appendMessages]);
+
+  // Progress indicator
+  const totalQuestions = steps.filter(s => s.type === "question_card").length;
+  const answeredQuestions = Object.keys(answers).length;
+
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: 20,
+      right: 20,
+      background: "rgba(0,0,0,0.8)",
+      backdropFilter: "blur(10px)",
+      padding: "12px 20px",
+      borderRadius: "12px",
+      border: "1px solid rgba(255,255,255,0.1)",
+      color: "white",
+      fontSize: "13px",
+      fontFamily: "Inter, sans-serif",
+      zIndex: 1000,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Progress bar */}
+        <div style={{ flex: 1, maxWidth: "120px" }}>
+          <div style={{
+            background: "rgba(255,255,255,0.1)",
+            height: "4px",
+            borderRadius: "2px",
+            overflow: "hidden",
+          }}>
+            <div style={{
+              background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+              height: "100%",
+              width: `${(answeredQuestions / totalQuestions) * 100}%`,
+              transition: "width 0.3s ease",
+            }} />
+          </div>
+        </div>
+        
+        {/* Text */}
+        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap" }}>
+          Step {answeredQuestions} of {totalQuestions}
+        </div>
+
+        {/* Loading indicator */}
+        {isRunning && (
+          <div style={{
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            background: "#6366f1",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }} />
+        )}
+
+        {/* Error indicator */}
+        {error && (
+          <div style={{ color: "#ef4444", fontSize: "11px" }}>
+            Error
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+      `}</style>
+    </div>
+  );
+}
