@@ -17,6 +17,7 @@ import { MeetingPrepCard } from "./components/MeetingPrepCard";
 import { PersonPicker } from "./components/PersonPicker";
 import { ForkInTheRoad } from "./components/ForkInTheRoad";
 import { ButtonGroup } from "./components/ButtonGroup";
+import { ConfirmationModal } from "./components/ConfirmationModal";
 import { chat } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
