@@ -21,24 +21,48 @@ const templates = [
   { name: "serendipity_card",  Component: SerendipityCard  },
 ];
 
-const STARTERS = [
+const DEFAULT_STARTERS = [
   {
     displayText: "🎯 Outcome — I'm raising a $4M seed, find VCs in my network who back graph tech",
     prompt: "I'm raising a $4M seed round for Orbiter, a relationship intelligence platform built on a graph database. I need warm introductions to seed-stage investors who have backed graph databases, network intelligence tools, or relationship-driven SaaS in the last 2 years. We're 60 days from target close.",
   },
   {
-    displayText: "⚡ Leverage Loop — My contact just became VP at Salesforce",
-    prompt: "My contact just got promoted to VP of Platform Partnerships at Salesforce. We worked together 3 years ago at a Series B startup. This is a leverage loop — what's my move and draft me a message to send today.",
+    displayText: "⚡ Leverage Loop — My contact just became VP at a major company",
+    prompt: "A key contact in my network just got promoted to VP at a major company. We worked together 3 years ago. This is a leverage loop — what's my move and draft me a message to send today.",
   },
   {
     displayText: "✨ Serendipity — Who in my network should meet our fractional CFO?",
     prompt: "Serendipity match: We just brought on a fractional CFO who specializes in SaaS Series A financials. She needs deal flow. Find the best person in my network to introduce her to right now.",
   },
   {
-    displayText: "👤 Contact Profile — Pull up the selected person",
+    displayText: "👤 Contact Profile — Select someone above, then click this",
     prompt: "Pull up the contact profile for the person I've selected. Show me our relationship context, bond strength, and what I should do next.",
   },
 ];
+
+function getPersonStarters(person: SelectedPerson) {
+  const name = person.master_person.name || person.full_name;
+  const title = person.master_person.current_title || "their current role";
+  const company = person.master_person.master_company?.company_name || "their company";
+  return [
+    {
+      displayText: `👤 Contact Profile — Deep-dive on ${name}`,
+      prompt: `Pull up the full contact profile for ${name} — ${title} at ${company}. Show me our relationship context, bond strength, when we last connected, and the top 3 things I should do next.`,
+    },
+    {
+      displayText: `⚡ Leverage Loop — What's my move with ${name} right now?`,
+      prompt: `${name} is ${title} at ${company}. I want to activate this relationship. What recent signals should I act on, what's my best move, and draft me a message I can send today to strengthen this connection.`,
+    },
+    {
+      displayText: `✨ Serendipity — Who should ${name} meet in my network?`,
+      prompt: `Serendipity match for ${name} — ${title} at ${company}. Who in my network would be most valuable for them to meet right now? Find the highest-potential introduction I could make.`,
+    },
+    {
+      displayText: `🎯 Outcome — Get a warm intro through ${name}`,
+      prompt: `I want to use my relationship with ${name} at ${company} to get a warm introduction. Who are the most valuable people in their network that I should be meeting? Create an outcome around this and map the best path.`,
+    },
+  ];
+}
 
 type Tab = "Copilot" | "Network" | "Outcomes" | "Horizon" | "Docs";
 
@@ -248,7 +272,9 @@ export default function Home() {
     []
   );
 
-  // Dynamic welcome content based on selected person
+  // Dynamic welcome content + starters based on selected person
+  const starters = selectedPerson ? getPersonStarters(selectedPerson) : DEFAULT_STARTERS;
+
   const welcomeTitle = selectedPerson
     ? `What do you want to do with ${selectedPerson.master_person.name || selectedPerson.full_name}?`
     : "Your network is full of doors. Which one do you want to open?";
@@ -259,7 +285,7 @@ export default function Home() {
           ? ` at ${selectedPerson.master_person.master_company.company_name}`
           : ""
       } — explore their profile, create a leverage loop, or find a serendipity match.`
-    : "Pick someone above or describe what you want to make happen. Orbiter surfaces the right people, right timing, and right message.";
+    : "Search your network above, then tell Orbiter what you want to make happen.";
 
   return (
     <div
@@ -401,17 +427,25 @@ export default function Home() {
               }}
               conversationStarters={{
                 variant: "long",
-                options: STARTERS,
+                options: starters,
               }}
             />
           </div>
         </div>
 
-        {activeTab === "Network"  && <NetworkView />}
-        {activeTab === "Outcomes" && <OutcomesView />}
-        {activeTab === "Horizon"  && <HorizonView />}
-        {activeTab === "Docs"     && <DocsView />}
+        {activeTab === "Network"  && <TabPanel key="network"><NetworkView /></TabPanel>}
+        {activeTab === "Outcomes" && <TabPanel key="outcomes"><OutcomesView /></TabPanel>}
+        {activeTab === "Horizon"  && <TabPanel key="horizon"><HorizonView /></TabPanel>}
+        {activeTab === "Docs"     && <TabPanel key="docs"><DocsView /></TabPanel>}
       </div>
+    </div>
+  );
+}
+
+function TabPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", animation: "fadeUp 0.25s ease both" }}>
+      {children}
     </div>
   );
 }
