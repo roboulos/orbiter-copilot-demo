@@ -6,11 +6,13 @@ const WB_CRAYON_ARCH    = "https://robert-storage.tor1.digitaloceanspaces.com/im
 const WB_ORBITER_ARCH   = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771420871000.jpg";
 const WB_CONVERSATIONS  = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771420438000.jpg";
 const WB_TIMELINE       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771419619000.jpg";
+const WB_FEB18_RECAP    = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771501768000.jpg";
 
-type Section = "overview" | "architecture" | "orbiter" | "conversations" | "decisions" | "skill" | "resources";
+type Section = "overview" | "today" | "architecture" | "orbiter" | "conversations" | "decisions" | "skill" | "resources";
 
 const NAV: { id: Section; label: string; emoji: string }[] = [
   { id: "overview", label: "Overview", emoji: "🧭" },
+  { id: "today", label: "Feb 18 Recap", emoji: "📅" },
   { id: "architecture", label: "How CrayonAI Works", emoji: "🏗️" },
   { id: "orbiter", label: "Orbiter Architecture", emoji: "🕸️" },
   { id: "conversations", label: "Our Conversations", emoji: "💬" },
@@ -60,6 +62,7 @@ export function DocsView() {
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "32px 40px" }}>
         {active === "overview"       && <OverviewSection onImageClick={setLightbox} />}
+        {active === "today"          && <TodayRecapSection onImageClick={setLightbox} />}
         {active === "architecture"   && <ArchSection onImageClick={setLightbox} />}
         {active === "orbiter"        && <OrbiterArchSection onImageClick={setLightbox} />}
         {active === "conversations"  && <ConversationsSection onImageClick={setLightbox} />}
@@ -96,8 +99,9 @@ function OverviewSection({ onImageClick }: { onImageClick: (url: string) => void
         emoji="🧭"
       />
 
-      {/* Whiteboard previews — all 4 */}
+      {/* Whiteboard previews — all 5 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "40px" }}>
+        <WhiteboardCard url={WB_FEB18_RECAP}   title="Feb 18 — Today's Breakthroughs" caption="Meeting recap + 7 commits shipped today" onClick={() => onImageClick(WB_FEB18_RECAP)} />
         <WhiteboardCard url={WB_CRAYON_ARCH}   title="How CrayonAI SDK Works"        caption="CrayonChat → SSE → Cards → Components" onClick={() => onImageClick(WB_CRAYON_ARCH)} />
         <WhiteboardCard url={WB_ORBITER_ARCH}  title="Orbiter Product Architecture"   caption="FalkorDB · Xano · 3 Modes · Horizon"    onClick={() => onImageClick(WB_ORBITER_ARCH)} />
         <WhiteboardCard url={WB_CONVERSATIONS} title="Key Conversations + Insights"   caption="What Robert and Mark aligned on"         onClick={() => onImageClick(WB_CONVERSATIONS)} />
@@ -120,6 +124,111 @@ function OverviewSection({ onImageClick }: { onImageClick: (url: string) => void
         This is a working proof-of-concept of what the Orbiter Copilot could look like with full generative UI.
         Dennis has CrayonAI (Thesys C1) wired up but barely touched — this demo shows what's possible when you
         lean fully into it. All 4 card types stream in real-time from Claude. No mocks.
+      </CalloutBox>
+    </div>
+  );
+}
+
+// ─── FEB 18 RECAP ───────────────────────────────────────────────────────────
+
+function TodayRecapSection({ onImageClick }: { onImageClick: (url: string) => void }) {
+  const commits = [
+    { hash: "480f932", msg: "masterPersonId passthrough into every card's templateProps" },
+    { hash: "bf794d7", msg: "JSON parsing fix — lenient parser handles LLM quirks" },
+    { hash: "7e648bf", msg: "CSS/visual polish — scroll, labels, typos" },
+    { hash: "70f608c", msg: "PersonPicker z-index fix (position: fixed); Network 'View' panel wired" },
+    { hash: "6806474", msg: "World-class premium experience — orbital SVG, animated arcs, glow states" },
+    { hash: "617fd3b", msg: "Standalone mode + PersonPicker rewrite + dynamic starters + all view upgrades" },
+    { hash: "0288b28", msg: "Fix sidebar CSS class → .crayon-shell-sidebar-container; full-width layout" },
+  ];
+
+  const meetingPoints = [
+    { icon: "🔐", text: "GitHub repo access granted — Robert can push to Orbiter codebase" },
+    { icon: "💬", text: "Orbiter Slack #copilot-dev joined — direct line to Charles, Njogu, Dennis" },
+    { icon: "🎯", text: "Robert's role confirmed: UX consultant + prompt architect for Copilot" },
+    { icon: "🔓", text: "CrayonAI = open source SDK — no paid Thesys budget needed" },
+    { icon: "🚀", text: "Mark's direction: keep pushing the generative UI layer — world-class UX" },
+    { icon: "👥", text: "Attendees: Mark (CEO), Charles (charles@orbiter.io), Njogu (njogu@orbiter.io), Dennis" },
+  ];
+
+  const technicalWins = [
+    { title: "Xano /chat Rewritten", desc: "Full Orbiter system prompt, all 4 card schemas, person_context injection, Claude Sonnet 4 via OpenRouter — single endpoint powers all intelligence", color: "#6366f1" },
+    { title: "PersonPicker Rebuilt", desc: "Orbital SVG spinner on load, live green dot when focused, gradient chip, 'In focus' badge, crossfade transitions, search with glow ring", color: "#8b5cf6" },
+    { title: "World-Class Animation System", desc: "12 keyframe animations in globals.css: orbital SVG rings (12s/18s/26s), animated arc connector between people, pulsing glow states, bond strength bar, scan rings", color: "#06b6d4" },
+    { title: "Sidebar Removed", desc: "Standalone mode + .crayon-shell-sidebar-container hidden → clean full-width layout. Copilot chat fills the entire panel with no visual noise.", color: "#10b981" },
+    { title: "Profile Panel + YAML Parsing", desc: "Network 'View' button opens slide-over panel. js-yaml parses raw YAML string into structured About / Skills pills / Work History timeline / Roles tags", color: "#f59e0b" },
+    { title: "Dynamic Conversation Starters", desc: "getPersonStarters(person) generates 4 personalized starters using contact's name, title, company. Tab switch uses fadeUp crossfade.", color: "#ec4899" },
+  ];
+
+  return (
+    <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+      <SectionHeader
+        title="February 18, 2026 — Full Day Recap"
+        subtitle="9 AM code access meeting with the Orbiter team + 7 commits shipped to Vercel. Everything that changed today."
+        emoji="📅"
+      />
+
+      {/* Whiteboard */}
+      <WhiteboardCard
+        url={WB_FEB18_RECAP}
+        title="Feb 18 Progress Whiteboard"
+        caption="Click to enlarge — generated by Zora (Charlotte MCP)"
+        onClick={() => onImageClick(WB_FEB18_RECAP)}
+        fullWidth
+      />
+
+      {/* Meeting recap */}
+      <div style={{ marginTop: "32px", marginBottom: "32px" }}>
+        <SubHeader title="9 AM Team Meeting — What Was Decided" />
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {meetingPoints.map((p, i) => (
+            <div key={i} style={{
+              display: "flex", gap: "12px", alignItems: "flex-start",
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: "10px", padding: "12px 16px",
+            }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>{p.icon}</span>
+              <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>{p.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Technical wins */}
+      <SubHeader title="What Was Built & Shipped" />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "32px" }}>
+        {technicalWins.map((w, i) => (
+          <div key={i} style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderTop: `3px solid ${w.color}`,
+            borderRadius: "10px", padding: "16px 18px",
+          }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "#e8e8f0", marginBottom: "8px" }}>{w.title}</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{w.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Commit log */}
+      <SubHeader title="Commit History — Feb 18" />
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "32px" }}>
+        {commits.map((c, i) => (
+          <div key={i} style={{
+            display: "flex", gap: "12px", alignItems: "baseline",
+            padding: "10px 14px",
+            background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "8px",
+          }}>
+            <code style={{ fontSize: "11px", color: "#6366f1", fontFamily: "monospace", flexShrink: 0, fontWeight: 600 }}>{c.hash}</code>
+            <span style={{ fontSize: "12.5px", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{c.msg}</span>
+          </div>
+        ))}
+      </div>
+
+      <CalloutBox icon="🎯" title="What's Next (March 2 deadline)">
+        All core card types are working with real Orbiter data. Next priorities: test ContactCard + SerendipityCard with live starters, continue evolving the chat experience, and integrate with the real Orbiter codebase using the newly granted GitHub access. Mark wants world-class — we keep going.
       </CalloutBox>
     </div>
   );
