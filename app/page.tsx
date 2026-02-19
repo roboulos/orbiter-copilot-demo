@@ -417,6 +417,7 @@ export default function Home() {
 
           <div style={{ flex: 1, minHeight: 0, position: "relative", zIndex: 1 }}>
             <CrayonChat
+              type="standalone"
               processMessage={processMessage}
               agentName="Orbiter Copilot"
               responseTemplates={templates}

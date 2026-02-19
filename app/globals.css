@@ -333,6 +333,43 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════
+   STANDALONE MODE — Full-width, no sidebar
+   ══════════════════════════════════════════════════════ */
+
+/* Hide any leftover sidebar in standalone mode */
+.crayon-shell-sidebar { display: none !important; }
+
+/* Ensure thread list / history panel don't show */
+[class*="thread-list"] { display: none !important; }
+
+/* Full-width standalone shell */
+[class*="standalone"] .crayon-shell-container,
+[class*="copilot"] .crayon-shell-container {
+  width: 100% !important;
+}
+
+/* Welcome screen max-width for readability */
+.crayon-shell-desktop-welcome-screen {
+  max-width: 680px !important;
+  margin: 0 auto !important;
+}
+
+/* Messages column max-width */
+[class*="thread-messages"] > * {
+  max-width: 720px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Composer max-width */
+[class*="composer"],
+[class*="welcome-composer"] {
+  max-width: 680px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* ══════════════════════════════════════════════════════
    SCROLLBAR — Premium thin
    ══════════════════════════════════════════════════════ */
 
