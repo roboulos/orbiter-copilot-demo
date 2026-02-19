@@ -16,43 +16,64 @@ interface ButtonGroupProps {
 
 export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const handleSelect = (value: string) => {
     setSelected(value);
+    setSending(true);
     
-    console.log('[ButtonGroup] Button clicked, value:', value);
+    console.log('[ButtonGroup] Button clicked:', value);
     
-    // Find the input and set value
-    const input = 
-      document.querySelector('textarea[placeholder*="Type"]') ||
-      document.querySelector('textarea[placeholder*="message"]') ||
-      document.querySelector('textarea');
+    // Find the textarea and form
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const form = textarea?.closest('form');
     
-    if (input) {
-      (input as HTMLTextAreaElement).value = value;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.focus();
+    if (textarea && form) {
+      // Set value using native setter to bypass React's synthetic event system
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype,
+        'value'
+      )?.set;
+      
+      if (nativeSetter) {
+        nativeSetter.call(textarea, value);
+      } else {
+        textarea.value = value;
+      }
+      
+      // Trigger React onChange with real event
+      const event = new Event('input', { bubbles: true });
+      textarea.dispatchEvent(event);
+      
+      // Focus the textarea
+      textarea.focus();
+      
+      // Wait a bit for React to process, then submit the form
+      setTimeout(() => {
+        console.log('[ButtonGroup] Submitting form');
+        
+        // Try multiple submit strategies
+        // Strategy 1: Form submit event
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        form.dispatchEvent(submitEvent);
+        
+        // Strategy 2: If that didn't work, find and click submit button
+        setTimeout(() => {
+          const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+          if (submitButton) {
+            submitButton.click();
+          }
+          setSending(false);
+        }, 100);
+      }, 200);
+    } else {
+      console.error('[ButtonGroup] Could not find textarea or form');
+      setSending(false);
     }
     
     // Also call onSelect if provided
     if (onSelect) {
       onSelect(value);
-    }
-  };
-
-  const handleSend = () => {
-    console.log('[ButtonGroup] Send button clicked');
-    
-    // Find and click the actual send button
-    const sendButton =
-      document.querySelector('button[type="submit"]') ||
-      Array.from(document.querySelectorAll('button')).find(btn => 
-        btn.querySelector('svg')
-      );
-    
-    if (sendButton) {
-      console.log('[ButtonGroup] Clicking send button');
-      (sendButton as HTMLButtonElement).click();
     }
   };
 
@@ -63,6 +84,9 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
       gap: "8px",
       margin: "8px 0",
       animation: "fadeUp 0.3s ease both",
+      opacity: sending ? 0.6 : 1,
+      pointerEvents: sending ? "none" : "auto",
+      transition: "opacity 0.2s ease",
     }}>
       {question && (
         <div style={{
@@ -86,40 +110,10 @@ export function ButtonGroup({ question, options, onSelect }: ButtonGroupProps) {
             option={option}
             selected={selected === option.value}
             onClick={() => handleSelect(option.value)}
+            disabled={sending}
           />
         ))}
       </div>
-
-      {selected && (
-        <button
-          onClick={handleSend}
-          style={{
-            marginTop: "8px",
-            padding: "12px 20px",
-            background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-            border: "1px solid rgba(99,102,241,0.4)",
-            borderRadius: "12px",
-            color: "#ffffff",
-            fontSize: "14px",
-            fontWeight: 600,
-            fontFamily: "Inter, sans-serif",
-            cursor: "pointer",
-            transition: "all 0.15s ease",
-            boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
-            animation: "fadeUp 0.2s ease both",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 6px 16px rgba(99,102,241,0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.3)";
-          }}
-        >
-          Send Selection →
-        </button>
-      )}
     </div>
   );
 }
@@ -128,10 +122,12 @@ function InterviewButton({
   option,
   selected,
   onClick,
+  disabled,
 }: {
   option: ButtonOption;
   selected: boolean;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -140,7 +136,7 @@ function InterviewButton({
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      disabled={selected}
+      disabled={selected || disabled}
       style={{
         display: "flex",
         alignItems: "center",

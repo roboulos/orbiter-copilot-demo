@@ -106,6 +106,18 @@ function CopilotModal({
     }
   }, [pendingPrompt, onPendingPromptConsumed]);
 
+  // Listen for button group messages
+  useEffect(() => {
+    const handler = ((e: CustomEvent<{ message: string }>) => {
+      console.log('[CopilotModal] Received button message:', e.detail.message);
+      chatKey.current += 1;
+      setPromptToSend(e.detail.message);
+    }) as EventListener;
+
+    window.addEventListener('orbiter:send-button-message', handler);
+    return () => window.removeEventListener('orbiter:send-button-message', handler);
+  }, []);
+
   if (!open) return null;
 
   const personName = selectedPerson?.master_person?.name || selectedPerson?.full_name;
