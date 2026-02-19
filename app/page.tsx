@@ -102,13 +102,23 @@ export default function Home() {
         .replace(/\s*```\s*$/, "")
         .trim();
 
+      // Fix unescaped newlines inside JSON string values — LLMs sometimes
+      // output literal newlines that break JSON.parse
+      const sanitized = cleaned.replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t");
+
       type ResponseItem =
         | { type: "text"; text: string }
         | { name: string; templateProps: Record<string, unknown> };
 
       let items: ResponseItem[] = [];
       try {
-        const parsed = JSON.parse(cleaned);
+        // Try clean version first, fall back to sanitized
+        let parsed;
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch {
+          parsed = JSON.parse(sanitized);
+        }
         items = parsed?.response ?? [];
       } catch {
         items = [{ type: "text", text: cleaned || raw }];
