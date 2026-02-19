@@ -29,8 +29,10 @@ import { ErrorCard } from "./components/ErrorCard";
 import { ProgressTracker } from "./components/ProgressTracker";
 import { BackButton } from "./components/BackButton";
 import { CancelButton } from "./components/CancelButton";
+import { Confetti } from "./components/Confetti";
 import { chat, dispatch } from "./lib/xano";
 import { orbiterTheme } from "./lib/theme";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
@@ -361,6 +363,9 @@ function CopilotModal({
               </div>
             )}
           </div>
+
+          {/* Cancel button (shows during processing) */}
+          <CancelButton />
         </div>
       </div>
     </>
@@ -576,10 +581,26 @@ export default function Home() {
   const [dispatchSummary, setDispatchSummary] = useState("");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
   const [networkSummary, setNetworkSummary] = useState<string>("");
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'k',
+      meta: true,
+      callback: () => setModalOpen(true),
+    },
+    {
+      key: 'Escape',
+      callback: () => {
+        if (modalOpen) setModalOpen(false);
+      },
+    },
+  ]);
 
   const handlePersonSelect = useCallback((person: SelectedPerson, context: string) => {
     setSelectedPerson(person);
@@ -686,6 +707,10 @@ export default function Home() {
         `Your network has been activated! (${result.dispatch_id}) We'll notify you when connections are found.`
       );
       setShowSuccessToast(true);
+      
+      // Trigger confetti celebration!
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
       
       handlePersonClear();
     } catch (error) {
@@ -1012,6 +1037,9 @@ export default function Home() {
         message={successMessage}
         onClose={() => setShowSuccessToast(false)}
       />
+
+      {/* ─── Confetti ────────────────────────────────────── */}
+      <Confetti active={showConfetti} />
     </div>
   );
 }
