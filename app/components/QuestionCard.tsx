@@ -38,16 +38,17 @@ export function QuestionCard({
 
     setSelectedValue(button.value);
 
-    // Add user's selection to the thread
-    appendMessages({
-      id: crypto.randomUUID(),
-      role: "user",
-      message: button.label,
-      createdAt: new Date(),
-    });
-
-    // Request next AI response
-    await processMessage({ message: button.value });
+    try {
+      // Send the user's selection to the backend
+      await processMessage({
+        role: "user",
+        type: "prompt",
+        message: button.label,
+      });
+    } catch (error) {
+      console.error("[QuestionCard] Error processing message:", error);
+      setSelectedValue(null); // Reset on error
+    }
   };
 
   return (

@@ -21,16 +21,17 @@ export function ButtonGroup({ question, options }: ButtonGroupProps) {
     
     setSelectedValue(option.value);
 
-    // Add user's selection as a message
-    appendMessages({
-      id: crypto.randomUUID(),
-      role: "user",
-      message: option.label,
-      createdAt: new Date(),
-    });
-
-    // Trigger AI to respond with next question
-    await processMessage({ message: option.value });
+    try {
+      // Send the user's selection to the backend
+      await processMessage({
+        role: "user",
+        type: "prompt",
+        message: option.label,
+      });
+    } catch (error) {
+      console.error("[ButtonGroup] Error processing message:", error);
+      setSelectedValue(null); // Reset on error
+    }
   };
 
   return (
