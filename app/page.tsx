@@ -21,6 +21,8 @@ import { ConfirmationModal } from "./components/ConfirmationModal";
 import { SubmitButton } from "./components/SubmitButton";
 import { SuccessToast } from "./components/SuccessToast";
 import { ErrorMessage } from "./components/ErrorMessage";
+import { QuestionCard } from "./components/QuestionCard";
+import { ScanningCard } from "./components/ScanningCard";
 import { chat, dispatch } from "./lib/xano";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -33,6 +35,8 @@ const templates = [
   { name: "button_group",       Component: ButtonGroup       },
   { name: "submit_button",      Component: SubmitButton      },
   { name: "error_message",      Component: ErrorMessage      },
+  { name: "question_card",      Component: QuestionCard      },
+  { name: "scanning_card",      Component: ScanningCard      },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
