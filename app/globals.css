@@ -198,8 +198,10 @@ html, body {
    ══════════════════════════════════════════════════════ */
 
 .crayon-shell-conversation-starter-item-long {
-  border: 1px solid rgba(255,255,255,0.06) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
   border-radius: 12px !important;
+  padding: 16px 20px !important;
   transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
   animation: fadeUp 0.4s ease both !important;
   color: rgba(255,255,255,0.9) !important;
@@ -215,10 +217,10 @@ html, body {
 .crayon-shell-conversation-starter-item-long:nth-child(4) { animation-delay: 0.26s !important; }
 
 .crayon-shell-conversation-starter-item-long:hover {
-  background-color: rgba(99, 102, 241, 0.08) !important;
-  border-color: rgba(99, 102, 241, 0.3) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 16px rgba(99,102,241,0.1) !important;
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.2) !important;
 }
 
 .crayon-shell-conversation-starter-item-long:active {
