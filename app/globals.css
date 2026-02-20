@@ -8,7 +8,22 @@ html, body {
   margin: 0;
   padding: 0;
   background: #0a0a0f;
+  color: #e8e8f0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Force light text color on ALL Crayon elements */
+[class*="crayon"] {
+  color: #e8e8f0 !important;
+}
+
+[class*="crayon"] p,
+[class*="crayon"] span,
+[class*="crayon"] div,
+[class*="crayon"] li,
+[class*="crayon"] a,
+[class*="crayon"] label {
+  color: inherit !important;
 }
 
 * {
@@ -493,13 +508,46 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════
-   AGENT TEXT MESSAGES
+   AGENT TEXT MESSAGES - Force white/light text everywhere
    ══════════════════════════════════════════════════════ */
 
-.crayon-shell-thread-message-agent__text {
-  font-size: 13px !important;
+.crayon-shell-thread-message-agent__text,
+.crayon-shell-thread-message-agent__content,
+.crayon-shell-thread-message-agent__body,
+.crayon-shell-thread-message-agent p,
+.crayon-shell-thread-message-agent span,
+.crayon-shell-thread-message-agent div {
+  font-size: 14px !important;
   line-height: 1.7 !important;
-  color: rgba(255,255,255,0.80) !important;
+  color: #e8e8f0 !important;
+}
+
+.crayon-shell-thread-message-user__text,
+.crayon-shell-thread-message-user__content,
+.crayon-shell-thread-message-user__body,
+.crayon-shell-thread-message-user p,
+.crayon-shell-thread-message-user span,
+.crayon-shell-thread-message-user div {
+  color: #ffffff !important;
+}
+
+/* Force ALL text in thread messages to be light */
+[class*="thread-message"] {
+  color: #e8e8f0 !important;
+}
+
+[class*="thread-message"] p,
+[class*="thread-message"] span,
+[class*="thread-message"] div,
+[class*="thread-message"] li,
+[class*="thread-message"] a {
+  color: inherit !important;
+}
+
+/* Response templates / cards text */
+.crayon-shell-response-template,
+.crayon-shell-response-template * {
+  color: #e8e8f0 !important;
 }
 
 /* ══════════════════════════════════════════════════════
