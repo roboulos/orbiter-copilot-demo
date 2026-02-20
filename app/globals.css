@@ -531,12 +531,14 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* Force composer to bottom */
+/* Force composer to bottom AND full width */
 .crayon-shell-desktop-welcome-composer-wrapper {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  justify-self: stretch !important;
+  align-self: end !important;
 }
 
 /* ══════════════════════════════════════════════════════
