@@ -565,13 +565,13 @@ Before deploying styling changes:
 ## Screenshots
 
 ### Before
-![Before Fix](/screenshot-current-issue.png)
+![Before Fix](../screenshot-current-issue.png)
 - Narrow input (~415px)
 - Excessive whitespace
 - Button centered in middle
 
 ### After
-![After Fix](/screenshot-CLEAN.png)
+![After Fix](../screenshot-CLEAN.png)
 - Centered content with proper constraints
 - Full-width input field
 - Button on the right
