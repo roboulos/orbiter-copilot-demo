@@ -34,6 +34,9 @@ export function ScanningCard({
   const matchesCount = potential_matches || matches_found || 0;
   const displaySubtitle = subtitle || message;
   
+  // If backend didn't send numbers, show generic scanning without counts
+  const showCounts = analyzedCount > 0 || matchesCount > 0;
+  
   // DEBUG: Log what props we received
   console.log('[ScanningCard] Props received:', {
     title,
@@ -45,7 +48,8 @@ export function ScanningCard({
     message,
     subtitle,
     analyzedCount,
-    matchesCount
+    matchesCount,
+    showCounts
   });
   
   const [progress, setProgress] = useState(0);
@@ -192,15 +196,16 @@ export function ScanningCard({
           </p>
         )}
 
-        {/* Stats Grid (Pass 3: Spacing) */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "var(--space-lg)",
-            marginTop: "var(--space-2xl)",
-          }}
-        >
+        {/* Only show stats if backend sent numbers */}
+        {showCounts && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "var(--space-lg)",
+              marginTop: "var(--space-2xl)",
+            }}
+          >
           {/* Connections Stat */}
           <div
             style={{
@@ -271,9 +276,11 @@ export function ScanningCard({
               {displayMatches}
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
-        {/* Progress Bar (Pass 7: Loading state) */}
+        {/* Progress Bar (Pass 7: Loading state) - only if showing counts */}
+        {showCounts && (
         <div
           style={{
             marginTop: "var(--space-xl)",
@@ -293,6 +300,7 @@ export function ScanningCard({
             }}
           />
         </div>
+        )}
       </div>
     </div>
   );
