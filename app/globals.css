@@ -297,18 +297,17 @@ html, body {
    ══════════════════════════════════════════════════════ */
 
 /* Force the welcome composer to be a horizontal flex row */
-.crayon-shell-desktop-welcome-composer,
-.crayon-shell-desktop-welcome-composer > *,
 .crayon-shell-desktop-welcome-composer form {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 12px !important;
   width: 100% !important;
+  justify-content: space-between !important;
 }
 
 .crayon-shell-desktop-welcome-composer {
-  padding: 14px 14px 14px 24px !important;
+  padding: 12px !important;
   background-color: rgba(255, 255, 255, 0.05) !important;
   border: 1.5px solid rgba(99,102,241,0.3) !important;
   border-radius: 20px !important;
@@ -317,6 +316,9 @@ html, body {
   max-width: 100% !important;
   margin: 0 !important;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
 }
 
 .crayon-shell-desktop-welcome-composer:focus-within {
@@ -343,7 +345,7 @@ html, body {
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  padding: 0 !important;
+  padding: 0 12px !important;
   margin: 0 !important;
   font-weight: 400 !important;
 }
