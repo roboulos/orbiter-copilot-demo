@@ -207,8 +207,13 @@ html, body {
   color: rgba(255,255,255,0.9) !important;
 }
 
-.crayon-shell-conversation-starter-item-long * {
-  color: rgba(255,255,255,0.9) !important;
+.crayon-shell-conversation-starter-item-long,
+.crayon-shell-conversation-starter-item-long *,
+.crayon-shell-conversation-starter-item-long__text,
+.crayon-shell-conversation-starter-item-long__icon,
+.crayon-shell-conversation-starter-item-long__content {
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 .crayon-shell-conversation-starter-item-long:nth-child(1) { animation-delay: 0.08s !important; }
