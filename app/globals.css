@@ -523,11 +523,11 @@ html, body {
   grid-template-rows: 1fr auto !important;
   grid-template-columns: 1fr !important;
   gap: 32px !important;
-  place-items: center !important;
+  place-items: center stretch !important; /* CENTER vertically, STRETCH horizontally */
   position: relative !important;
   overflow: hidden !important;
   width: 100% !important;
-  padding: 32px !important;
+  padding: 0 24px !important; /* Reduced from 32px to give more width */
   box-sizing: border-box !important;
 }
 
