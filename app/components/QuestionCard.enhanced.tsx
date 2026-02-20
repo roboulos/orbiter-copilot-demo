@@ -147,44 +147,38 @@ export function QuestionCard({
             }}
           />
         </div>
-      ) : icon ? (
-        <div
-          style={{
-            width: "100%",
-            padding: "var(--space-2xl) 0",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "4rem",
-              /* Pass 8: Gentle float animation */
-              animation: "float-gentle 6s ease-in-out infinite",
-            }}
-          >
-            {icon}
-          </div>
-        </div>
       ) : null}
 
       {/* Content Section */}
       <div style={{ padding: "var(--space-xl)" }}>
-        {/* Pass 1: Typography hierarchy */}
-        <h3
-          className="text-heading"
-          style={{
-            fontSize: "var(--text-2xl)",
-            fontWeight: "var(--weight-bold)",
-            color: "var(--text-primary)",
-            marginBottom: "var(--space-sm)",
-            letterSpacing: "var(--tracking-tight)",
-          }}
-        >
-          {title}
-        </h3>
+        {/* Pass 1: Typography hierarchy with inline icon */}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-sm)" }}>
+          {icon && !displayImage && (
+            <div
+              style={{
+                fontSize: "2rem",
+                flexShrink: 0,
+                opacity: 0.9,
+                /* Pass 8: Gentle float animation */
+                animation: "float-gentle 6s ease-in-out infinite",
+              }}
+            >
+              {icon}
+            </div>
+          )}
+          <h3
+            className="text-heading"
+            style={{
+              fontSize: "var(--text-2xl)",
+              fontWeight: "var(--weight-bold)",
+              color: "var(--text-primary)",
+              letterSpacing: "var(--tracking-tight)",
+              flex: 1,
+            }}
+          >
+            {title}
+          </h3>
+        </div>
 
         {description && (
           <p
