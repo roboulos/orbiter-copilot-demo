@@ -691,6 +691,12 @@ html, body {
   box-sizing: border-box !important;
 }
 
+/* CRITICAL: Override Crayon's fixed 530px copilot shell width */
+.crayon-copilot-shell-container {
+  width: 100dvw !important;
+  max-width: 100dvw !important;
+}
+
 /* ══════════════════════════════════════════════════════
    SCROLLBAR — Premium thin
    ══════════════════════════════════════════════════════ */
