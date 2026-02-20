@@ -42,6 +42,7 @@ Click "⚡ Copilot" button in top right
 - **IMPLEMENTATION-PLAN.md** - Full technical plan (5 phases)
 - **BACKEND-INTEGRATION.md** - What backend needs to implement
 - **DEMO-CONTACTS.md** - Test data and scenarios
+- **docs/STYLING-SOLUTION.md** - Complete CSS/layout solution (Crayon overrides)
 
 **Reference:**
 - **CURRENT-STATE.md** - Quick reference
@@ -122,7 +123,9 @@ Click "⚡ Copilot" button in top right
 ```
 app/
 ├── page.tsx                    # Main app + routing
-├── globals.css                 # Crayon overrides + custom styles
+├── globals.css                 # Crayon overrides + custom styles ⭐
+├── hooks/
+│   └── useForceFullWidth.ts    # JavaScript width fix ⭐
 ├── lib/
 │   └── xano.ts                 # Chat backend
 └── components/
@@ -134,6 +137,9 @@ app/
     ├── SuccessToast.tsx        # Success feedback
     ├── ErrorMessage.tsx        # Error feedback
     └── [Card components...]    # Various display cards
+
+docs/
+└── STYLING-SOLUTION.md         # Complete styling documentation ⭐
 ```
 
 ---
