@@ -516,7 +516,7 @@ html, body {
 /* Force composer to bottom */
 .crayon-shell-desktop-welcome-composer-wrapper {
   width: 100% !important;
-  max-width: 720px !important;
+  max-width: 1200px !important;
   margin: 0 auto !important;
 }
 
@@ -644,15 +644,15 @@ html, body {
 
 /* Messages column max-width */
 [class*="thread-messages"] > * {
-  max-width: 720px !important;
+  max-width: 1200px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-/* Composer max-width */
+/* Composer max-width - MAKE IT WIDE ENOUGH TO TYPE */
 [class*="composer"],
 [class*="welcome-composer"] {
-  max-width: 680px !important;
+  max-width: 1200px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
