@@ -683,13 +683,21 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* NUCLEAR: Force all Crayon shell containers to full width */
-.crayon-shell-desktop-welcome-container,
-.crayon-shell-desktop-welcome-screen,
+/* NUCLEAR: Force all Crayon shell containers to full width - REMOVE NESTED PADDING */
 .crayon-shell-welcome-screen,
 .crayon-shell-welcome-screen__header,
 .crayon-shell-welcome-screen__content,
-.crayon-shell-welcome-screen__desktop-composer,
+.crayon-shell-welcome-screen__desktop-composer {
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Only the OUTERMOST container gets padding */
+.crayon-shell-desktop-welcome-container,
+.crayon-shell-desktop-welcome-screen,
 [class*="welcome-container"],
 [class*="welcome-screen"] {
   max-width: none !important;
