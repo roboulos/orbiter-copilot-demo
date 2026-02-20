@@ -4,303 +4,268 @@ import { useEffect, useState } from "react";
 
 interface ScanningCardProps {
   title?: string;
-  total_connections?: number;
-  matches_found?: number;
-  status?: string;
+  subtitle?: string;
+  connections_analyzed?: number;
+  potential_matches?: number;
 }
 
+/**
+ * ScanningCard - Premium Edition
+ * Animated constellation radar with real-time stats
+ * All 8 passes applied for premium feel
+ */
 export function ScanningCard({
-  title = "🔍 Scanning Your Network...",
-  total_connections = 847,
-  matches_found = 0,
-  status = "Analyzing connections...",
+  title = "Scanning Network",
+  subtitle,
+  connections_analyzed = 0,
+  potential_matches = 0,
 }: ScanningCardProps) {
-  const [animatedMatches, setAnimatedMatches] = useState(0);
-  const [pulseScale, setPulseScale] = useState(1);
+  const [progress, setProgress] = useState(0);
+  const [displayConnections, setDisplayConnections] = useState(0);
+  const [displayMatches, setDisplayMatches] = useState(0);
 
-  // Animate the match counter
+  // Animate numbers counting up
   useEffect(() => {
-    if (matches_found > 0) {
-      let current = 0;
-      const increment = Math.ceil(matches_found / 20);
-      const interval = setInterval(() => {
-        current += increment;
-        if (current >= matches_found) {
-          setAnimatedMatches(matches_found);
-          clearInterval(interval);
-        } else {
-          setAnimatedMatches(current);
-        }
-      }, 50);
-      return () => clearInterval(interval);
-    }
-  }, [matches_found]);
+    const duration = 2000;
+    const steps = 50;
+    const interval = duration / steps;
 
-  // Pulse animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPulseScale((prev) => (prev === 1 ? 1.1 : 1));
-    }, 1500);
-    return () => clearInterval(interval);
-  }, []);
+    let currentStep = 0;
+    const timer = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      
+      setDisplayConnections(Math.floor(connections_analyzed * progress));
+      setDisplayMatches(Math.floor(potential_matches * progress));
+      setProgress(progress * 100);
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+        setDisplayConnections(connections_analyzed);
+        setDisplayMatches(potential_matches);
+        setProgress(100);
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [connections_analyzed, potential_matches]);
 
   return (
     <div
-      className="orbiter-card-enter"
       style={{
-        background: "linear-gradient(160deg, #0f0f1a 0%, #13131f 60%, #0d0d18 100%)",
-        border: "1px solid rgba(99, 102, 241, 0.35)",
-        borderRadius: "20px",
-        padding: "32px",
-        margin: "6px 0",
-        boxShadow:
-          "0 0 0 1px rgba(99,102,241,0.2), 0 8px 32px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
-        fontFamily: "Inter, sans-serif",
         position: "relative",
+        maxWidth: "600px",
+        margin: "var(--space-xl) 0",
+        padding: "var(--space-2xl)",
+        borderRadius: "var(--radius-2xl)",
+        
+        /* Pass 2: Premium glass surface */
+        background: "linear-gradient(145deg, rgba(124, 58, 237, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(255, 255, 255, 0.04) 100%)",
+        backdropFilter: "blur(32px) saturate(180%)",
+        border: "1px solid rgba(124, 58, 237, 0.3)",
+        
+        /* Pass 5: Glowing shadow */
+        boxShadow: `0 0 40px rgba(124, 58, 237, 0.2),
+                    0 10px 30px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1)`,
+        
+        /* Pass 6: Entrance animation */
+        animation: "constellation-appear 0.8s var(--ease-out-expo)",
+        
         overflow: "hidden",
-        maxWidth: "560px",
       }}
     >
-      {/* Animated background gradient */}
+      {/* Animated constellation radar (Pass 8: Premium visual) */}
       <div
         style={{
           position: "absolute",
-          inset: -100,
-          background:
-            "radial-gradient(circle at 50% 50%, rgba(99,102,241,0.15), transparent 70%)",
-          animation: "scanRotate 8s linear infinite",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Top glow line */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
+          top: "50%",
           left: "50%",
-          transform: "translateX(-50%)",
-          width: "70%",
-          height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.8), transparent)",
-          animation: "glowPulse 2s ease-in-out infinite",
+          transform: "translate(-50%, -50%)",
+          width: "300px",
+          height: "300px",
+          opacity: 0.3,
         }}
-      />
+      >
+        {/* Radar circles */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              inset: `${i * 30}px`,
+              border: "1px solid rgba(124, 58, 237, 0.3)",
+              borderRadius: "50%",
+              /* Pass 6: Pulsing animation */
+              animation: `glow-pulse ${2 + i}s ease-in-out infinite`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+          />
+        ))}
+        
+        {/* Scanning line */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "50%",
+            height: "2px",
+            background: "linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.8), rgba(124, 58, 237, 0))",
+            transformOrigin: "0% 50%",
+            /* Pass 6: Rotating scan */
+            animation: "orbitSpin 4s linear infinite",
+            filter: "blur(1px)",
+          }}
+        />
+        
+        {/* Center glow */}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "12px",
+            height: "12px",
+            transform: "translate(-50%, -50%)",
+            background: "radial-gradient(circle, rgba(124, 58, 237, 1) 0%, rgba(124, 58, 237, 0) 70%)",
+            borderRadius: "50%",
+            /* Pass 6: Subtle pulse */
+            animation: "glow-pulse 2s ease-in-out infinite",
+          }}
+        />
+      </div>
 
       {/* Content */}
-      <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Title */}
+      <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+        {/* Pass 1: Typography */}
         <h3
+          className="text-heading"
           style={{
-            fontSize: "18px",
-            fontWeight: 700,
-            color: "#e8e8f0",
-            marginBottom: "24px",
-            textAlign: "center",
-            letterSpacing: "-0.01em",
+            fontSize: "var(--text-2xl)",
+            fontWeight: "var(--weight-bold)",
+            color: "var(--text-primary)",
+            marginBottom: "var(--space-sm)",
+            letterSpacing: "var(--tracking-tight)",
           }}
         >
           {title}
         </h3>
 
-        {/* Radar Animation */}
-        <div
-          style={{
-            width: "160px",
-            height: "160px",
-            margin: "0 auto 32px auto",
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* Outer ripples */}
-          <div
+        {subtitle && (
+          <p
             style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              border: "2px solid rgba(99,102,241,0.3)",
-              animation: "radarPulse 3s ease-out infinite",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              border: "2px solid rgba(99,102,241,0.2)",
-              animation: "radarPulse 3s 0.5s ease-out infinite",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: "50%",
-              border: "2px solid rgba(99,102,241,0.15)",
-              animation: "radarPulse 3s 1s ease-out infinite",
-            }}
-          />
-
-          {/* Center dot with pulse */}
-          <div
-            style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              boxShadow: "0 0 24px rgba(99,102,241,0.6), 0 0 48px rgba(99,102,241,0.3)",
-              transform: `scale(${pulseScale})`,
-              transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-              position: "relative",
+              fontSize: "var(--text-base)",
+              color: "var(--text-secondary)",
+              marginBottom: "var(--space-xl)",
             }}
           >
-            {/* Inner glow */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius: "50%",
-                background: "white",
-                opacity: 0.3,
-                animation: "innerPulse 2s ease-in-out infinite",
-              }}
-            />
-          </div>
+            {subtitle}
+          </p>
+        )}
 
-          {/* Scanning line (rotating) */}
-          <div
-            style={{
-              position: "absolute",
-              width: "2px",
-              height: "50%",
-              background: "linear-gradient(to bottom, rgba(99,102,241,0.8), transparent)",
-              top: "50%",
-              left: "50%",
-              transformOrigin: "top center",
-              animation: "radarSweep 3s linear infinite",
-            }}
-          />
-        </div>
-
-        {/* Stats */}
+        {/* Stats Grid (Pass 3: Spacing) */}
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "var(--space-lg)",
+            marginTop: "var(--space-2xl)",
           }}
         >
-          {/* Connections analyzed */}
+          {/* Connections Stat */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "12px 16px",
-              background: "rgba(52,211,153,0.08)",
-              border: "1px solid rgba(52,211,153,0.2)",
-              borderRadius: "12px",
+              padding: "var(--space-lg)",
+              borderRadius: "var(--radius-lg)",
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02))",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              /* Pass 8: Subtle lift on render */
+              animation: "slide-up-fade 0.6s var(--ease-out-expo) 0.2s backwards",
             }}
           >
-            <span style={{ fontSize: "18px" }}>✓</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", marginBottom: "2px" }}>
-                Connections Analyzed
-              </div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "#34d399" }}>
-                {total_connections.toLocaleString()}
-              </div>
-            </div>
-          </div>
-
-          {/* Matches found */}
-          {matches_found > 0 && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                background: "rgba(139,92,246,0.1)",
-                border: "1px solid rgba(139,92,246,0.25)",
-                borderRadius: "12px",
-                animation: "slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                fontSize: "var(--text-xs)",
+                fontWeight: "var(--weight-medium)",
+                color: "var(--text-tertiary)",
+                marginBottom: "var(--space-xs)",
+                textTransform: "uppercase",
+                letterSpacing: "var(--tracking-wide)",
               }}
             >
-              <span style={{ fontSize: "18px" }}>⭐</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", marginBottom: "2px" }}>
-                  Potential Matches
-                </div>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#a78bfa" }}>
-                  {animatedMatches}
-                </div>
-              </div>
+              Connections Analyzed
             </div>
-          )}
+            <div
+              className="text-display"
+              style={{
+                fontSize: "var(--text-3xl)",
+                color: "var(--color-accent)",
+                /* Pass 8: Tabular numbers for counting */
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {displayConnections}
+            </div>
+          </div>
 
-          {/* Status */}
+          {/* Matches Stat */}
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 16px",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "12px",
+              padding: "var(--space-lg)",
+              borderRadius: "var(--radius-lg)",
+              background: "linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(99, 102, 241, 0.08))",
+              border: "1px solid rgba(124, 58, 237, 0.3)",
+              /* Pass 8: Staggered entrance */
+              animation: "slide-up-fade 0.6s var(--ease-out-expo) 0.3s backwards",
             }}
           >
             <div
               style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: "#6366f1",
-                animation: "statusPulse 1.5s ease-in-out infinite",
+                fontSize: "var(--text-xs)",
+                fontWeight: "var(--weight-medium)",
+                color: "var(--text-tertiary)",
+                marginBottom: "var(--space-xs)",
+                textTransform: "uppercase",
+                letterSpacing: "var(--tracking-wide)",
               }}
-            />
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>
-              {status}
+            >
+              Potential Matches
+            </div>
+            <div
+              className="text-display"
+              style={{
+                fontSize: "var(--text-3xl)",
+                color: "rgba(124, 58, 237, 1)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {displayMatches}
             </div>
           </div>
         </div>
+
+        {/* Progress Bar (Pass 7: Loading state) */}
+        <div
+          style={{
+            marginTop: "var(--space-xl)",
+            height: "4px",
+            background: "rgba(255, 255, 255, 0.05)",
+            borderRadius: "var(--radius-full)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, rgba(124, 58, 237, 1), rgba(99, 102, 241, 1))",
+              transition: "width 100ms linear",
+              boxShadow: "0 0 10px rgba(124, 58, 237, 0.6)",
+            }}
+          />
+        </div>
       </div>
-
-      <style>{`
-        @keyframes radarPulse {
-          0% { transform: scale(0.6); opacity: 0.6; }
-          100% { transform: scale(1.3); opacity: 0; }
-        }
-
-        @keyframes radarSweep {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        @keyframes innerPulse {
-          0%, 100% { transform: scale(0.8); opacity: 0.3; }
-          50% { transform: scale(1.2); opacity: 0.1; }
-        }
-
-        @keyframes scanRotate {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        @keyframes statusPulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(99,102,241,0.7); }
-          50% { opacity: 0.5; box-shadow: 0 0 0 4px rgba(99,102,241,0); }
-        }
-
-        @keyframes slideInUp {
-          from { transform: translateY(10px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
