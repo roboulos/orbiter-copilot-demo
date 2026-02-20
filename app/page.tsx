@@ -817,17 +817,26 @@ export default function Home() {
         { role: "user", content: prompt }
       ];
 
-      // Send person context and network data separately (network_data is structured JSON)
-      const data = await chat(
-        prompt,
-        personContextRef.current || undefined,
-        history.length > 0 ? history : undefined,
-        masterPersonIdRef.current,
-        networkSummary || undefined // Structured JSON with full network
-      );
-
-      let raw = data.raw || "";
-      console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
+      // MOCK MODE: Use mock responses for testing frontend
+      const MOCK_ENABLED = process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
+      let raw = "";
+      
+      if (MOCK_ENABLED) {
+        const { getMockResponse } = await import('./lib/mock-backend');
+        raw = getMockResponse(prompt, networkSummary);
+        console.log('[MOCK RESPONSE]', raw);
+      } else {
+        // Send person context and network data separately (network_data is structured JSON)
+        const data = await chat(
+          prompt,
+          personContextRef.current || undefined,
+          history.length > 0 ? history : undefined,
+          masterPersonIdRef.current,
+          networkSummary || undefined // Structured JSON with full network
+        );
+        raw = data.raw || "";
+        console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
+      }
       
       const cleaned = raw
         .replace(/^```(?:json)?\s*/i, "")
