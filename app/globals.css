@@ -399,6 +399,7 @@ html, body {
 }
 
 .crayon-shell-thread-composer__input {
+  display: block !important;
   flex: 1 1 auto !important;
   width: 100% !important;
   max-width: none !important;
@@ -408,34 +409,23 @@ html, body {
   height: 44px !important;
   min-height: 44px !important;
   max-height: 44px !important;
-  overflow-y: hidden !important;
-  overflow-x: auto !important;
+  overflow: hidden !important;
   resize: none !important;
-  font-size: 15px !important;
-  line-height: 22px !important;
+  font-size: 16px !important;
+  line-height: 44px !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  padding: 0 !important;
+  padding: 0 12px !important;
   margin: 0 !important;
+  vertical-align: middle !important;
 }
 
 .crayon-shell-thread-composer__input::-webkit-scrollbar {
   display: none !important;
 }
 
-/* Force ALL textareas in composers to be single-line with comfortable line-height */
-[class*="composer"] textarea {
-  height: 40px !important;
-  min-height: 40px !important;
-  max-height: 40px !important;
-  overflow-y: hidden !important;
-  overflow-x: auto !important;
-  line-height: 1.5 !important;
-  resize: none !important;
-  padding: 10px 0 !important;
-}
-
+/* Generic textarea scrollbar hide */
 [class*="composer"] textarea::-webkit-scrollbar {
   display: none !important;
 }
