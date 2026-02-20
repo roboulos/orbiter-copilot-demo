@@ -625,9 +625,9 @@ html, body {
   max-width: 100% !important;
 }
 
-/* Welcome screen — centered with proper constraints */
+/* Welcome screen — WIDE for full-width input */
 .crayon-shell-desktop-welcome-screen {
-  max-width: 720px !important;
+  max-width: 95% !important;
   width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
@@ -638,7 +638,7 @@ html, body {
   text-align: center !important;
   flex: 1 !important;
   margin: 0 auto !important;
-  padding: 0 !important;
+  padding: 0 32px !important;
 }
 
 /* Ensure starters don't overflow */
