@@ -170,7 +170,7 @@ html, body {
 .crayon-shell-welcome-screen__description {
   font-size: 13px !important;
   line-height: 1.7 !important;
-  color: rgba(255,255,255,0.38) !important;
+  color: rgba(255,255,255,0.75) !important;
   max-width: 380px !important;
   animation: fadeUp 0.55s 0.06s ease both !important;
   text-align: center !important;
@@ -323,7 +323,7 @@ html, body {
 }
 
 .crayon-shell-desktop-welcome-composer__input::placeholder {
-  color: rgba(255,255,255,0.2) !important;
+  color: rgba(255,255,255,0.5) !important;
 }
 
 /* Submit button stays right-aligned, fixed size */
@@ -370,7 +370,7 @@ html, body {
 }
 
 .crayon-shell-thread-composer__input::placeholder {
-  color: rgba(255,255,255,0.2) !important;
+  color: rgba(255,255,255,0.5) !important;
 }
 
 .crayon-shell-thread-composer__input-wrapper .crayon-shell-composer-submit-button {
@@ -485,7 +485,7 @@ html, body {
 
 .crayon-shell-sidebar-thread-item {
   border-radius: 8px !important;
-  color: rgba(255,255,255,0.45) !important;
+  color: rgba(255,255,255,0.8) !important;
   font-size: 11px !important;
   transition: background 0.12s ease, color 0.12s ease !important;
 }
@@ -500,7 +500,7 @@ html, body {
   font-size: 12px !important;
   border-radius: 8px !important;
   border-color: rgba(99,102,241,0.28) !important;
-  color: rgba(255,255,255,0.55) !important;
+  color: rgba(255,255,255,0.85) !important;
   transition: background 0.12s ease, color 0.12s ease !important;
 }
 
