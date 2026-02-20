@@ -297,11 +297,16 @@ html, body {
    ══════════════════════════════════════════════════════ */
 
 /* Force the welcome composer to be a horizontal flex row */
-.crayon-shell-desktop-welcome-composer {
+.crayon-shell-desktop-welcome-composer,
+.crayon-shell-desktop-welcome-composer > *,
+.crayon-shell-desktop-welcome-composer form {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 8px !important;
+}
+
+.crayon-shell-desktop-welcome-composer {
   padding: 8px 8px 8px 16px !important;
   background-color: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
@@ -345,11 +350,16 @@ html, body {
 }
 
 /* Thread composer (in-chat) — same treatment */
-.crayon-shell-thread-composer__input-wrapper {
+.crayon-shell-thread-composer__input-wrapper,
+.crayon-shell-thread-composer__input-wrapper > *,
+.crayon-shell-thread-composer__input-wrapper form {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 8px !important;
+}
+
+.crayon-shell-thread-composer__input-wrapper {
   padding: 8px 8px 8px 16px !important;
   background-color: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
