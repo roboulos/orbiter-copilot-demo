@@ -7,11 +7,6 @@ interface ScanningCardProps {
   subtitle?: string;
   connections_analyzed?: number;
   potential_matches?: number;
-  // Backend might send different prop names - handle all variants
-  total_connections?: number;
-  matches_found?: number;
-  count?: number;
-  message?: string;
 }
 
 /**
@@ -24,34 +19,7 @@ export function ScanningCard({
   subtitle,
   connections_analyzed = 0,
   potential_matches = 0,
-  total_connections,
-  matches_found,
-  count,
-  message,
 }: ScanningCardProps) {
-  // Handle all prop name variants backend might send
-  const analyzedCount = connections_analyzed || total_connections || count || 0;
-  const matchesCount = potential_matches || matches_found || 0;
-  const displaySubtitle = subtitle || message;
-  
-  // If backend didn't send numbers, show generic scanning without counts
-  const showCounts = analyzedCount > 0 || matchesCount > 0;
-  
-  // DEBUG: Log what props we received
-  console.log('[ScanningCard] Props received:', {
-    title,
-    connections_analyzed,
-    potential_matches,
-    total_connections,
-    matches_found,
-    count,
-    message,
-    subtitle,
-    analyzedCount,
-    matchesCount,
-    showCounts
-  });
-  
   const [progress, setProgress] = useState(0);
   const [displayConnections, setDisplayConnections] = useState(0);
   const [displayMatches, setDisplayMatches] = useState(0);
@@ -67,20 +35,20 @@ export function ScanningCard({
       currentStep++;
       const progress = currentStep / steps;
       
-      setDisplayConnections(Math.floor(analyzedCount * progress));
-      setDisplayMatches(Math.floor(matchesCount * progress));
+      setDisplayConnections(Math.floor(connections_analyzed * progress));
+      setDisplayMatches(Math.floor(potential_matches * progress));
       setProgress(progress * 100);
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        setDisplayConnections(analyzedCount);
-        setDisplayMatches(matchesCount);
+        setDisplayConnections(connections_analyzed);
+        setDisplayMatches(potential_matches);
         setProgress(100);
       }
     }, interval);
 
     return () => clearInterval(timer);
-  }, [analyzedCount, matchesCount]);
+  }, [connections_analyzed, potential_matches]);
 
   return (
     <div
@@ -184,7 +152,7 @@ export function ScanningCard({
           {title}
         </h3>
 
-        {displaySubtitle && (
+        {subtitle && (
           <p
             style={{
               fontSize: "var(--text-base)",
@@ -192,20 +160,19 @@ export function ScanningCard({
               marginBottom: "var(--space-xl)",
             }}
           >
-            {displaySubtitle}
+            {subtitle}
           </p>
         )}
 
-        {/* Only show stats if backend sent numbers */}
-        {showCounts && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "var(--space-lg)",
-              marginTop: "var(--space-2xl)",
-            }}
-          >
+        {/* Stats Grid (Pass 3: Spacing) */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "var(--space-lg)",
+            marginTop: "var(--space-2xl)",
+          }}
+        >
           {/* Connections Stat */}
           <div
             style={{
@@ -276,11 +243,9 @@ export function ScanningCard({
               {displayMatches}
             </div>
           </div>
-          </div>
-        )}
+        </div>
 
-        {/* Progress Bar (Pass 7: Loading state) - only if showing counts */}
-        {showCounts && (
+        {/* Progress Bar (Pass 7: Loading state) */}
         <div
           style={{
             marginTop: "var(--space-xl)",
@@ -300,7 +265,6 @@ export function ScanningCard({
             }}
           />
         </div>
-        )}
       </div>
     </div>
   );
