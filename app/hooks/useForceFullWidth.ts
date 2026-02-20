@@ -7,6 +7,21 @@ import { useEffect } from 'react';
 export function useForceFullWidth() {
   useEffect(() => {
     const forceWidth = () => {
+      // Force the thread wrapper to be full width (this is what's constraining it!)
+      const threadWrapper = document.querySelector('.crayon-shell-thread-wrapper');
+      if (threadWrapper) {
+        const htmlEl = threadWrapper as HTMLElement;
+        htmlEl.style.setProperty('width', '100%', 'important');
+        htmlEl.style.setProperty('max-width', 'none', 'important');
+      }
+
+      const chatPanel = document.querySelector('.crayon-shell-thread-chat-panel');
+      if (chatPanel) {
+        const htmlEl = chatPanel as HTMLElement;
+        htmlEl.style.setProperty('width', '100%', 'important');
+        htmlEl.style.setProperty('max-width', 'none', 'important');
+      }
+
       // Target all nested containers that are adding padding
       const selectors = [
         '.crayon-shell-welcome-screen',
@@ -21,7 +36,6 @@ export function useForceFullWidth() {
         const elements = document.querySelectorAll(selector);
         elements.forEach((el: Element) => {
           const htmlEl = el as HTMLElement;
-          // Use setProperty with empty priority to override inline styles
           htmlEl.style.setProperty('padding-left', '0', 'important');
           htmlEl.style.setProperty('padding-right', '0', 'important');
           htmlEl.style.setProperty('width', '100%', 'important');
@@ -30,16 +44,8 @@ export function useForceFullWidth() {
         });
       });
 
-      // Force the outer container to have padding only
-      const outerContainer = document.querySelector('.crayon-copilot-shell-container');
-      if (outerContainer) {
-        const htmlEl = outerContainer as HTMLElement;
-        htmlEl.style.setProperty('padding-left', '24px', 'important');
-        htmlEl.style.setProperty('padding-right', '24px', 'important');
-      }
-
-      if (changed) {
-        console.log('[useForceFullWidth] Applied width fixes to', selectors.length, 'selectors');
+      if (changed || threadWrapper || chatPanel) {
+        console.log('[useForceFullWidth] Applied width fixes');
       }
     };
 
