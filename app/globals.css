@@ -334,27 +334,24 @@ html, body {
   min-width: 0 !important;
   color: rgba(255,255,255,0.95) !important;
   caret-color: #8b5cf6 !important;
-  min-height: 24px !important;
-  max-height: 120px !important;
-  overflow-y: auto !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
   resize: none !important;
   font-size: 16px !important;
-  line-height: 1.5 !important;
+  line-height: 48px !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  padding: 12px !important;
+  padding: 0 12px !important;
   margin: 0 !important;
   font-weight: 400 !important;
 }
 
 .crayon-shell-desktop-welcome-composer__input::-webkit-scrollbar {
-  width: 4px !important;
-}
-
-.crayon-shell-desktop-welcome-composer__input::-webkit-scrollbar-thumb {
-  background: rgba(139,92,246,0.3) !important;
-  border-radius: 2px !important;
+  display: none !important;
 }
 
 .crayon-shell-desktop-welcome-composer__input::placeholder {
@@ -384,15 +381,13 @@ html, body {
 }
 
 .crayon-shell-thread-composer__input-wrapper {
-  padding: 4px 10px 4px 16px !important;
+  padding: 10px 10px 10px 24px !important;
   background-color: rgba(255, 255, 255, 0.04) !important;
   width: 100% !important;
   max-width: 100% !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 16px !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-  min-height: 52px !important;
-  align-items: flex-start !important;
 }
 
 .crayon-shell-thread-composer:focus-within .crayon-shell-thread-composer__input-wrapper {
@@ -407,45 +402,38 @@ html, body {
   min-width: 0 !important;
   color: #e8e8f0 !important;
   caret-color: #a5b4fc !important;
-  min-height: 24px !important;
-  max-height: 120px !important;
-  overflow-y: auto !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
   resize: none !important;
   font-size: 15px !important;
-  line-height: 1.5 !important;
+  line-height: 44px !important;
   background: transparent !important;
   border: none !important;
   outline: none !important;
-  padding: 10px 0 !important;
+  padding: 0 !important;
   margin: 0 !important;
 }
 
 .crayon-shell-thread-composer__input::-webkit-scrollbar {
-  width: 4px !important;
+  display: none !important;
 }
 
-.crayon-shell-thread-composer__input::-webkit-scrollbar-thumb {
-  background: rgba(99,102,241,0.3) !important;
-  border-radius: 2px !important;
-}
-
-/* Force ALL textareas in composers to be multi-line with max height */
+/* Force ALL textareas in composers to be single-line */
 [class*="composer"] textarea {
-  min-height: 24px !important;
-  max-height: 120px !important;
-  overflow-y: auto !important;
-  line-height: 1.5 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
+  line-height: 40px !important;
   resize: none !important;
-  padding: 10px 0 !important;
 }
 
 [class*="composer"] textarea::-webkit-scrollbar {
-  width: 4px !important;
-}
-
-[class*="composer"] textarea::-webkit-scrollbar-thumb {
-  background: rgba(99,102,241,0.3) !important;
-  border-radius: 2px !important;
+  display: none !important;
 }
 
 .crayon-shell-thread-composer__input::placeholder {
