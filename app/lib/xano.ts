@@ -237,7 +237,8 @@ export async function chat(
   prompt: string,
   personContext?: string,
   history?: Array<{ role: string; content: string }>,
-  masterPersonId?: number
+  masterPersonId?: number,
+  networkData?: string // Structured JSON of full network
 ) {
   return xanoFetch<{ raw: string; model: string }>("/chat", {
     method: "POST",
@@ -246,6 +247,7 @@ export async function chat(
       ...(personContext ? { person_context: personContext } : {}),
       ...(masterPersonId ? { master_person_id: masterPersonId } : {}),
       ...(history?.length ? { history } : {}),
+      ...(networkData ? { network_data: networkData } : {}),
     },
   });
 }

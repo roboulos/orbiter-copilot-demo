@@ -1,9 +1,11 @@
-import type { ThemeProps } from "@crayonai/react-ui";
+// Theme configuration for CrayonChat
+// Note: ThemeProps is not exported from @crayonai/react-ui directly
+// but is used internally by CrayonChat component
 
 /**
  * Custom Orbiter brand theme for CrayonChat
  */
-export const orbiterTheme: ThemeProps = {
+export const orbiterTheme = {
   mode: "dark",
   colors: {
     // Primary brand colors
@@ -92,7 +94,7 @@ export const orbiterTheme: ThemeProps = {
  * CSS custom properties for theme
  * Can be injected into global styles
  */
-export function getThemeCSSVars(theme: ThemeProps): string {
+export function getThemeCSSVars(theme: typeof orbiterTheme): string {
   return `
     :root {
       --orbiter-primary: ${theme.colors?.primary};

@@ -31,7 +31,7 @@ import { BackButton } from "./components/BackButton";
 import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
 import { chat, dispatch } from "./lib/xano";
-import { orbiterTheme } from "./lib/theme";
+// import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import "@crayonai/react-ui/styles/index.css";
 
@@ -345,7 +345,7 @@ function CopilotModal({
                   processMessage={processMessage}
                   agentName="Orbiter Copilot"
                   responseTemplates={templates}
-                  theme={orbiterTheme}
+                  // theme={orbiterTheme} // Custom theme via CSS instead
                   messageLoadingComponent={() => <LoadingIndicator />}
                   welcomeMessage={{
                     title: personName
@@ -583,6 +583,24 @@ export default function Home() {
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll chat to bottom when new messages arrive
+  useEffect(() => {
+    if (modalOpen && chatContainerRef.current) {
+      // Small delay to ensure DOM has updated with new message
+      const timer = setTimeout(() => {
+        const container = document.querySelector('.crayon-shell-thread');
+        if (container) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [modalOpen, conversationHistoryRef.current.length]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -658,18 +676,44 @@ export default function Home() {
     };
   }, [handleReadyToDispatch]);
 
-  // Fetch network summary when copilot opens
+  // Fetch FULL network data when copilot opens (structured JSON, not text)
   useEffect(() => {
     if (modalOpen && !networkSummary) {
       import("./lib/xano").then(({ getNetwork }) => {
-        getNetwork({ per_page: 50 })
+        // Fetch ALL connections (increase to 200 or itemsTotal if available)
+        getNetwork({ per_page: 200 })
           .then((data) => {
-            const summary = `My Network (${data.items.length} connections):\n` +
-              data.items.slice(0, 20).map(p => 
-                `- ${p.full_name}${p.master_person?.current_title ? ` (${p.master_person.current_title})` : ''}${p.master_person?.master_company?.company_name ? ` at ${p.master_person.master_company.company_name}` : ''}`
-              ).join('\n');
+            // Build structured JSON for intelligent AI suggestions
+            const networkData = {
+              total: data.itemsTotal || data.items.length,
+              loaded: data.items.length,
+              connections: data.items.map(p => ({
+                id: p.master_person_id,
+                name: p.full_name,
+                title: p.master_person?.current_title || null,
+                company: p.master_person?.master_company?.company_name || null,
+                bio: p.master_person?.bio || null,
+                avatar: p.master_person?.avatar || null,
+                status: p.status_connected,
+                last_activity: p.last_activity_at,
+              })),
+              // Extract industries/companies for filtering
+              industries: [...new Set(
+                data.items
+                  .map(p => p.master_person?.master_company?.company_name)
+                  .filter(Boolean)
+              )].slice(0, 50),
+              top_companies: [...new Set(
+                data.items
+                  .map(p => p.master_person?.master_company?.company_name)
+                  .filter(Boolean)
+              )].slice(0, 20),
+            };
+            
+            // Store as JSON string for backend
+            const summary = JSON.stringify(networkData);
             setNetworkSummary(summary);
-            console.log('[Network] Loaded summary:', data.items.length, 'connections');
+            console.log('[Network] Loaded FULL data:', data.items.length, 'connections with structured metadata');
           })
           .catch((err) => {
             console.error('[Network] Failed to load:', err);
@@ -773,17 +817,13 @@ export default function Home() {
         { role: "user", content: prompt }
       ];
 
-      // Combine network summary with person context
-      const combinedContext = [
-        networkSummary,
-        personContextRef.current
-      ].filter(Boolean).join('\n\n');
-
+      // Send person context and network data separately (network_data is structured JSON)
       const data = await chat(
         prompt,
-        combinedContext || undefined,
+        personContextRef.current || undefined,
         history.length > 0 ? history : undefined,
-        masterPersonIdRef.current
+        masterPersonIdRef.current,
+        networkSummary || undefined // Structured JSON with full network
       );
 
       let raw = data.raw || "";

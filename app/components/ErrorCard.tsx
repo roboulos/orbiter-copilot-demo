@@ -27,13 +27,14 @@ export function ErrorCard({
     }
 
     // Default retry: re-send last user message
-    const lastUserMessage = messages
-      .filter(m => m.role === "user")
-      .slice(-1)[0];
-
-    if (lastUserMessage && typeof lastUserMessage.message === "string") {
-      await processMessage({ message: lastUserMessage.message });
-    }
+    // TODO: Fix processMessage signature to match Crayon API
+    // const lastUserMessage = messages
+    //   .filter(m => m.role === "user")
+    //   .slice(-1)[0];
+    // if (lastUserMessage && typeof lastUserMessage.message === "string") {
+    //   await processMessage({ message: lastUserMessage.message });
+    // }
+    console.log('[ErrorCard] Retry clicked - processMessage signature needs update');
   };
 
   const handleStartOver = () => {

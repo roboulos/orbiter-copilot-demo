@@ -121,8 +121,8 @@ export function InterviewFlow({ topic, onComplete, allowBack = true }: Interview
     appendMessages({
       id: userMessageId,
       role: "user",
+      type: "prompt",
       message: label,
-      createdAt: new Date(),
     });
     setMessageHistory(prev => [...prev, userMessageId]);
 
@@ -143,12 +143,12 @@ export function InterviewFlow({ topic, onComplete, allowBack = true }: Interview
         const scanMessageId = crypto.randomUUID();
         appendMessages({
           id: scanMessageId,
-          role: "agent",
-          message: {
-            template: "scanning_card",
-            data: nextStep.data
-          },
-          createdAt: new Date(),
+          role: "assistant",
+          message: [{
+            type: "template",
+            name: "scanning_card",
+            templateProps: nextStep.data
+          }],
         });
         setMessageHistory(prev => [...prev, scanMessageId]);
         
@@ -161,12 +161,12 @@ export function InterviewFlow({ topic, onComplete, allowBack = true }: Interview
         const questionMessageId = crypto.randomUUID();
         appendMessages({
           id: questionMessageId,
-          role: "agent",
-          message: {
-            template: "question_card",
-            data: nextStep.data
-          },
-          createdAt: new Date(),
+          role: "assistant",
+          message: [{
+            type: "template",
+            name: "question_card",
+            templateProps: nextStep.data
+          }],
         });
         setMessageHistory(prev => [...prev, questionMessageId]);
       }
@@ -180,12 +180,12 @@ export function InterviewFlow({ topic, onComplete, allowBack = true }: Interview
       const firstMessageId = crypto.randomUUID();
       appendMessages({
         id: firstMessageId,
-        role: "agent",
-        message: {
-          template: "question_card",
-          data: firstStep.data
-        },
-        createdAt: new Date(),
+        role: "assistant",
+        message: [{
+          type: "template",
+          name: "question_card",
+          templateProps: firstStep.data
+        }],
       });
       setMessageHistory([firstMessageId]);
     }
