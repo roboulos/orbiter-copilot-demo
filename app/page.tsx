@@ -827,6 +827,8 @@ export default function Home() {
       );
 
       let raw = data.raw || "";
+      console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
+      
       const cleaned = raw
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```\s*$/, "")
