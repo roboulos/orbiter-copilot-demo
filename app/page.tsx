@@ -33,6 +33,7 @@ import { Confetti } from "./components/Confetti";
 import { chat, dispatch } from "./lib/xano";
 // import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useForceFullWidth } from "./hooks/useForceFullWidth";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
@@ -601,6 +602,9 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [modalOpen, conversationHistoryRef.current.length]);
+
+  // Force full width (JavaScript override since CSS isn't working)
+  useForceFullWidth();
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
