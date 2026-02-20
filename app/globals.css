@@ -114,9 +114,9 @@ html, body {
   width: 100% !important;
 }
 
-/* Thread area - constrain max width for readability */
+/* Thread area - WIDE for full-width input */
 .crayon-shell-thread {
-  max-width: 800px !important;
+  max-width: 95% !important;
   width: 100% !important;
   margin: 0 auto !important;
   padding: 20px 32px !important;
@@ -534,9 +534,9 @@ html, body {
 /* Force composer to bottom */
 .crayon-shell-desktop-welcome-composer-wrapper {
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: none !important;
   margin: 0 !important;
-  padding: 0 32px !important;
+  padding: 0 !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -668,13 +668,27 @@ html, body {
   margin-right: auto !important;
 }
 
-/* Composer max-width - FULL WIDTH */
+/* Composer max-width - FULL WIDTH - NUCLEAR OVERRIDE */
 [class*="composer"],
-[class*="welcome-composer"] {
-  max-width: 100% !important;
+[class*="welcome-composer"],
+[class*="composer-wrapper"],
+[class*="welcome"] [class*="composer"] {
+  max-width: none !important;
   width: 100% !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* NUCLEAR: Force all Crayon shell containers to full width */
+.crayon-shell-desktop-welcome-container,
+.crayon-shell-desktop-welcome-screen,
+[class*="welcome-container"],
+[class*="welcome-screen"] {
+  max-width: none !important;
+  width: 100% !important;
+  padding: 0 32px !important;
+  box-sizing: border-box !important;
 }
 
 /* ══════════════════════════════════════════════════════
