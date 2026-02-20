@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
 
-// Whiteboard images (generated via Charlotte MCP / Gemini 3 Pro)
-const WB_CRAYON_ARCH    = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771420352000.jpg";
-const WB_ORBITER_ARCH   = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771420871000.jpg";
-const WB_CONVERSATIONS  = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771420438000.jpg";
-const WB_TIMELINE       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771419619000.jpg";
-const WB_FEB18_RECAP    = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771501768000.jpg";
+// Whiteboard images - UPDATE THESE URLs with your actual hosted images
+// Using placeholders that show image type until real whiteboards are uploaded
+const WB_CRAYON_ARCH    = "https://placehold.co/1200x800/1a1a2e/6366f1?text=CrayonAI+Architecture&font=roboto";
+const WB_ORBITER_ARCH   = "https://placehold.co/1200x800/1a1a2e/8b5cf6?text=Orbiter+Architecture&font=roboto";
+const WB_CONVERSATIONS  = "https://placehold.co/1200x800/1a1a2e/06b6d4?text=Key+Conversations&font=roboto";
+const WB_TIMELINE       = "https://placehold.co/1200x800/1a1a2e/10b981?text=Timeline&font=roboto";
+const WB_FEB18_RECAP    = "https://placehold.co/1200x800/1a1a2e/f59e0b?text=Feb+18+Recap&font=roboto";
+
+// TODO: Replace with actual whiteboard images once uploaded to accessible CDN
 
 type Section = "overview" | "today" | "architecture" | "orbiter" | "conversations" | "decisions" | "skill" | "resources";
 
