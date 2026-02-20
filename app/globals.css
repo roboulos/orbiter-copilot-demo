@@ -691,10 +691,7 @@ html, body {
 .crayon-shell-welcome-screen__content,
 .crayon-shell-welcome-screen__desktop-composer,
 [class*="welcome-container"],
-[class*="welcome-screen"],
-[class*="welcome"]__header,
-[class*="welcome"]__content,
-[class*="welcome"]__desktop-composer {
+[class*="welcome-screen"] {
   max-width: none !important;
   width: 100% !important;
   padding-left: 24px !important;
