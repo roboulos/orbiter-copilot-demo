@@ -135,6 +135,8 @@ html, body {
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
+  overflow: visible !important;
+  padding-left: 16px !important;
 }
 
 /* Remove any centering from message wrappers */
@@ -256,7 +258,7 @@ html, body {
 
 .crayon-shell-thread-message-agent__content {
   display: inline-block !important;
-  max-width: 480px !important;
+  max-width: 580px !important;
   width: fit-content !important;
   background: rgba(255,255,255,0.06) !important;
   border: 1px solid rgba(255,255,255,0.10) !important;
@@ -268,6 +270,7 @@ html, body {
   line-height: 1.6 !important;
   color: rgba(255,255,255,0.9) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  overflow: visible !important;
 }
 
 /* ══════════════════════════════════════════════════════

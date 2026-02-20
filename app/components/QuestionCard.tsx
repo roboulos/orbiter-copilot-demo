@@ -220,20 +220,20 @@ export function QuestionCard({
                   padding: button.subtitle ? "var(--space-md) var(--space-lg)" : "var(--space-md) var(--space-lg)",
                   minHeight: "52px",
                   
-                  /* Pass 2: Glass button surface */
+                  /* Pass 2: Glass button surface - BRIGHTER for visibility */
                   background: isSelected
-                    ? "linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(99, 102, 241, 0.2))"
+                    ? "linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(99, 102, 241, 0.3))"
                     : isHovered
-                    ? "linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08))"
-                    : "linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03))",
+                    ? "linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.12))"
+                    : "linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08))",
                   
                   backdropFilter: "blur(16px)",
                   border: `1px solid ${
                     isSelected
-                      ? "rgba(124, 58, 237, 0.5)"
+                      ? "rgba(124, 58, 237, 0.6)"
                       : isHovered
-                      ? "rgba(255, 255, 255, 0.2)"
-                      : "rgba(255, 255, 255, 0.1)"
+                      ? "rgba(255, 255, 255, 0.25)"
+                      : "rgba(255, 255, 255, 0.15)"
                   }`,
                   borderRadius: "var(--radius-lg)",
                   
