@@ -1,450 +1,221 @@
-# Message for Backend Team - Visual Template Integration
+# 🚨 Message for Backend Team - Critical Issues
 
-## TL;DR
-
-**Stop returning plain text.** Start returning visual template objects so the copilot looks premium instead of basic.
-
-Frontend has beautiful visual cards ready to display — backend just needs to return the right format.
+**Date:** Feb 19, 2026  
+**From:** Robert (Frontend)  
+**Re:** 2 Critical Issues Blocking March 2nd Demo
 
 ---
 
-## What to Change
+## ✅ What's Working
 
-### ❌ Current (Plain Text Response)
-```json
-{
-  "response": "What region of Costa Rica interests you? You can choose Pacific Coast, Central Valley, or Caribbean Coast."
-}
-```
-
-**Result:** Boring text bubble that user has to type a response to
-
-### ✅ New (Visual Template Response)
-```json
-{
-  "response": {
-    "template": "question_card",
-    "data": {
-      "icon": "🏝️",
-      "title": "Costa Rica Relocation",
-      "description": "Which region interests you most?",
-      "buttons": [
-        {
-          "label": "Pacific Coast",
-          "value": "pacific",
-          "emoji": "🏖️",
-          "subtitle": "Guanacaste, Manuel Antonio"
-        },
-        {
-          "label": "Central Valley",
-          "value": "central",
-          "emoji": "🏔️",
-          "subtitle": "San José, Escazú"
-        },
-        {
-          "label": "Caribbean Coast",
-          "value": "caribbean",
-          "emoji": "🌴",
-          "subtitle": "Puerto Viejo, Limón"
-        },
-        {
-          "label": "Still exploring all regions",
-          "value": "exploring",
-          "emoji": "🗺️"
-        }
-      ]
-    }
-  }
-}
-```
-
-**Result:** Beautiful visual card with icon, description, and clickable buttons
+**Costa Rica flow:** Perfect end-to-end
+- User clicks starter
+- Question 1: Region → User selects "Pacific Coast"
+- ScanningCard appears + Question 2: Property type → User selects "Beach House"
+- OutcomeCard appears with full summary
+- **Zero errors, smooth experience**
 
 ---
 
-## Available Templates
+## 🔴 Issue #1: Investor Flow - 500 Error (CRITICAL)
 
-### 1. `question_card` - Visual Multiple Choice
+### What Breaks
 
-**Use when:** Asking user a question with 2-6 options
+**Flow that fails:**
+1. User clicks "💰 Find investors for my startup" ✅
+2. Backend asks: "What's your target raise amount?" ✅
+3. User selects: "$1M - $3M" ✅
+4. Backend asks: "What's your B2B SaaS vertical?" ✅
+5. User selects: "Developer Tools" ✅
+6. **Backend returns 500 error** ❌
 
-**Format:**
+### Error Details
+
+```
+Failed to load resource: 500 ()
+URL: https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz/chat
+Timestamp: 2026-02-19T23:36:11.402Z
+
+Error: Xano error
+```
+
+### What User Sees
+
+- ScanningCard appears: "Scanning for DevTools Seed Investors"
+- But then... nothing
+- No follow-up question
+- No outcome card
+- User is stuck
+
+### Expected Behavior
+
+After "Developer Tools" selection, backend should return:
 ```json
 {
-  "template": "question_card",
-  "data": {
-    "icon": "🏝️",              // Large emoji icon (or use image_url instead)
-    "image_url": "https://source.unsplash.com/800x400/?costa-rica,beach", // OR use this for real image
-    "title": "Costa Rica Relocation",
-    "description": "Which region interests you most?",  // Optional
-    "buttons": [
-      {
-        "label": "Pacific Coast",
-        "value": "pacific",     // This gets sent back when clicked
-        "emoji": "🏖️",         // Optional
-        "subtitle": "Guanacaste, Manuel Antonio"  // Optional
+  "messages": [
+    {
+      "template": "scanning_card",
+      "data": {
+        "title": "Scanning for DevTools Seed Investors",
+        "connections_analyzed": 50,
+        "potential_matches": 8
       }
-    ]
-  }
+    },
+    {
+      "template": "question_card",
+      "data": {
+        "title": "Next Question...",
+        "buttons": [...]
+      }
+    }
+  ]
 }
 ```
 
-**Visual result:** Large icon/image at top, title, description, beautiful gradient buttons with hover states
+OR deliver outcome_card if enough context gathered.
+
+### Root Cause Hypothesis
+
+- Works for Costa Rica (2 questions)
+- Fails for Investors (3 questions)
+- Possibly related to conversation history length?
+- Or specific to investor flow logic?
 
 ---
 
-### 2. `scanning_card` - Network Analysis Animation
+## ⚠️ Issue #2: Help Someone Flow - Too Many Questions (BAD UX)
 
-**Use when:** AI is "thinking" or "scanning the network"
+### What Happens
 
-**Format:**
-```json
-{
-  "template": "scanning_card",
-  "data": {
-    "title": "🔍 Scanning Your Network...",
-    "total_connections": 847,
-    "matches_found": 12,
-    "status": "Finding connections in Pacific Coast..."
-  }
-}
-```
+**Flow that goes too deep:**
+1. User clicks "🎯 Help someone I know with..." ✅
+2. Backend asks: "Who do you want to help?" (3 options) ✅
+3. User selects: "Someone specific I have in mind" ✅
+4. Backend asks: "Who?" (network people + search) ✅
+5. User selects: "Aaron Skonnard" ✅
+6. Backend asks: "How can you help Aaron?" (4 options) ✅
+7. User selects: "Talent & Hiring" ✅
+8. Backend asks: "What type of role?" (4 options) ✅
+9. User selects: "Engineering" ✅
+10. Backend asks: "What level?" (2 options) ✅
+11. **STILL NO OUTCOME CARD** ⚠️
 
-**Visual result:** Animated radar effect, real-time counters, pulsing animations
+### The Problem
 
----
+- Costa Rica: 2 questions → outcome ✅
+- Help Someone: 5+ questions → still asking ❌
 
-### 3. `contact_card` - Show a Person
+**User experience:**
+- Feels like interrogation
+- Too much friction
+- Unclear when it will end
+- Possible infinite loop?
 
-**Use when:** Presenting someone from the network
+### Expected Behavior
 
-**Format:**
-```json
-{
-  "template": "contact_card",
-  "data": {
-    "name": "David Park",
-    "title": "Real Estate Developer",
-    "company": "Costa Rica Coastal Properties",
-    "avatar": "https://...",
-    "bio": "Specializes in Pacific Coast properties for American expats",
-    "why_matters": "David has helped 50+ Americans buy property in Guanacaste"
-  }
-}
-```
-
-**Visual result:** Profile-style card with avatar, title, company, bio
-
----
-
-### 4. `outcome_card` - Summary Before Dispatch
-
-**Use when:** Showing final summary before creating outcome
-
-**Format:**
+After 2-3 questions max, deliver outcome_card:
 ```json
 {
   "template": "outcome_card",
   "data": {
-    "goal": "Buy vacation property in Pacific Coast, Costa Rica",
-    "whyItMatters": "Building a retreat and investment property",
-    "idealHelper": "Local realtors, expat community, legal advisors",
-    "timeframe": "6 months",
-    "contextToShare": "Budget $300-500K, prefer beachfront",
-    "matchStrength": "high"  // "high" | "medium" | "building"
+    "goal": "Help Aaron Skonnard find senior engineering talent at Pluralsight",
+    "whyItMatters": "...",
+    "idealHelper": "...",
+    "timeframe": "...",
+    "contextToShare": "..."
   }
 }
 ```
 
-**Visual result:** Polished summary card with gradient background, editable fields, "Save to Orbiter" button
+### Root Cause Hypothesis
+
+- LLM not limiting question depth for "help someone" flow
+- Needs explicit instruction: "Ask max 2-3 questions, then deliver outcome"
+- Or question counter not working
 
 ---
 
-### 5. `button_group` - Simple Buttons (No Image)
+## 🎯 What Backend Needs to Fix
 
-**Use when:** Quick yes/no or simple choice without needing visuals
+### Fix #1: Investor Flow 500 Error
 
-**Format:**
-```json
-{
-  "template": "button_group",
-  "data": {
-    "question": "Do you have existing connections in Costa Rica?",
-    "options": [
-      { "label": "Yes, show them", "value": "yes", "emoji": "✓" },
-      { "label": "No, find some", "value": "no", "emoji": "🔍" },
-      { "label": "Not sure", "value": "unsure", "emoji": "🤔" }
-    ]
-  }
-}
-```
+**Priority:** 🔴 **CRITICAL** (blocks 1 of 3 demo flows)
 
-**Note:** Use `question_card` instead if you want images/descriptions for richer experience.
+**Action Items:**
+1. Debug why `/chat` endpoint crashes on 3rd investor message
+2. Check backend logs for stack trace
+3. Verify history parsing works for 3+ message conversations
+4. Ensure scanning_card + question_card paired in SAME response
+5. Test fix with full investor flow
+
+**Success Criteria:**
+- Investor flow works end-to-end like Costa Rica
+- No 500 errors
+- Outcome delivered after 2-3 questions
 
 ---
 
-## Complete Interview Flow Example
+### Fix #2: Help Someone Question Depth
 
-Here's what the **full Costa Rica interview** should return from backend:
+**Priority:** 🟡 **HIGH** (bad UX, possible infinite loop)
 
-### User: "I want to buy a house in Costa Rica"
+**Action Items:**
+1. Add question counter to LLM system prompt
+2. Force outcome delivery after 2-3 questions max
+3. Update system prompt:
+   ```
+   "After gathering 2-3 key details, deliver an outcome_card.
+    Do not ask more than 3 follow-up questions."
+   ```
+4. Test that outcome appears consistently
 
-**Backend Response 1:**
-```json
-{
-  "response": {
-    "template": "question_card",
-    "data": {
-      "icon": "🏝️",
-      "title": "Costa Rica Relocation",
-      "description": "Let's find your perfect region",
-      "buttons": [
-        { "label": "Pacific Coast", "value": "pacific", "emoji": "🏖️", "subtitle": "Beaches & surf towns" },
-        { "label": "Central Valley", "value": "central", "emoji": "🏔️", "subtitle": "Mountains & cities" },
-        { "label": "Caribbean Coast", "value": "caribbean", "emoji": "🌴", "subtitle": "Rainforest & culture" },
-        { "label": "Still exploring", "value": "exploring", "emoji": "🗺️" }
-      ]
-    }
-  }
-}
-```
+**Success Criteria:**
+- Help someone flow: 2-3 questions → outcome
+- Consistent with Costa Rica flow depth
+- No infinite question loops
 
 ---
 
-### User clicks: "Pacific Coast"
+## ✅ Frontend Status
 
-**Backend Response 2 (Show scanning animation):**
-```json
-{
-  "response": {
-    "template": "scanning_card",
-    "data": {
-      "title": "🔍 Scanning Your Network...",
-      "total_connections": 847,
-      "matches_found": 0,
-      "status": "Finding connections in Pacific Coast..."
-    }
-  }
-}
-```
+**Visual Design:** 100% Complete (8-pass premium upgrade applied)
+- Glass-morphism surfaces
+- Animated radar in ScanningCard
+- Confetti on save in OutcomeCard
+- Premium typography + interactions
 
-*After 2 seconds, update with results:*
+**Testing:** Ready
+- Costa Rica flow: ✅ Works perfectly
+- Investor flow: ❌ Waiting for backend fix
+- Help someone: ⚠️ Waiting for backend fix
 
-```json
-{
-  "response": {
-    "template": "scanning_card",
-    "data": {
-      "title": "🔍 Scanning Your Network...",
-      "total_connections": 847,
-      "matches_found": 8,
-      "status": "Ranking by relevance..."
-    }
-  }
-}
-```
+**Deployment:** Ready to demo once backend fixed
 
 ---
 
-**Backend Response 3 (Next question):**
-```json
-{
-  "response": {
-    "template": "question_card",
-    "data": {
-      "icon": "🏠",
-      "title": "What's your main purpose?",
-      "buttons": [
-        { "label": "Vacation Property", "value": "vacation", "emoji": "🏝️" },
-        { "label": "Investment Rental", "value": "investment", "emoji": "💰" },
-        { "label": "Full Relocation", "value": "relocate", "emoji": "🎯" },
-        { "label": "Exploring Options", "value": "exploring", "emoji": "🤔" }
-      ]
-    }
-  }
-}
-```
+## 📅 Timeline
+
+**Today (Feb 19):** Frontend enhancements complete  
+**Feb 20-21:** Backend fixes investor 500 + question depth  
+**Feb 22-23:** Full testing of all 3 flows  
+**Feb 24-26:** Polish + rehearsal  
+**Feb 27:** Buffer day  
+**March 2:** 🚀 **DEMO**
 
 ---
 
-### User clicks: "Full Relocation"
+## 🤝 What We Need from Backend
 
-**Backend Response 4:**
-```json
-{
-  "response": {
-    "template": "question_card",
-    "data": {
-      "icon": "💰",
-      "title": "Budget Range",
-      "buttons": [
-        { "label": "$200-300K", "value": "low", "emoji": "💵" },
-        { "label": "$300-500K", "value": "mid", "emoji": "💰" },
-        { "label": "$500K+", "value": "high", "emoji": "💎" },
-        { "label": "Still researching", "value": "unsure", "emoji": "🤔" }
-      ]
-    }
-  }
-}
-```
+1. **Fix investor 500 error** (highest priority)
+2. **Limit help someone to 2-3 questions**
+3. **Test both flows end-to-end**
+4. **Confirm both deliver outcome_cards**
+
+Once these are fixed, we're 100% ready to launch!
 
 ---
 
-### User clicks: "$300-500K"
-
-**Backend Response 5:**
-```json
-{
-  "response": {
-    "template": "button_group",
-    "data": {
-      "question": "Do you have existing connections in Costa Rica?",
-      "options": [
-        { "label": "Yes, show them", "value": "yes", "emoji": "✓" },
-        { "label": "No, find some", "value": "no", "emoji": "🔍" },
-        { "label": "Not sure", "value": "unsure", "emoji": "🤔" }
-      ]
-    }
-  }
-}
-```
-
----
-
-### User clicks: "No, find some"
-
-**Backend Response 6 (Show top connection):**
-```json
-{
-  "response": {
-    "template": "contact_card",
-    "data": {
-      "name": "David Park",
-      "title": "Real Estate Developer",
-      "company": "Costa Rica Coastal Properties",
-      "avatar": "https://example.com/david.jpg",
-      "bio": "Specializes in Pacific Coast properties for American expats. 15+ years experience.",
-      "why_matters": "David has helped 50+ Americans buy property in Guanacaste and knows all the local pitfalls to avoid"
-    }
-  }
-}
-```
-
----
-
-**Backend Response 7 (Final summary):**
-```json
-{
-  "response": {
-    "template": "outcome_card",
-    "data": {
-      "goal": "Buy property in Pacific Coast, Costa Rica for full relocation",
-      "whyItMatters": "Ready to leave corporate life and embrace pura vida",
-      "idealHelper": "Local realtors specializing in expats, recent American relocators, legal advisors",
-      "timeframe": "6 months",
-      "contextToShare": "Budget $300-500K, prefer Pacific Coast, interested in full relocation",
-      "matchStrength": "high"
-    }
-  }
-}
-```
-
-*(User clicks "Save to Orbiter" → frontend calls `/dispatch` endpoint)*
-
----
-
-## Images
-
-### Option 1: Use Emojis (Easiest)
-```json
-"icon": "🏝️"
-```
-Works great, no additional setup needed.
-
-### Option 2: Use Unsplash (Free)
-```json
-"image_url": "https://source.unsplash.com/800x400/?costa-rica,beach"
-```
-Free random images, instant.
-
-### Option 3: Hosted Images (Best Quality)
-```json
-"image_url": "https://cdn.orbiter.ai/images/costa-rica-pacific.jpg"
-```
-Upload custom images to your CDN.
-
----
-
-## When to Use Each Template
-
-| Scenario | Template | Why |
-|----------|----------|-----|
-| Multiple choice with context | `question_card` | Rich visual, images, subtitles |
-| Simple yes/no | `button_group` | Lightweight, faster |
-| AI "thinking" | `scanning_card` | Visual feedback, engagement |
-| Show a person | `contact_card` | Profile-style with actions |
-| Final summary | `outcome_card` | Polished, editable, saveable |
-
-**Default rule:** When in doubt, use `question_card` — it's the most visual and engaging.
-
----
-
-## Testing
-
-### Endpoint
-```
-POST /chat
-```
-
-### Request
-```json
-{
-  "message": "I want to buy a house in Costa Rica",
-  "thread_id": "test-123"
-}
-```
-
-### Expected Response
-```json
-{
-  "response": {
-    "template": "question_card",
-    "data": {
-      "icon": "🏝️",
-      "title": "Costa Rica Relocation",
-      "description": "Which region interests you most?",
-      "buttons": [...]
-    }
-  }
-}
-```
-
----
-
-## Summary
-
-**What backend needs to do:**
-
-1. ✅ Return `{ template: "...", data: {...} }` format instead of plain text
-2. ✅ Use `question_card` for all multiple-choice questions
-3. ✅ Use `scanning_card` when analyzing/thinking
-4. ✅ Use `contact_card` when showing people
-5. ✅ Use `outcome_card` for final summary
-6. ✅ Add images (emojis or Unsplash URLs)
-7. ✅ Include subtitles on buttons for extra context
-
-**Result:** Premium visual experience that matches Mark's expectations.
-
----
-
-## Documentation Reference
-
-See `BACKEND-VISUAL-TEMPLATES.md` for complete examples and integration guide.
-
----
-
-**Questions?** Ask in Slack or reference the frontend code:
-- `app/components/QuestionCard.tsx`
-- `app/components/ScanningCard.tsx`
-- `app/components/ContactCard.tsx`
-- `app/components/OutcomeCard.tsx`
+**Questions? Need more details?**  
+DM Robert or check:
+- COMPREHENSIVE-TEST-RESULTS.md (full test documentation)
+- MARCH-2-STATUS.md (executive summary)
