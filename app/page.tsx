@@ -865,9 +865,28 @@ export default function Home() {
         let parsed;
         try { parsed = JSON.parse(cleaned); }
         catch { parsed = JSON.parse(sanitized); }
-        items = parsed?.response ?? [];
-      } catch {
-        items = [{ type: "text", text: cleaned || raw }];
+        
+        // Support multiple backend response formats
+        if (parsed?.response && Array.isArray(parsed.response)) {
+          // Format 1: {response: [{name, templateProps}]}
+          items = parsed.response;
+        } else if (parsed?.template && parsed?.data) {
+          // Format 2: {template: "name", data: {...}}
+          items = [{ name: parsed.template, templateProps: parsed.data }];
+        } else if (Array.isArray(parsed)) {
+          // Format 3: [{template, data}, ...]
+          items = parsed.map(item => ({
+            name: item.template || item.name,
+            templateProps: item.data || item.templateProps || item
+          }));
+        } else {
+          // Fallback to empty array
+          console.warn('[PARSE WARNING] Unknown response format:', parsed);
+          items = [];
+        }
+      } catch (err) {
+        console.error('[PARSE ERROR]', err, 'Raw:', raw);
+        items = [{ type: "text", text: cleaned || raw || "I encountered an error. Please try again." }];
       }
 
       const encoder = new TextEncoder();
