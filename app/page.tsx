@@ -345,7 +345,13 @@ function CopilotModal({
                   flexDirection: "column",
                 }}
               >
-                <div className="force-light-text">
+                <div className="force-light-text" style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden"
+                }}>
                   <CrayonChat
                     type="standalone"
                     processMessage={processMessage}
