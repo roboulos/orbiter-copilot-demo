@@ -12,15 +12,48 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-/* Force light text ONLY on message content (not all Crayon elements) */
-[class*="thread-message"] [class*="content"],
-[class*="thread-message"] [class*="text"],
-[class*="thread-message"] [class*="body"] {
+/* Force light text on ALL Crayon chat message content - override any system defaults */
+.crayon-chat *,
+.crayon-thread *,
+.crayon-message *,
+[class*="crayon"] *,
+[class*="thread"] *,
+[class*="message"] * {
+  color: #e8e8f0 !important;
+}
+
+/* Specifically target common text elements */
+p, span, div, a, li, h1, h2, h3, h4, h5, h6 {
+  color: #e8e8f0 !important;
+}
+
+/* Input fields should have visible text */
+input, textarea {
+  color: #e8e8f0 !important;
+}
+
+/* Important: Override any color-scheme that might be set */
+html {
+  color-scheme: dark !important;
+}
+
+body, #__next, [data-theme] {
   color: #e8e8f0 !important;
 }
 
 * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Additional webkit-specific overrides for Safari/Chrome on macOS */
+*:not(svg):not(path):not(circle):not(rect) {
+  color: #e8e8f0 !important;
+  -webkit-text-fill-color: #e8e8f0 !important;
+}
+
+/* Ensure all divs inherit light color */
+div, section, article, main, aside {
+  color: #e8e8f0 !important;
 }
 
 /* ══════════════════════════════════════════════════════
