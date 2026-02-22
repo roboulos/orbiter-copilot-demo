@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useThreadActions } from "@crayonai/react-core";
 import { getContextualImage } from "../lib/images";
-import { getIcon, emojiToIcon } from "./icons";
 
-interface QuestionCardProps {
+interface QuestionCardEnhancedProps {
   image_url?: string;
   icon?: string;
   title: string;
@@ -15,48 +14,27 @@ interface QuestionCardProps {
     value: string;
     emoji?: string;
     subtitle?: string;
-    helpText?: string;
+    helpText?: string; // NEW: Explanation of this option
   }>;
   autoImage?: boolean;
-  allowDontKnow?: boolean;
-}
-
-// AUTO-GENERATE help text if not provided (Josh's requirement)
-function generateHelpText(label: string, subtitle?: string): string {
-  // Common patterns
-  if (label.toLowerCase().includes("pacific") || label.toLowerCase().includes("coast")) {
-    return "Beach areas with year-round sunshine. Higher property costs but strong rental income potential.";
-  }
-  if (label.toLowerCase().includes("central valley") || label.toLowerCase().includes("san josé")) {
-    return "Spring-like climate year-round, close to capital. Lower costs, ideal for full-time living.";
-  }
-  if (label.toLowerCase().includes("caribbean")) {
-    return "Tropical rainforest climate, laid-back culture. More rain but lush, affordable, off-the-beaten-path.";
-  }
-  if (subtitle) {
-    return `This option includes: ${subtitle}. Click for more details.`;
-  }
-  return `Learn more about ${label}`;
+  allowDontKnow?: boolean; // NEW: Show "I don't know" button
 }
 
 /**
- * QuestionCard - WITH "I Don't Know" + Help Text (AUTO-ENABLED)
- * 
+ * QuestionCardEnhanced - WITH "I Don't Know" + Help Text
  * Addresses Mark/Josh feedback from Transcript #423:
  * - Users need context for choices they don't understand
  * - "I don't know" escape hatch for when they need help
- * 
- * FIXED: Always shows enhancements even if backend doesn't send helpText
  */
-export function QuestionCard({
+export function QuestionCardEnhanced({
   image_url,
   icon,
   title,
   description,
   buttons,
   autoImage = true,
-  allowDontKnow = true, // ALWAYS true by default
-}: QuestionCardProps) {
+  allowDontKnow = true, // Default: always show "I don't know"
+}: QuestionCardEnhancedProps) {
   const { processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [hovered, setHovered] = useState(false);
@@ -76,7 +54,7 @@ export function QuestionCard({
         message: button.label,
       });
     } catch (error) {
-      console.error("[QuestionCard] Error:", error);
+      console.error("[QuestionCardEnhanced] Error:", error);
       setSelectedValue(null);
     }
   };
@@ -92,7 +70,7 @@ export function QuestionCard({
         message: "I don't know - can you help me understand the differences between these options?",
       });
     } catch (error) {
-      console.error("[QuestionCard] Error:", error);
+      console.error("[QuestionCardEnhanced] Error:", error);
       setSelectedValue(null);
     }
   };
@@ -118,6 +96,7 @@ export function QuestionCard({
         animation: "constellation-appear 0.8s var(--ease-out-expo)",
       }}
     >
+      {/* Top shimmer */}
       <div style={{
         position: "absolute",
         top: 0,
@@ -129,6 +108,7 @@ export function QuestionCard({
         transition: "all 400ms ease",
       }} />
 
+      {/* Image Header */}
       {displayImage && (
         <div style={{ width: "100%", height: "220px", position: "relative", overflow: "hidden" }}>
           <div style={{
@@ -148,7 +128,9 @@ export function QuestionCard({
         </div>
       )}
 
+      {/* Content */}
       <div style={{ padding: "var(--space-xl)" }}>
+        {/* Title */}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-sm)" }}>
           {icon && !displayImage && (
             <div style={{ fontSize: "2rem", flexShrink: 0, opacity: 0.9 }}>{icon}</div>
@@ -175,15 +157,13 @@ export function QuestionCard({
           </p>
         )}
 
+        {/* Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
           {buttons.map((button, index) => {
             const isSelected = selectedValue === button.value;
             const isHovered = hoveredButton === index;
             const isDisabled = selectedValue !== null && !isSelected;
             const helpExpanded = expandedHelp === index;
-            
-            // AUTO-GENERATE help text if not provided
-            const effectiveHelpText = button.helpText || generateHelpText(button.label, button.subtitle);
 
             return (
               <div key={button.value} style={{ position: "relative" }}>
@@ -227,20 +207,12 @@ export function QuestionCard({
                 >
                   {button.emoji && (
                     <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "8px",
-                      background: "linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(124, 58, 237, 0.1))",
-                      border: "1px solid rgba(99, 102, 241, 0.2)",
-                      color: "#a5b4fc",
+                      fontSize: "1.5rem",
                       flexShrink: 0,
                       transform: isHovered ? "scale(1.1)" : "scale(1)",
-                      transition: "all 200ms var(--ease-smooth)",
+                      transition: "transform 200ms var(--ease-smooth)",
                     }}>
-                      {getIcon(emojiToIcon(button.emoji), 18)}
+                      {button.emoji}
                     </div>
                   )}
 
@@ -265,30 +237,32 @@ export function QuestionCard({
                     )}
                   </div>
 
-                  {/* Help icon - ALWAYS show (Josh's requirement) */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedHelp(helpExpanded ? null : index);
-                    }}
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "rgba(99, 102, 241, 0.2)",
-                      border: "1px solid rgba(99, 102, 241, 0.3)",
-                      color: "rgba(99, 102, 241, 0.9)",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    ?
-                  </button>
+                  {/* Help icon (NEW) */}
+                  {button.helpText && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedHelp(helpExpanded ? null : index);
+                      }}
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        background: "rgba(99, 102, 241, 0.2)",
+                        border: "1px solid rgba(99, 102, 241, 0.3)",
+                        color: "rgba(99, 102, 241, 0.9)",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      ?
+                    </button>
+                  )}
 
                   {isSelected && (
                     <div style={{
@@ -301,8 +275,8 @@ export function QuestionCard({
                   )}
                 </button>
 
-                {/* Expanded help text - uses effective (auto-generated or provided) help text */}
-                {helpExpanded && effectiveHelpText && (
+                {/* Expanded help text (NEW) */}
+                {helpExpanded && button.helpText && (
                   <div style={{
                     marginTop: "var(--space-xs)",
                     padding: "var(--space-sm) var(--space-md)",
@@ -314,14 +288,14 @@ export function QuestionCard({
                     lineHeight: "1.5",
                     animation: "slideDown 200ms ease-out",
                   }}>
-                    {effectiveHelpText}
+                    {button.helpText}
                   </div>
                 )}
               </div>
             );
           })}
 
-          {/* "I don't know" button - ALWAYS show */}
+          {/* "I don't know" button (NEW) */}
           {allowDontKnow && (
             <button
               onClick={handleDontKnow}
@@ -351,7 +325,7 @@ export function QuestionCard({
                 (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255, 255, 255, 0.2)";
               }}
             >
-              I don't know - help me choose
+              🤔 I don't know - help me choose
             </button>
           )}
         </div>

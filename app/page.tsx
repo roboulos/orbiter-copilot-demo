@@ -22,6 +22,8 @@ import { SubmitButton } from "./components/SubmitButton";
 import { SuccessToast } from "./components/SuccessToast";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { QuestionCard } from "./components/QuestionCard";
+import { QuestionCardEnhanced } from "./components/QuestionCardEnhanced";
+import { QuickResultCard } from "./components/QuickResultCard";
 import { ScanningCard } from "./components/ScanningCard";
 import { RichWelcomeScreen } from "./components/RichWelcomeScreen";
 import { LoadingIndicator } from "./components/LoadingIndicator";
@@ -46,6 +48,8 @@ const templates = [
   { name: "submit_button",      Component: SubmitButton      },
   { name: "error_message",      Component: ErrorMessage      },
   { name: "question_card",      Component: QuestionCard      },
+  { name: "question_card_enhanced", Component: QuestionCardEnhanced }, // NEW: with "I don't know" + help text
+  { name: "quick_result_card",  Component: QuickResultCard   }, // NEW: Jason's two-layer system
   { name: "scanning_card",      Component: ScanningCard      },
   { name: "loading_indicator",  Component: LoadingIndicator  },
   { name: "error_card",         Component: ErrorCard         },
@@ -132,29 +136,29 @@ function CopilotModal({
   const defaultStarters = selectedPerson
     ? [
         {
-          displayText: `⚡ Leverage Network for ${personName}`,
+          displayText: `Leverage Network for ${personName}`,
           prompt: `Leverage my network for ${personName}${personTitle ? ` (${personTitle})` : ""}. What's my single best move right now to activate this relationship? Be direct and concise — tell me what to do and draft the message.`,
         },
         {
-          displayText: `🎯 Help ${personName} with something specific`,
+          displayText: `Help ${personName} with something specific`,
           prompt: `I want to help ${personName}${personTitle ? ` — ${personTitle}` : ""} with something specific. Ask me what I want to help them with — keep it brief.`,
         },
         {
-          displayText: `📅 Meeting Prep for ${personName}`,
+          displayText: `Meeting Prep for ${personName}`,
           prompt: `Meeting prep: give me a meeting prep card for ${personName}. Include a summary, 3 talking points, things to listen for, and any landmines to avoid.`,
         },
       ]
     : [
         {
-          displayText: "🏠 I want to buy a house in Costa Rica",
+          displayText: "I want to buy a house in Costa Rica",
           prompt: "I want to buy a house in Costa Rica for relocation. Help me find connections to realtors and expats who know the area.",
         },
         {
-          displayText: "💰 Find investors for my startup",
+          displayText: "Find investors for my startup",
           prompt: "I'm raising a seed round for a B2B SaaS company. Find warm introductions to seed-stage investors in my network.",
         },
         {
-          displayText: "🎯 Help someone I know with...",
+          displayText: "Help someone I know with...",
           prompt: "I want to help someone in my network with something specific. Ask me who and what they need.",
         },
       ];
