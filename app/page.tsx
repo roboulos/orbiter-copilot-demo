@@ -345,26 +345,28 @@ function CopilotModal({
                   flexDirection: "column",
                 }}
               >
-                <CrayonChat
-                  type="standalone"
-                  processMessage={processMessage}
-                  agentName="Orbiter Copilot"
-                  responseTemplates={templates}
-                  // theme={orbiterTheme} // Custom theme via CSS instead
-                  messageLoadingComponent={() => <LoadingIndicator />}
-                  welcomeMessage={{
-                    title: personName
-                      ? `What do you want to do with ${personName}?`
-                      : "Your network is full of doors.",
-                    description: personName
-                      ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
-                      : "Pick someone above or ask me anything about your network.",
-                  }}
-                  conversationStarters={{
-                    variant: "long",
-                    options: defaultStarters,
-                  }}
-                />
+                <div className="force-light-text">
+                  <CrayonChat
+                    type="standalone"
+                    processMessage={processMessage}
+                    agentName="Orbiter Copilot"
+                    responseTemplates={templates}
+                    // theme={orbiterTheme} // Custom theme via CSS instead
+                    messageLoadingComponent={() => <LoadingIndicator />}
+                    welcomeMessage={{
+                      title: personName
+                        ? `What do you want to do with ${personName}?`
+                        : "Your network is full of doors.",
+                      description: personName
+                        ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
+                        : "Pick someone above or ask me anything about your network.",
+                    }}
+                    conversationStarters={{
+                      variant: "long",
+                      options: defaultStarters,
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>

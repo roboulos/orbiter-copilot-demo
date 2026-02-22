@@ -56,6 +56,34 @@ div, section, article, main, aside {
   color: #e8e8f0 !important;
 }
 
+/* CRITICAL: Force light text inside CrayonChat - override ALL internal styles */
+.force-light-text,
+.force-light-text *,
+.force-light-text div,
+.force-light-text span,
+.force-light-text p,
+.force-light-text button,
+.force-light-text a,
+.force-light-text h1,
+.force-light-text h2,
+.force-light-text h3,
+.force-light-text label {
+  color: #e8e8f0 !important;
+  -webkit-text-fill-color: #e8e8f0 !important;
+}
+
+/* Target Crayon's internal class names directly */
+.force-light-text [class*="text"],
+.force-light-text [class*="label"],
+.force-light-text [class*="title"],
+.force-light-text [class*="description"],
+.force-light-text [class*="content"],
+.force-light-text [class*="message"],
+.force-light-text [class*="button"] {
+  color: #e8e8f0 !important;
+  -webkit-text-fill-color: #e8e8f0 !important;
+}
+
 /* ══════════════════════════════════════════════════════
    KEYFRAME LIBRARY
    ══════════════════════════════════════════════════════ */
