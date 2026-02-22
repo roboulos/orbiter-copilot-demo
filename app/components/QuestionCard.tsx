@@ -266,7 +266,7 @@ export function QuestionCard({
                   </div>
 
                   {/* Help icon - ALWAYS show (Josh's requirement) */}
-                  <button
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       setExpandedHelp(helpExpanded ? null : index);
@@ -285,10 +285,11 @@ export function QuestionCard({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      userSelect: "none",
                     }}
                   >
                     ?
-                  </button>
+                  </div>
 
                   {isSelected && (
                     <div style={{
