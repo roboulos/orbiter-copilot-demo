@@ -201,12 +201,14 @@ function CopilotModal({
         console.log('[Interview] Action returned:', action);
         console.log('[Interview] State after activation:', interview.state);
         
-        // Interview started - don't send to backend yet
-        // The InterviewPanel will handle the user interaction
-        // Return empty streaming response
+        // Interview started - return brief text to keep chat alive
+        // The InterviewPanel will overlay and handle the user interaction
+        const encoder = new TextEncoder();
         return new Response(
           new ReadableStream({
             start(controller) {
+              // Send brief starting message
+              controller.enqueue(encoder.encode('event: text\ndata: 🎯 \n\n'));
               controller.close();
             }
           })
