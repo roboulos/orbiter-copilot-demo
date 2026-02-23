@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PersonPicker } from "./PersonPicker";
 import type { InterviewState } from "../hooks/useInterviewFlow";
 
@@ -42,6 +42,11 @@ export function InterviewPanel({
   const [inputValue, setInputValue] = useState("");
   const [showHelp, setShowHelp] = useState(false);
   const [showPersonPicker, setShowPersonPicker] = useState(state.stage === "identify_person");
+
+  // Update person picker visibility when stage changes
+  useEffect(() => {
+    setShowPersonPicker(state.stage === "identify_person");
+  }, [state.stage]);
 
   const currentStep = stageNumbers[state.stage];
   const totalSteps = 4;
