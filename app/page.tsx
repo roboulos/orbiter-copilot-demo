@@ -402,25 +402,24 @@ function CopilotModal({
             />
           </div>
 
-          {/* Dispatch button */}
+          {/* Dispatch button - triggers dispatch modal only when ready */}
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('[Dispatch Button] ⚡ Clicked!');
               
               if (selectedPerson) {
-                // Person selected - start interview to clarify outcome
-                console.log('[Dispatch Button] Starting interview with person:', personName);
-                interview.processInput(
-                  `I want to help ${personName}. What should I do?`,
-                  selectedPerson.master_person_id,
-                  personName
-                );
+                // Person selected - show dispatch modal directly
+                setDispatchDescription(`Help ${personName} with...`);
+                setCurrentDispatchData({
+                  personId: selectedPerson.master_person_id,
+                  goal: "",
+                  context: "",
+                });
+                setShowDispatchModal(true);
               } else {
-                // No person selected - start from person picker
-                console.log('[Dispatch Button] Starting interview without person');
-                interview.processInput("I want to help someone.", undefined, undefined);
+                // No person - prompt in chat
+                onForkChoice("I want to help someone from my network");
               }
             }}
             style={{
@@ -530,7 +529,7 @@ function CopilotModal({
                 }}>
                   <CrayonChat
                     type="standalone"
-                    processMessage={processMessageWithInterview}
+                    processMessage={processMessage}
                     agentName="Orbiter Copilot"
                     responseTemplates={templates}
                     // theme={orbiterTheme} // Custom theme via CSS instead
@@ -632,106 +631,7 @@ function CopilotModal({
       </>
       )}
 
-      {/* Interview Panel - Rendered outside modal, overlays everything when active */}
-      {interview.state.active && (
-        <InterviewPanel
-          state={interview.state}
-          question={
-            interview.state.stage === "identify_person"
-              ? "Who would you like to help?"
-              : interview.state.stage === "clarify_outcome"
-              ? `What specific outcome are you looking for${interview.state.personName ? ` with ${interview.state.personName}` : ""}?`
-              : interview.state.stage === "extract_context"
-              ? "Any specific constraints or preferences I should know about?"
-              : "Let me confirm what I understand..."
-          }
-          examples={
-            interview.state.stage === "clarify_outcome"
-              ? [
-                  "Help them find a job at a specific company",
-                  "Connect them with potential investors",
-                  "Introduce them to industry experts",
-                  "Find partnership opportunities",
-                ]
-              : interview.state.stage === "extract_context"
-              ? [
-                  "Geographic location preference",
-                  "Industry or sector focus",
-                  "Company size or stage",
-                  "Specific skills or background",
-                ]
-              : undefined
-          }
-          helpText={
-            interview.state.stage === "identify_person"
-              ? "I'll search your network and show you people you might want to help."
-              : interview.state.stage === "clarify_outcome"
-              ? "Think about what would be most valuable for them right now."
-              : interview.state.stage === "extract_context"
-              ? "This is optional but helps me find better matches."
-              : undefined
-          }
-          onPersonSelect={(personId, personName) => {
-            interview.setPerson(personId, personName);
-          }}
-          onAnswer={(answer) => {
-            const action = interview.processInput(answer, interview.state.personId, interview.state.personName);
-            
-            if (action.type === "show_confirmation") {
-              // Move to dispatch confirmation
-              setDispatchDescription(action.summary || "");
-              setCurrentDispatchData({
-                personId: interview.state.personId,
-                goal: interview.state.outcome || answer,
-                context: interview.state.constraints?.join(", "),
-              });
-              setShowDispatchModal(true);
-              interview.reset();
-            } else if (action.type === "dispatch") {
-              // Direct dispatch (skip mode)
-              setDispatchDescription(
-                generateDispatchSummary({
-                  personName: interview.state.personName!,
-                  outcome: interview.state.outcome!,
-                  constraints: interview.state.constraints,
-                })
-              );
-              setCurrentDispatchData({
-                personId: interview.state.personId,
-                goal: interview.state.outcome,
-                context: interview.state.constraints?.join(", "),
-              });
-              setShowDispatchModal(true);
-              interview.reset();
-            }
-          }}
-          onSkip={() => {
-            // Skip to confirmation with current data
-            if (interview.state.personName && interview.state.outcome) {
-              setDispatchDescription(
-                generateDispatchSummary({
-                  personName: interview.state.personName,
-                  outcome: interview.state.outcome,
-                  constraints: interview.state.constraints,
-                })
-              );
-              setCurrentDispatchData({
-                personId: interview.state.personId,
-                goal: interview.state.outcome,
-                context: interview.state.constraints?.join(", "),
-              });
-              setShowDispatchModal(true);
-              interview.reset();
-            } else {
-              // Not enough info, close interview
-              interview.reset();
-            }
-          }}
-          onReset={() => {
-            interview.reset();
-          }}
-        />
-      )}
+      {/* Interview Panel removed - backend will handle conversational flow, modal only for final dispatch */}
     </>
   );
 }
