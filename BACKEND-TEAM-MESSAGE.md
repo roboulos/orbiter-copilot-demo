@@ -1,449 +1,299 @@
-# Backend Team: Critical Endpoints Needed for Feb 27 Demo
+# Message for Backend Team
 
-**From:** Robert  
-**Date:** February 23, 2026  
-**Deadline:** February 26 (Wednesday EOD) for Thursday 9 AM demo with Charles
-
----
-
-## Executive Summary
-
-Frontend is **95% complete** and production-ready. We need **10 backend endpoints** to connect everything for the Thursday demo. All specs below with request/response formats.
-
-**Priority:** 🔴 Critical (must-have for demo) | 🟡 High (demo enhancement) | 🟢 Nice-to-have
+**To:** Charles, Mark, Backend Team  
+**From:** Robert + Zora  
+**Date:** Feb 23, 2026  
+**Subject:** Inline Interview Mode - Frontend Complete, Need Backend Support
 
 ---
 
-## 🔴 CRITICAL - Must Have for Demo (4 endpoints)
+## Quick Summary
 
-### 1. Calendar Integration (HIGHEST PRIORITY)
+We've built the **inline interview card system** (conversational, context-aware, no blocking modals). Frontend is 100% complete and ready.
 
-**Blocker:** Mark needs to enable calendar API access for robert@snappy.ai
+**What we need:** Backend `/chat` endpoint to return `interview_card` responses instead of text when user has exploratory intent.
 
-#### POST `/calendar/connect`
-**Purpose:** Connect Robert's Google Calendar  
-**Request:**
-```json
-{
-  "email": "robert@snappy.ai",
-  "provider": "google"
-}
-```
-**Response:**
-```json
-{
-  "success": true,
-  "calendar_id": 123,
-  "connected_at": 1708714800
-}
-```
-
-#### GET `/calendar/events`
-**Purpose:** Get upcoming meetings  
-**Query Params:**
-- `days_ahead` (optional, default: 7)
-- `limit` (optional, default: 20)
-
-**Response:**
-```json
-{
-  "events": [
-    {
-      "id": 456,
-      "title": "Charles Integration Meeting",
-      "start_time": 1708948800,
-      "end_time": 1708952400,
-      "attendees": ["charles@orbiter.io"],
-      "master_person_ids": [40],
-      "location": "Zoom"
-    }
-  ]
-}
-```
+**Timeline:** 2-3 hours backend work. Can be done before Thursday demo.
 
 ---
 
-### 2. Meeting Prep Generation
+## What We Built (Frontend)
 
-#### POST `/meeting-prep/generate`
-**Purpose:** Generate meeting prep materials for a person  
-**Request:**
+✅ **InlineInterviewCard** component - appears IN the chat (not blocking overlay)  
+✅ **Smart example generation** - adapts based on person's role and outcome  
+✅ **4-stage flow** - identify person → clarify outcome → extract constraints → confirm  
+✅ **Registered in template system** - ready to receive from backend
+
+**Component name:** `interview_card`
+
+**Files:**
+- `app/components/InlineInterviewCard.tsx` (8.2KB)
+- `app/lib/interview-templates.ts` (7KB)
+- Registered in `app/page.tsx` templates array
+
+**Commit:** 6b86051
+
+---
+
+## What Backend Needs to Do
+
+### 1. Detect Exploratory Intent
+
+When user says:
+- "I want to help someone"
+- "Can you help me connect someone?"
+- "Looking to introduce two people"
+
+→ Return `interview_card` instead of trying to execute
+
+### 2. Return Structured Interview Card
+
+Instead of text response, return:
+
 ```json
 {
-  "master_person_id": 40,
-  "meeting_id": 456,
-  "context": "Integration demo, showing copilot progress"
+  "type": "interview_card",
+  "stage": "identify_person",
+  "question": "Who would you like to help?",
+  "examples": [],
+  "helpText": "Search across your 847 connections.",
+  "context": {}
 }
 ```
 
-**Response:**
+### 3. Track State Through 4 Stages
+
+**Stage 1: identify_person**
+- User selects person from PersonPicker
+- Backend receives: `{ personId: 1, personName: "Mark Pederson" }`
+- Backend looks up person's title from database
+
+**Stage 2: clarify_outcome**
+- Backend returns examples based on person's role:
+  - CEO → "Connect with investors", "Find co-founder", "Intro to advisors"
+  - Engineer → "Find senior roles", "Connect with OSS", "Intro to hiring managers"
+- User clicks example OR types custom
+
+**Stage 3: extract_context (optional)**
+- Backend returns constraint examples based on outcome:
+  - "Find investors" → "Seed stage", "SF Bay Area", "Lead investor"
+  - "Find job" → "Remote only", "SF Bay Area", "Series A-C"
+- User clicks example OR types custom OR skips
+
+**Stage 4: confirm**
+- Backend shows full summary
+- User confirms → trigger actual dispatch
+
+---
+
+## Example Backend Response
+
+### Stage 1: Identify Person
+
 ```json
 {
-  "person_summary": "Charles Njenga - Lead developer on Copilot UI at Orbiter...",
-  "talking_points": [
-    "Demo new interview-first copilot flow",
-    "Show dispatch confirmation modal",
-    "Walk through waiting room for long processes"
+  "type": "interview_card",
+  "stage": "identify_person",
+  "question": "Who would you like to help?",
+  "examples": [],
+  "helpText": "Search your network or browse recent contacts.",
+  "context": {
+    "networkSize": 847
+  }
+}
+```
+
+### Stage 2: Clarify Outcome (CEO)
+
+```json
+{
+  "type": "interview_card",
+  "stage": "clarify_outcome",
+  "question": "What outcome are you looking for with Mark Pederson?",
+  "examples": [
+    "Connect with potential investors",
+    "Find co-founder or CTO",
+    "Intro to advisors in their space",
+    "Find partnership opportunities"
   ],
-  "suggested_openers": [
-    "I've been working on the copilot improvements we discussed..."
+  "helpText": "Mark Pederson is a CEO. What would help them most?",
+  "context": {
+    "personName": "Mark Pederson",
+    "personId": 1,
+    "personTitle": "CEO at Orbiter"
+  }
+}
+```
+
+### Stage 3: Extract Context (Investors)
+
+```json
+{
+  "type": "interview_card",
+  "stage": "extract_context",
+  "question": "Any constraints for helping Mark Pederson connect with potential investors?",
+  "examples": [
+    "Seed stage ($500K-$2M)",
+    "SF Bay Area investors only",
+    "Looking for lead investor",
+    "Open to angels or VCs"
   ],
-  "why_they_care": "Charles owns the Copilot UI integration and needs to see how our work fits into the main app",
-  "listen_for": [
-    "Technical concerns about integration",
-    "Timeline questions",
-    "UI/UX feedback"
+  "helpText": "This is optional but helps me find better matches.",
+  "context": {
+    "personName": "Mark Pederson",
+    "personId": 1,
+    "outcome": "Connect with potential investors"
+  }
+}
+```
+
+### Stage 4: Confirm
+
+```json
+{
+  "type": "interview_card",
+  "stage": "confirm",
+  "question": "I'll help Mark Pederson connect with potential investors with these constraints: Seed stage ($500K-$2M), SF Bay Area investors only.",
+  "examples": [
+    "Yes, dispatch now",
+    "Let me refine this",
+    "Start over"
   ],
-  "landmines": [
-    "Don't over-promise on timeline - integration is complex",
-    "Avoid criticizing existing Copilot implementation"
-  ]
+  "helpText": "I'll analyze your network and find the best connections.",
+  "context": {
+    "personName": "Mark Pederson",
+    "personId": 1,
+    "outcome": "Connect with potential investors",
+    "constraints": ["Seed stage ($500K-$2M)", "SF Bay Area investors only"]
+  }
 }
 ```
 
 ---
 
-### 3. Dispatch Execution (Wire Real API)
+## Implementation Checklist
 
-**Current State:** DispatchConfirmationModal uses `setTimeout` mock  
-**Need:** Wire to actual backend
+**Required changes to `/chat` endpoint:**
 
-#### POST `/leverage-loop` (if not already working)
-**Purpose:** Create leverage loop  
-**Request:**
-```json
-{
-  "master_person_id": 1024,
-  "goal": "Find seed investors for SaaS product",
-  "context": "Xano.Snappy.ai raising seed round, need intros to dev tools investors",
-  "fast": false
-}
+- [ ] Add intent detection (regex for exploratory patterns)
+- [ ] Add interview state tracking (session or database)
+- [ ] Return `interview_card` type instead of text for exploratory intents
+- [ ] Handle `interview_response` message type
+- [ ] Look up person details (title, company) from master_person table
+- [ ] Generate context-aware examples based on:
+  - Person's role (for outcome examples)
+  - Chosen outcome (for constraint examples)
+- [ ] Trigger dispatch when stage=confirm and confirmed=true
+
+**Estimated time:** 2-3 hours
+
+---
+
+## Context-Aware Example Logic
+
+### Outcome Examples by Role
+
+```javascript
+// CEO/Founder
+["Connect with potential investors", "Find co-founder or CTO", "Intro to advisors"]
+
+// Engineer/Developer  
+["Find senior eng roles", "Connect with OSS maintainers", "Intro to hiring managers"]
+
+// Designer
+["Connect with product teams", "Intro to design leaders", "Find freelance opportunities"]
+
+// Sales/BD
+["Connect with potential clients", "Intro to sales leaders", "Find partnerships"]
 ```
 
-**Response:**
-```json
-{
-  "id": 789,
-  "status": "processing",
-  "estimated_seconds": 180
-}
-```
+### Constraint Examples by Outcome
 
-#### PATCH `/leverage-loop/{id}/dispatch`
-**Purpose:** Submit loop for execution  
-**Request:**
-```json
-{
-  "approved": true
-}
-```
+```javascript
+// "find investors"
+["Seed stage ($500K-$2M)", "SF Bay Area only", "Lead investor", "Angels or VCs"]
 
-**Response:**
-```json
-{
-  "success": true,
-  "dispatched_at": 1708714900,
-  "process_id": 999
-}
+// "find job"
+["Remote only", "SF Bay Area", "Series A-C startups", "Open to relocation"]
+
+// "find partnership"
+["B2B SaaS only", "Enterprise customers", "Geographic proximity", "Co-marketing"]
+
+// "find expert"
+["10+ years exp", "Scaled to $10M+ ARR", "Monthly calls", "Technical background"]
 ```
 
 ---
 
-### 4. Process Monitoring (for Waiting Room)
+## Testing Plan
 
-#### GET `/process/{id}/status`
-**Purpose:** Check status of long-running process  
-**Response:**
-```json
-{
-  "id": 999,
-  "status": "running",
-  "progress": 65,
-  "current_step": "Analyzing second-degree connections",
-  "elapsed_seconds": 142,
-  "estimated_seconds": 240
-}
-```
+### Test Case 1: Full Flow with CEO
 
-**Status values:** `"queued"` | `"running"` | `"complete"` | `"failed"` | `"cancelled"`
+1. User: "I want to help someone"
+   - **Expect:** interview_card (stage: identify_person)
 
-#### POST `/process/{id}/cancel`
-**Purpose:** Cancel running process  
-**Response:**
-```json
-{
-  "success": true,
-  "cancelled_at": 1708714950
-}
-```
+2. User selects: Mark Pederson (CEO)
+   - **Expect:** interview_card (stage: clarify_outcome) with CEO examples
 
----
+3. User clicks: "Connect with investors"
+   - **Expect:** interview_card (stage: extract_context) with investor examples
 
-## 🟡 HIGH PRIORITY - Demo Enhancement (3 endpoints)
+4. User clicks: "Seed stage"
+   - **Expect:** interview_card (stage: confirm) with full summary
 
-### 5. Network Graph Visualization
+5. User clicks: "Yes, dispatch now"
+   - **Expect:** Dispatch triggered, WaitingRoom shown
 
-#### GET `/network/graph-data`
-**Purpose:** Full network graph for visualization  
-**Query Params:**
-- `master_person_id` (optional, filter to specific person's network)
-- `depth` (optional, default: 2)
+### Test Case 2: Different Role (Engineer)
 
-**Response:**
-```json
-{
-  "nodes": [
-    {
-      "id": 1024,
-      "name": "Robert Boulos",
-      "type": "person",
-      "avatar": "https://...",
-      "in_my_network": true
-    }
-  ],
-  "edges": [
-    {
-      "source": 1024,
-      "target": 42,
-      "relationship": "works_with",
-      "strength": 0.8
-    }
-  ]
-}
-```
+1. User selects: Person with title "Senior Engineer"
+   - **Expect:** clarify_outcome returns engineer-specific examples:
+     - "Find senior eng roles"
+     - "Connect with open-source maintainers"
+     - "Intro to hiring managers"
+
+### Test Case 3: Skip Context
+
+1. At extract_context stage, user clicks "Skip"
+   - **Expect:** interview_card (stage: confirm) with no constraints shown
 
 ---
 
-### 6. Server-Side Dispatch Enhancement
+## Full Technical Documentation
 
-#### POST `/dispatch/describe`
-**Purpose:** Generate beautified descriptions server-side (currently done client-side)  
-**Request:**
-```json
-{
-  "master_person_id": 1024,
-  "goal": "Find seed investors",
-  "context": "Xano.Snappy.ai SaaS product"
-}
-```
+See: `BACKEND-INTERVIEW-INTEGRATION.md` (14KB comprehensive guide)
 
-**Response:**
-```json
-{
-  "description": "I'll leverage your network to help Robert Boulos find seed investors for Xano.Snappy.ai. By analyzing your connections in the dev tools and B2B SaaS space, I can identify warm introductions to investors who've backed similar products. This approach uses your social capital strategically while helping Robert access funding through trusted relationships."
-}
-```
+Includes:
+- Detailed flow diagrams
+- Complete request/response examples
+- State tracking implementation
+- Context-aware example generation functions
+- Edge cases and error handling
 
 ---
 
-### 7. Intent Detection
+## Demo Thursday (Feb 27, 9 AM)
 
-#### POST `/dispatch/detect-intent`
-**Purpose:** Server-side keyword detection (currently client-side)  
-**Request:**
-```json
-{
-  "message": "Alright, show me what you've got. Let's do this."
-}
-```
+**Goal:** Show Mark the inline interview flow working end-to-end
 
-**Response:**
-```json
-{
-  "should_dispatch": true,
-  "confidence": 0.92,
-  "keywords_matched": ["show me", "let's do this"]
-}
-```
+**Must have:**
+- ✅ Frontend (complete)
+- ⏳ Backend integration (2-3h work)
+- ✅ WaitingRoom flow (already working)
+- ✅ Dispatch confirmation (already working)
+
+**Status:** Frontend ready, need backend by Wednesday EOD for testing
 
 ---
 
-## 🟢 NICE-TO-HAVE - Future Enhancement (3 endpoints)
+## Questions / Support
 
-### 8. Context Add-Ons
+Ping me in #copilot-dev or DM:
+- Robert: @robert_gram (Telegram)
+- Slack: #copilot-dev channel
 
-#### GET `/context/add-ons`
-**Purpose:** List available context sources  
-**Response:**
-```json
-{
-  "sources": [
-    {
-      "id": "linkedin",
-      "name": "LinkedIn Profile",
-      "enabled": true,
-      "description": "Enrich with work history and connections"
-    },
-    {
-      "id": "transcripts",
-      "name": "Call Transcripts",
-      "enabled": true,
-      "description": "Include conversation context"
-    }
-  ]
-}
-```
+**Frontend is 100% ready. Just need backend to return interview_card JSON.**
 
-#### POST `/context/enrich`
-**Purpose:** Enrich person context with additional sources  
-**Request:**
-```json
-{
-  "master_person_id": 1024,
-  "source_ids": ["linkedin", "transcripts"]
-}
-```
+Let me know if you need anything clarified or want to pair on the implementation.
 
-**Response:**
-```yaml
-# Returns enriched YAML context (same format as /person-context/{id})
-```
-
----
-
-## 🔧 Frontend Integration Points
-
-### Files That Need Wiring
-
-1. **DispatchConfirmationModal.tsx** (line 89-95)
-   - Replace `setTimeout` mock with actual POST `/leverage-loop`
-   - Add error handling
-   - Redirect to WaitingRoom on success
-
-2. **WaitingRoom.tsx** (line 120-130)
-   - Add polling to GET `/process/{id}/status` every 2 seconds
-   - Wire cancel button to POST `/process/{id}/cancel`
-   - Optional: WebSocket for real-time updates
-
-3. **MeetingPrepCard.tsx** (not yet triggered)
-   - Call POST `/meeting-prep/generate` when copilot detects meeting prep intent
-   - Needs chat endpoint update or direct integration
-
-4. **NetworkView.tsx** (future)
-   - Use GET `/network/graph-data` for visualization
-   - Currently just lists, needs canvas/SVG rendering
-
-5. **QuickResultCard.tsx** (two-layer system)
-   - Quick layer: existing chat works
-   - Deep layer: needs `/leverage-loop` with `fast=false`
-   - Poll for results or use WebSocket
-
----
-
-## 🚨 Critical Path for Thursday Demo
-
-**Wednesday EOD Deadline:**
-
-1. ✅ **Mark enables calendar API** (external dependency)
-2. 🔴 `/calendar/connect` + `/calendar/events` working
-3. 🔴 `/meeting-prep/generate` working
-4. 🔴 `/leverage-loop` dispatch wired (if not already)
-5. 🔴 `/process/{id}/status` working
-
-**With these 5 items, demo is:**
-- ✅ Calendar integration working
-- ✅ Meeting prep generates real data
-- ✅ Dispatch executes (not mock)
-- ✅ Waiting room shows real progress
-
-**Without these, demo shows:**
-- ❌ Mocked dispatch (setTimeout)
-- ❌ No calendar integration
-- ❌ No meeting prep data
-- ❌ Static waiting room
-
----
-
-## 📦 Environment Variables Needed
-
-Add to `.env.local`:
-
-```bash
-# Calendar Integration
-NEXT_PUBLIC_GOOGLE_CALENDAR_CLIENT_ID=your_client_id
-NEXT_PUBLIC_GOOGLE_CALENDAR_API_KEY=your_api_key
-NEXT_PUBLIC_ENABLE_CALENDAR=true
-
-# WebSocket (optional, for real-time updates)
-NEXT_PUBLIC_WS_URL=ws://localhost:3001
-NEXT_PUBLIC_ENABLE_WAITING_ROOM=true
-
-# Xano API (already exists?)
-NEXT_PUBLIC_XANO_API_URL=https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz
-NEXT_PUBLIC_XANO_API_KEY=your_key
-```
-
----
-
-## 🧪 Testing Checklist
-
-Once endpoints are live:
-
-- [ ] Connect Robert's calendar successfully
-- [ ] Fetch upcoming meetings (should see Charles @ Feb 27 9 AM)
-- [ ] Generate meeting prep for Charles (Dennis)
-- [ ] Dispatch leverage loop (not mock)
-- [ ] Watch process status update in real-time
-- [ ] Cancel a running process
-- [ ] View completed results in Outcomes tab
-
----
-
-## 📚 Documentation
-
-**Full specs available in:**
-- `BACKEND-TODO.md` (5KB)
-- `COMPLETE-GAP-ANALYSIS.md` (12KB)
-- `IMPLEMENTATION_GUIDE.md` (19KB)
-
-**All files in:** `/projects/orbiter-copilot-demo/`
-
----
-
-## 🎯 What's Already Working (Frontend)
-
-✅ Dispatch confirmation modal (beautiful UI)  
-✅ Beautified LLM descriptions (client-side)  
-✅ Keyword detection (client-side)  
-✅ Waiting room UI (needs polling)  
-✅ Meeting prep card template (needs data)  
-✅ Project context selector  
-✅ Enhanced outcome cards with fold-down panels  
-✅ Help system ("I don't know" button)  
-✅ Two-path UX (hardcore + conversational)  
-✅ Premium loading animations  
-✅ All emojis removed  
-✅ Consistent visual design  
-
-**Demo page:** localhost:3000/demo-components
-
----
-
-## 📞 Questions?
-
-Ping Robert:
-- Telegram: @robert_gram
-- Email: robert@snappy.ai
-
-**Let's ship this by Wednesday EOD! 🚀**
-
----
-
-## Summary for Quick Reference
-
-| Endpoint | Priority | Deadline | Purpose |
-|----------|----------|----------|---------|
-| POST `/calendar/connect` | 🔴 Critical | Wed EOD | Connect calendar |
-| GET `/calendar/events` | 🔴 Critical | Wed EOD | Get meetings |
-| POST `/meeting-prep/generate` | 🔴 Critical | Wed EOD | Generate prep |
-| POST `/leverage-loop` | 🔴 Critical | Wed EOD | Dispatch (wire real) |
-| PATCH `/leverage-loop/{id}/dispatch` | 🔴 Critical | Wed EOD | Submit loop |
-| GET `/process/{id}/status` | 🔴 Critical | Wed EOD | Monitor progress |
-| POST `/process/{id}/cancel` | 🔴 Critical | Wed EOD | Cancel process |
-| GET `/network/graph-data` | 🟡 High | Post-demo | Network viz |
-| POST `/dispatch/describe` | 🟡 High | Post-demo | Server descriptions |
-| POST `/dispatch/detect-intent` | 🟡 High | Post-demo | Server detection |
-
-**Critical: 7 endpoints  
-High: 3 endpoints  
-Total: 10 endpoints**
+— Robert + Zora
