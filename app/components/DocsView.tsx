@@ -467,7 +467,7 @@ function Feb20PlanningSection({ onImageClick }: { onImageClick: (url: string) =>
       <SectionHeader
         title="February 20, 2026 — Planning Meeting"
         subtitle="Mark, Jason, Josh, and Robert align on priorities: Two-layer agents, help system, and meeting prep mode"
-        emoji: "📋"
+        emoji="📋"
       />
 
       {/* Whiteboard */}
@@ -617,7 +617,7 @@ function Feb23BuildSection({ onImageClick }: { onImageClick: (url: string) => vo
       <SectionHeader
         title="February 23, 2026 — Critical Implementation Day"
         subtitle="38/86 checklist items completed (44%) - All critical frontend work shipped in 10 commits"
-        emoji: "🚀"
+        emoji="🚀"
       />
 
       {/* Whiteboard */}
