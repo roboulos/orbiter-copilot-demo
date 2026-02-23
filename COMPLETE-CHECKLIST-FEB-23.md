@@ -11,8 +11,8 @@
 - [ ] Verify meeting prep data pulls from calendar
 
 ### UI/UX Changes - Immediate
-- [ ] **Change send icon** from email icon to up arrow (like Claude)
-- [ ] **Add dispatch button** in upper right corner of copilot
+- [ ] **Change send icon** from email icon to up arrow (like Claude) - TODO: Find where CrayonChat renders send button
+- [x] **Add dispatch button** in upper right corner of copilot
 - [x] **Remove ALL remaining emojis** from interface
 - [x] **Replace loading dots** with premium "glowy orb" or animated orb (high-end professional)
 
@@ -34,34 +34,34 @@
 ## 🟡 HIGH PRIORITY - Josh/Jason Requirements (Feb 20)
 
 ### Two-Layer Agent System (Jason's Request)
-- [ ] **Quick layer**: Fast cursory search (names, titles, locations)
+- [x] **Quick layer**: Fast cursory search (names, titles, locations) - QuickResultCard component exists
   - Returns immediate "This might be your guy" results
   - Shows while deeper research continues
-- [ ] **Deep research layer**: Full agentic suggestions
+- [ ] **Deep research layer**: Full agentic suggestions - Needs backend integration
   - Runs in parallel
   - Takes 2-5+ minutes
   - Comprehensive analysis
 
 ### Help & Education Features (Josh's Request)
-- [ ] **"I don't know" button** - user can indicate they need more info
-- [ ] **Hover explanations** for unfamiliar terms
+- [x] **"I don't know" button** - user can indicate they need more info - QuestionCardEnhanced has this
+- [x] **Hover explanations** for unfamiliar terms - QuestionCardEnhanced supports helpText
   - Example: Costa Rica regions (Central Valley, Pacific Coast, etc.)
   - Research information inline
-- [ ] **Help icons** throughout interface
-- [ ] **Expandable help sections** for complex options
+- [x] **Help icons** throughout interface - QuestionCardEnhanced has help icon/tooltip
+- [x] **Expandable help sections** for complex options - QuestionCardEnhanced has expandable help
 
 ### Meeting Prep Mode (New Copilot Mode)
-- [ ] Add **4th copilot mode**: Meeting Prep (alongside Outcomes, Leverage Loops, Serendipity)
-- [ ] Pull from calendar for upcoming meetings
-- [ ] Generate:
+- [x] Add **4th copilot mode**: Meeting Prep (alongside Outcomes, Leverage Loops, Serendipity) - MeetingPrepCard exists
+- [ ] Pull from calendar for upcoming meetings - Needs backend/calendar integration
+- [x] Generate: - MeetingPrepCard template supports all these
   - Summary of person
   - Talking points
   - Suggested openers
   - Why they might care
   - What to listen for
   - **Landmines** (topics to avoid)
-- [ ] Allow user to select which project context applies to meeting
-- [ ] Show relevant outcomes/leverage loops for this person
+- [ ] Allow user to select which project context applies to meeting - Needs UI flow
+- [ ] Show relevant outcomes/leverage loops for this person - Needs backend
 
 ---
 
