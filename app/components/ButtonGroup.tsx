@@ -91,13 +91,7 @@ export function ButtonGroup({ question, options }: ButtonGroupProps) {
                 transition: "all 0.2s ease",
               }}
             >
-              {option.emoji && (
-                <span style={{ fontSize: "18px" }}>{option.emoji}</span>
-              )}
               <span style={{ flex: 1 }}>{option.label}</span>
-              {isSelected && (
-                <span style={{ fontSize: "16px", color: "white" }}>✓</span>
-              )}
             </button>
           );
         })}

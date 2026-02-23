@@ -205,17 +205,6 @@ export function QuestionCardEnhanced({
                     textAlign: "left",
                   }}
                 >
-                  {button.emoji && (
-                    <div style={{
-                      fontSize: "1.5rem",
-                      flexShrink: 0,
-                      transform: isHovered ? "scale(1.1)" : "scale(1)",
-                      transition: "transform 200ms var(--ease-smooth)",
-                    }}>
-                      {button.emoji}
-                    </div>
-                  )}
-
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontFamily: "var(--font-display)",
