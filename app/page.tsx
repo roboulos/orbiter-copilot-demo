@@ -35,12 +35,12 @@ import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
 import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
-import { InterviewPanel } from "./components/InterviewPanel";
+// InterviewPanel removed - using conversational backend flow instead
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
-import { classifyIntent, detectSkipIntent, getNextQuestion, generateDispatchSummary, type IntentAnalysis } from "./lib/intent-classifier";
-import { useInterviewFlow } from "./hooks/useInterviewFlow";
+// Interview classifier imports removed - backend handles conversational flow
+// useInterviewFlow removed - backend handles conversational interview
 // import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
@@ -109,7 +109,6 @@ interface CopilotModalProps {
   pendingPrompt: string | null;
   onPendingPromptConsumed: () => void;
   onTabChange?: (tab: string) => void;
-  interview: ReturnType<typeof useInterviewFlow>;
 }
 
 function CopilotModal({
@@ -125,7 +124,6 @@ function CopilotModal({
   pendingPrompt,
   onPendingPromptConsumed,
   onTabChange,
-  interview,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
@@ -140,96 +138,7 @@ function CopilotModal({
     context?: string;
   } | null>(null);
   
-  // Wrap processMessage to intercept for interview mode
-  const processMessageWithInterview = useCallback(
-    async (args: { threadId: string; messages: Array<{ role: string; message?: unknown }>; abortController: AbortController }) => {
-      const lastMessage = args.messages[args.messages.length - 1];
-      const prompt = typeof lastMessage?.message === "string"
-        ? lastMessage.message
-        : String(lastMessage?.message ?? "");
-      
-      // Interview Mode: Check if we should route through interview flow
-      if (interview.state.active) {
-        // Already in interview - route message through interview flow
-        const action = interview.processInput(
-          prompt,
-          interview.state.personId,
-          interview.state.personName
-        );
-        
-        // Handle interview actions
-        if (action.type === "show_confirmation" || action.type === "dispatch") {
-          // Move to dispatch confirmation
-          setDispatchDescription(action.summary || generateDispatchSummary({
-            personName: interview.state.personName!,
-            outcome: interview.state.outcome!,
-            constraints: interview.state.constraints,
-          }));
-          setCurrentDispatchData({
-            personId: interview.state.personId,
-            goal: interview.state.outcome,
-            context: interview.state.constraints?.join(", "),
-          });
-          setShowDispatchModal(true);
-          interview.reset();
-        }
-        
-        // Don't send to backend - interview handles everything
-        return new Response(
-          new ReadableStream({
-            start(controller) {
-              controller.close();
-            }
-          })
-        );
-      }
-      
-      // Not in interview - check if prompt should trigger interview mode
-      const intent = classifyIntent(prompt);
-      console.log('[Interview] Intent classified:', intent);
-      
-      // Trigger interview for partial or exploratory intents  
-      if (intent.type === "exploratory" || intent.type === "partial") {
-        console.log('[Interview] ✨ Triggering interview mode for:', intent.type);
-        
-        // Start interview flow - this updates state synchronously
-        const action = interview.processInput(
-          prompt,
-          selectedPerson?.master_person?.id || selectedPerson?.master_person_id,
-          selectedPerson?.master_person?.name || selectedPerson?.full_name
-        );
-        
-        console.log('[Interview] ✓ Interview activated:', {
-          active: interview.state.active,
-          stage: interview.state.stage,
-          action: action.type
-        });
-        
-        // Don't send to backend - interview will handle interaction
-        // Return minimal response to keep CrayonChat happy
-        const encoder = new TextEncoder();
-        return new Response(
-          new ReadableStream({
-            start(controller) {
-              // Just close the stream - interview panel will overlay
-              controller.close();
-            }
-          }),
-          {
-            headers: {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive'
-            }
-          }
-        );
-      }
-      
-      // Normal flow - pass through to original processMessage
-      return processMessage(args);
-    },
-    [interview, selectedPerson, processMessage]
-  );
+  // No interview mode interception - backend handles conversational flow
 
   useEffect(() => {
     if (pendingPrompt) {
@@ -242,12 +151,6 @@ function CopilotModal({
   const personName = selectedPerson?.master_person?.name || selectedPerson?.full_name;
   const personTitle = selectedPerson?.master_person?.current_title;
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
-
-  // Direct interview trigger handler (bypasses CrayonChat for immediate activation)
-  const handleStartInterview = useCallback(() => {
-    console.log('[Interview] Direct trigger via button');
-    interview.processInput("I want to help someone");
-  }, [interview]);
 
   // Dynamic conversation starters based on whether person is selected
   const defaultStarters = selectedPerson
@@ -846,17 +749,6 @@ export default function Home() {
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
-  
-  // Interview flow hook at parent level (so it persists across modal open/close)
-  const interview = useInterviewFlow();
-  
-  // Debug: Watch for interview state changes
-  useEffect(() => {
-    console.log('[Home] Interview state changed:', {
-      active: interview.state.active,
-      stage: interview.state.stage,
-    });
-  }, [interview.state.active, interview.state.stage]);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
@@ -1054,8 +946,6 @@ export default function Home() {
       const prompt = typeof lastMessage?.message === "string"
         ? lastMessage.message
         : String(lastMessage?.message ?? "");
-
-      // Interview mode handling moved to CopilotModal's processMessageWithInterview wrapper
 
       const history = messages
         .slice(0, -1)
@@ -1424,7 +1314,6 @@ export default function Home() {
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
         onTabChange={(tab) => setActiveTab(tab as Tab | "Home")}
-        interview={interview}
       />
 
       {/* ─── Calendar Settings Modal ──────────────────────── */}
