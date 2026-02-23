@@ -35,6 +35,7 @@ import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
 import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
+import { InlineInterviewCard } from "./components/InlineInterviewCard";
 // InterviewPanel removed - using conversational backend flow instead
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
@@ -61,6 +62,7 @@ const templates = [
   { name: "scanning_card",      Component: ScanningCard      },
   { name: "loading_indicator",  Component: LoadingIndicator  },
   { name: "error_card",         Component: ErrorCard         },
+  { name: "interview_card",     Component: InlineInterviewCard }, // NEW: Inline conversational interview
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
