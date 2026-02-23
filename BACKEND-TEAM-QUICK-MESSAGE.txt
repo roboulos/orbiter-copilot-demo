@@ -1,0 +1,46 @@
+Hey team,
+
+Frontend is 95% done and looks amazing. Need 10 backend endpoints to make it all work for Thursday's demo with Charles. Here's the priority list:
+
+🔴 MUST-HAVE for Demo (Wednesday EOD):
+
+1. Calendar Integration (2 endpoints)
+   - POST /calendar/connect - Connect Robert's Google Calendar
+   - GET /calendar/events - Fetch upcoming meetings
+   ⚠️ Blocked on Mark enabling calendar API access
+
+2. Meeting Prep (1 endpoint)
+   - POST /meeting-prep/generate - Generate prep materials
+   Takes: master_person_id, meeting_id, context
+   Returns: talking_points, openers, landmines, etc.
+
+3. Dispatch Execution (2 endpoints)
+   - POST /leverage-loop - Create loop (wire real API, not mock)
+   - PATCH /leverage-loop/{id}/dispatch - Submit for execution
+
+4. Process Monitoring (2 endpoints)
+   - GET /process/{id}/status - Check progress (for waiting room)
+   - POST /process/{id}/cancel - Cancel running process
+
+🟡 NICE-TO-HAVE (Post-demo):
+- GET /network/graph-data - Network visualization
+- POST /dispatch/describe - Server-side beautified descriptions
+- POST /dispatch/detect-intent - Server-side keyword detection
+
+Total: 7 critical, 3 nice-to-have
+
+Full specs with request/response formats in BACKEND-TEAM-MESSAGE.md
+
+Demo is Thursday 9 AM. Without these endpoints we're showing mocks. With them, we're showing real working software.
+
+Current frontend features ready to wire up:
+✅ Dispatch confirmation modal
+✅ Waiting room UI
+✅ Meeting prep card template
+✅ Process monitoring UI
+✅ Enhanced outcome cards
+✅ All visual polish complete
+
+Questions? Ping me.
+
+- Robert
