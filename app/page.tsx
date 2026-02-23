@@ -635,6 +635,22 @@ function CopilotModal({
       )}
 
       {/* Interview Panel - Rendered outside modal, overlays everything when active */}
+      {/* Debug indicator */}
+      <div style={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        background: interview.state.active ? 'green' : 'red',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: '8px',
+        zIndex: 99999,
+        fontSize: '14px',
+        fontWeight: 'bold',
+      }}>
+        Interview: {interview.state.active ? 'ACTIVE' : 'INACTIVE'} | Stage: {interview.state.stage}
+      </div>
+      
       {interview.state.active && (
         <InterviewPanel
           state={interview.state}
@@ -951,6 +967,14 @@ export default function Home() {
   
   // Interview flow hook at parent level (so it persists across modal open/close)
   const interview = useInterviewFlow();
+  
+  // Debug: Watch for interview state changes
+  useEffect(() => {
+    console.log('[Home] Interview state changed:', {
+      active: interview.state.active,
+      stage: interview.state.stage,
+    });
+  }, [interview.state.active, interview.state.stage]);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {

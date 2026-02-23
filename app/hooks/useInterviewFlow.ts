@@ -29,6 +29,9 @@ export function useInterviewFlow() {
     active: false,
     stage: "identify_person",
   });
+  
+  // Force re-render mechanism
+  const [, forceUpdate] = useState({});
 
   /**
    * Process user input and determine next interview action
