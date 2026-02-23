@@ -27,7 +27,7 @@
   - "execute"
   - "go"
   - Other action phrases
-- [ ] Make dispatch option appear when AI detects completion intent - Needs chat message monitoring
+- [x] Make dispatch option appear when AI detects completion intent - useDispatchIntent hook + DispatchPromptBanner component
 
 ---
 
@@ -60,7 +60,7 @@
   - Why they might care
   - What to listen for
   - **Landmines** (topics to avoid)
-- [ ] Allow user to select which project context applies to meeting - Needs UI flow
+- [x] Allow user to select which project context applies to meeting - ProjectContextSelector component built
 - [ ] Show relevant outcomes/leverage loops for this person - Needs backend
 
 ---
@@ -84,12 +84,12 @@
 
 ### Results Display (SEPARATE FROM COPILOT)
 - [x] **Never show agent results in copilot** - Dispatch modal separates concerns
-- [ ] Results populate in **beautiful separate UI** - OutcomesView exists, needs polish
+- [x] Results populate in **beautiful separate UI** - OutcomeCardEnhanced component built
   - Fold-down panels
   - Rich context
-  - Visual presentation
+  - Visual presentation with timeline
 - [x] Copilot is for DEFINING what to dispatch - Modal confirms before dispatch
-- [ ] Results are for REVIEWING suggestions - Needs OutcomesView integration
+- [ ] Results are for REVIEWING suggestions - Needs OutcomesView integration with backend
 
 ---
 
