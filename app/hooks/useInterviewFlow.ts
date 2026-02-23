@@ -102,11 +102,13 @@ export function useInterviewFlow() {
       }
       
       // No person selected, start from beginning
+      console.log('[useInterviewFlow] Activating interview - stage:', analysis.nextStage);
       setState({
         active: true,
         stage: analysis.nextStage,
         intentAnalysis: analysis,
       });
+      console.log('[useInterviewFlow] setState called with active: true');
       
       if (analysis.nextStage === "identify_person") {
         return {

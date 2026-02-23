@@ -405,17 +405,25 @@ function CopilotModal({
           {/* Dispatch button */}
           <button
             onClick={() => {
+              console.log('[Dispatch Button] Clicked! Person:', selectedPerson ? personName : 'none');
+              console.log('[Dispatch Button] Before - interview.state.active:', interview.state.active);
+              
               if (selectedPerson) {
                 // Person selected - start interview to clarify outcome
-                interview.processInput(
+                const result = interview.processInput(
                   `I want to help ${personName}. What should I do?`,
                   selectedPerson.master_person_id,
                   personName
                 );
+                console.log('[Dispatch Button] Interview started (with person):', result);
               } else {
                 // No person selected - start from person picker
-                interview.processInput("I want to help someone.", undefined, undefined);
+                const result = interview.processInput("I want to help someone.", undefined, undefined);
+                console.log('[Dispatch Button] Interview started (no person):', result);
               }
+              
+              console.log('[Dispatch Button] After - interview.state.active:', interview.state.active);
+              console.log('[Dispatch Button] Full state:', interview.state);
             }}
             style={{
               padding: "7px 14px",
