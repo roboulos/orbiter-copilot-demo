@@ -1013,25 +1013,50 @@ div, section, article, main, aside {
 }
 
 /* ─── Send Icon Override (CrayonChat) ───────────────────────────────────── */
-/* Attempt to override send icon with up arrow like Claude */
-[class*="send"] svg path[d*="M22"],
-[class*="Send"] svg path[d*="M22"],
-[class*="submit"] svg path[d*="M22"],
-button[type="submit"] svg path[d*="M22"] {
-  d: path("M12 19V5M5 12l7-7 7 7") !important;
-}
+/* Replace send/mail icon with up arrow like Claude */
 
-/* Alternative: Hide default send icon and inject up arrow */
-.crayon-composer button[type="submit"] svg,
-[class*="composer"] button[type="submit"] svg {
+/* Hide the default send icon */
+.crayon-shell-composer-submit-button svg,
+.crayon-shell-desktop-welcome-composer button[type="submit"] svg,
+.crayon-shell-thread-composer button[type="submit"] svg,
+[class*="composer"] button[type="submit"] svg,
+[class*="composer-submit"] svg,
+button[type="submit"][class*="submit"] svg {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
-.crayon-composer button[type="submit"]::before,
-[class*="composer"] button[type="submit"]::before {
+/* Add up arrow using ::before pseudo-element */
+.crayon-shell-composer-submit-button::before,
+.crayon-shell-desktop-welcome-composer button[type="submit"]::before,
+.crayon-shell-thread-composer button[type="submit"]::before,
+[class*="composer"] button[type="submit"]::before,
+[class*="composer-submit"]::before,
+button[type="submit"][class*="submit"]::before {
   content: "↑" !important;
-  font-size: 20px !important;
+  font-size: 22px !important;
   font-weight: 700 !important;
-  display: inline-block !important;
-  color: currentColor !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: white !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Ensure button has position relative for absolute positioning of ::before */
+.crayon-shell-composer-submit-button,
+.crayon-shell-desktop-welcome-composer button[type="submit"],
+.crayon-shell-thread-composer button[type="submit"],
+[class*="composer"] button[type="submit"],
+[class*="composer-submit"],
+button[type="submit"][class*="submit"] {
+  position: relative !important;
+  overflow: hidden !important;
 }
