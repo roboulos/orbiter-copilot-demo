@@ -109,6 +109,7 @@ interface CopilotModalProps {
   pendingPrompt: string | null;
   onPendingPromptConsumed: () => void;
   onTabChange?: (tab: string) => void;
+  interview: ReturnType<typeof useInterviewFlow>;
 }
 
 function CopilotModal({
@@ -124,6 +125,7 @@ function CopilotModal({
   pendingPrompt,
   onPendingPromptConsumed,
   onTabChange,
+  interview,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
@@ -137,9 +139,6 @@ function CopilotModal({
     goal?: string;
     context?: string;
   } | null>(null);
-  
-  // Interview flow hook
-  const interview = useInterviewFlow();
   
   // Wrap processMessage to intercept for interview mode
   const processMessageWithInterview = useCallback(
@@ -189,16 +188,17 @@ function CopilotModal({
       const intent = classifyIntent(prompt);
       console.log('[Interview] Intent classified:', intent);
       
-      // Trigger interview for partial or exploratory intents
+      // Trigger interview for partial or exploratory intents  
       if (intent.type === "exploratory" || intent.type === "partial") {
         console.log('[Interview] Triggering interview mode');
-        // Start interview flow
-        const action = interview.processInput(
+        
+        // Start interview flow - this updates state synchronously
+        interview.processInput(
           prompt,
           selectedPerson?.master_person?.id || selectedPerson?.master_person_id,
           selectedPerson?.master_person?.name || selectedPerson?.full_name
         );
-        console.log('[Interview] Action returned:', action);
+        
         console.log('[Interview] State after activation:', interview.state);
         
         // Interview started - return brief text to keep chat alive
@@ -228,8 +228,6 @@ function CopilotModal({
       onPendingPromptConsumed();
     }
   }, [pendingPrompt, onPendingPromptConsumed]);
-
-  if (!open) return null;
 
   const personName = selectedPerson?.master_person?.name || selectedPerson?.full_name;
   const personTitle = selectedPerson?.master_person?.current_title;
@@ -272,7 +270,10 @@ function CopilotModal({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Modal - only show when open */}
+      {open && (
+      <>
+        {/* Backdrop */}
       <div
         onClick={onClose}
         style={{
@@ -606,13 +607,26 @@ function CopilotModal({
           }}
         />
       )}
+      </>
+      )}
 
-      {/* Interview Panel */}
-      {(() => {
-        console.log('[Interview] Render check - interview.state.active:', interview.state.active);
-        console.log('[Interview] Full state:', interview.state);
-        return interview.state.active;
-      })() && (
+      {/* Interview Panel - Always rendered, independent of modal */}
+      {/* DEBUG: Force show interview active state */}
+      {interview.state.active && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          background: 'red',
+          color: 'white',
+          padding: '20px',
+          zIndex: 99999,
+          fontSize: '24px'
+        }}>
+          INTERVIEW ACTIVE: {JSON.stringify(interview.state.stage)}
+        </div>
+      )}
+      {interview.state.active && (
         <InterviewPanel
           state={interview.state}
           question={
@@ -925,6 +939,18 @@ export default function Home() {
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  
+  // Interview flow hook at parent level (so it persists across modal open/close)
+  const interview = useInterviewFlow();
+  
+  // DEBUG: Force activate interview 3 seconds after mount to test UI
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('[DEBUG] Force activating interview for test...');
+      interview.processInput("I want to help someone");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
@@ -1492,6 +1518,7 @@ export default function Home() {
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
         onTabChange={(tab) => setActiveTab(tab as Tab | "Home")}
+        interview={interview}
       />
 
       {/* ─── Calendar Settings Modal ──────────────────────── */}
