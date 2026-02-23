@@ -21,6 +21,7 @@ import { ConfirmationModal } from "./components/ConfirmationModal";
 import { SubmitButton } from "./components/SubmitButton";
 import { SuccessToast } from "./components/SuccessToast";
 import { ErrorMessage } from "./components/ErrorMessage";
+import CalendarSettingsModal from "./components/CalendarSettingsModal";
 import { QuestionCard } from "./components/QuestionCard";
 import { QuestionCardEnhanced } from "./components/QuestionCardEnhanced";
 import { QuickResultCard } from "./components/QuickResultCard";
@@ -119,6 +120,7 @@ function CopilotModal({
   onChatStart,
   pendingPrompt,
   onPendingPromptConsumed,
+  onTabChange,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
@@ -715,6 +717,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab | "Home">("Home");
   const [selectedPerson, setSelectedPerson] = useState<SelectedPerson | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [calendarModalOpen, setCalendarModalOpen] = useState(false);
   const [showFork, setShowFork] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -1197,6 +1200,42 @@ export default function Home() {
             Copilot
           </button>
 
+          {/* Calendar Settings */}
+          <button
+            onClick={() => setCalendarModalOpen(true)}
+            title="Calendar Settings"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "8px",
+              color: "#8b92a7",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.15)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#a5b4fc";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#8b92a7";
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </button>
+
           {/* Avatar */}
           <div style={{
             width: "28px",
@@ -1256,7 +1295,18 @@ export default function Home() {
         onChatStart={handleChatStart}
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => setActiveTab(tab as Tab | "Home")}
+      />
+
+      {/* ─── Calendar Settings Modal ──────────────────────── */}
+      <CalendarSettingsModal
+        isOpen={calendarModalOpen}
+        onClose={() => setCalendarModalOpen(false)}
+        onSuccess={(connection) => {
+          setSuccessMessage(`Successfully connected ${connection.provider} calendar for ${connection.email}`);
+          setShowSuccessToast(true);
+          setTimeout(() => setCalendarModalOpen(false), 2000);
+        }}
       />
 
       {/* ─── Confirmation Modal ───────────────────────────── */}
