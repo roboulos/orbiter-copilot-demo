@@ -1582,6 +1582,35 @@ export default function Home() {
 
       {/* ─── Confetti ────────────────────────────────────── */}
       <Confetti active={showConfetti} />
+      
+      {/* ─── TEST BUTTON: Direct Interview Trigger ─────────*/}
+      <button
+        onClick={() => {
+          console.log('[TEST BUTTON] Clicked! Activating interview...');
+          alert('[TEST] About to activate interview. Current state: ' + interview.state.active);
+          interview.processInput("I want to help someone.");
+          setTimeout(() => {
+            alert('[TEST] After processInput. State is now: ' + interview.state.active);
+          }, 100);
+        }}
+        style={{
+          position: 'fixed',
+          bottom: '80px',
+          right: '20px',
+          padding: '15px 25px',
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          border: 'none',
+          borderRadius: '12px',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+          zIndex: 99998,
+        }}
+      >
+        🧪 TEST Interview
+      </button>
     </div>
   );
 }
