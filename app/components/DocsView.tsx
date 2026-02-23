@@ -11,7 +11,6 @@ const WB_FEB19_BUILD_DAY      = "https://robert-storage.tor1.digitaloceanspaces.
 const WB_FEB20_PLANNING       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899713000.jpg";
 const WB_FEB23_CRITICAL       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899758000.jpg";
 const CONV_FEB20_MEETING      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899995000.jpg";
-const CONV_FEB23_SESSION      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771900015000.jpg";
 const INTERVIEW_MODE_DEV      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771915932000.jpg";
 
 type Section = "overview" | "today" | "feb19" | "feb20" | "feb23" | "architecture" | "orbiter" | "conversations" | "decisions" | "skill" | "resources";
@@ -761,18 +760,6 @@ function Feb23BuildSection({ onImageClick }: { onImageClick: (url: string) => vo
             Branch pushed to GitHub: <code style={{ color: "#818cf8" }}>feature/complete-checklist-feb23</code>
           </div>
         </div>
-      </div>
-
-      {/* Conversation Visualization */}
-      <div style={{ marginBottom: "32px" }}>
-        <SubHeader title="Work Session with Mark" />
-        <WhiteboardCard
-          url={CONV_FEB23_SESSION}
-          title="Feb 23 Critical Implementation Session - Mark & Robert"
-          caption="Click to enlarge — Two-person video call work session completing 38 checklist items"
-          onClick={() => onImageClick(CONV_FEB23_SESSION)}
-          fullWidth
-        />
       </div>
 
       {/* Interview Mode Development - Evening Session */}
