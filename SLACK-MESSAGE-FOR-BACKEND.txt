@@ -1,0 +1,47 @@
+Hey team 👋
+
+Inline interview mode is ready on the frontend. Need backend support to make it work for Thursday demo.
+
+**What's Built (Frontend):**
+✅ InlineInterviewCard component - conversational, context-aware, NO blocking modals
+✅ 4-stage flow: identify person → clarify outcome → constraints → confirm
+✅ Smart examples that change based on person's role and outcome
+
+**What Backend Needs (2-3h work):**
+1. Detect exploratory intent ("I want to help someone")
+2. Return `interview_card` type instead of text
+3. Generate context-aware examples (CEO → investor examples, Engineer → job examples)
+4. Track state through 4 stages
+
+**Example Response:**
+```json
+{
+  "type": "interview_card",
+  "stage": "clarify_outcome",
+  "question": "What outcome for Mark Pederson?",
+  "examples": [
+    "Connect with potential investors",
+    "Find co-founder or CTO",
+    "Intro to advisors in their space"
+  ],
+  "helpText": "Mark is a CEO. What would help most?",
+  "context": {
+    "personName": "Mark Pederson",
+    "personId": 1,
+    "personTitle": "CEO at Orbiter"
+  }
+}
+```
+
+**Full docs:** 
+• BACKEND-TEAM-MESSAGE.md (8KB - quick overview)
+• BACKEND-INTERVIEW-INTEGRATION.md (14KB - comprehensive guide)
+
+**Repo:** https://github.com/roboulos/orbiter-copilot-demo
+**Commit:** 46e7168
+
+Frontend is 100% ready. Just need backend to return the structured JSON.
+
+LMK if you have questions or want to pair on the implementation.
+
+— Robert
