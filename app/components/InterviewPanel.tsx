@@ -207,12 +207,16 @@ export function InterviewPanel({
         {state.stage === "identify_person" && showPersonPicker && (
           <div style={{ marginBottom: "20px" }}>
             <PersonPicker
+              selectedPerson={null}
               onSelect={(person) => {
                 onPersonSelect(
                   person.master_person_id,
                   person.master_person?.name || person.full_name
                 );
                 setShowPersonPicker(false);
+              }}
+              onClear={() => {
+                // No-op in interview mode
               }}
             />
           </div>

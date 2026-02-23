@@ -140,6 +140,80 @@ function CopilotModal({
   
   // Interview flow hook
   const interview = useInterviewFlow();
+  
+  // Wrap processMessage to intercept for interview mode
+  const processMessageWithInterview = useCallback(
+    async (args: { threadId: string; messages: Array<{ role: string; message?: unknown }>; abortController: AbortController }) => {
+      const lastMessage = args.messages[args.messages.length - 1];
+      const prompt = typeof lastMessage?.message === "string"
+        ? lastMessage.message
+        : String(lastMessage?.message ?? "");
+      
+      // Interview Mode: Check if we should route through interview flow
+      if (interview.state.active) {
+        // Already in interview - route message through interview flow
+        const action = interview.processInput(
+          prompt,
+          interview.state.personId,
+          interview.state.personName
+        );
+        
+        // Handle interview actions
+        if (action.type === "show_confirmation" || action.type === "dispatch") {
+          // Move to dispatch confirmation
+          setDispatchDescription(action.summary || generateDispatchSummary({
+            personName: interview.state.personName!,
+            outcome: interview.state.outcome!,
+            constraints: interview.state.constraints,
+          }));
+          setCurrentDispatchData({
+            personId: interview.state.personId,
+            goal: interview.state.outcome,
+            context: interview.state.constraints?.join(", "),
+          });
+          setShowDispatchModal(true);
+          interview.reset();
+        }
+        
+        // Don't send to backend - interview handles everything
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.close();
+            }
+          })
+        );
+      }
+      
+      // Not in interview - check if prompt should trigger interview mode
+      const intent = classifyIntent(prompt);
+      
+      // Trigger interview for partial or exploratory intents
+      if (intent.type === "exploratory" || intent.type === "partial") {
+        // Start interview flow
+        interview.processInput(
+          prompt,
+          selectedPerson?.master_person?.id || selectedPerson?.master_person_id,
+          selectedPerson?.master_person?.name || selectedPerson?.full_name
+        );
+        
+        // Interview started - don't send to backend yet
+        // The InterviewPanel will handle the user interaction
+        // Return empty streaming response
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.close();
+            }
+          })
+        );
+      }
+      
+      // Normal flow - pass through to original processMessage
+      return processMessage(args);
+    },
+    [interview, selectedPerson, processMessage]
+  );
 
   useEffect(() => {
     if (pendingPrompt) {
@@ -427,7 +501,7 @@ function CopilotModal({
                 }}>
                   <CrayonChat
                     type="standalone"
-                    processMessage={processMessage}
+                    processMessage={processMessageWithInterview}
                     agentName="Orbiter Copilot"
                     responseTemplates={templates}
                     // theme={orbiterTheme} // Custom theme via CSS instead
@@ -1039,32 +1113,7 @@ export default function Home() {
         ? lastMessage.message
         : String(lastMessage?.message ?? "");
 
-      // Interview Mode Interception: Check if we should start or continue interview
-      if (!interview.state.active) {
-        // Not in interview - check if prompt should trigger interview mode
-        const intent = classifyIntent(prompt);
-        
-        // Trigger interview for partial or exploratory intents
-        if (intent.type === "exploratory" || intent.type === "partial") {
-          // Start interview flow
-          const action = interview.processInput(
-            prompt,
-            masterPersonIdRef.current || undefined,
-            selectedPerson?.master_person?.name || selectedPerson?.full_name
-          );
-          
-          // Interview started - don't send to backend yet
-          // The InterviewPanel will handle the user interaction
-          // Return empty streaming response
-          return new Response(
-            new ReadableStream({
-              start(controller) {
-                controller.close();
-              }
-            })
-          );
-        }
-      }
+      // Interview mode handling moved to CopilotModal's processMessageWithInterview wrapper
 
       const history = messages
         .slice(0, -1)
