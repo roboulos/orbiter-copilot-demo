@@ -406,12 +406,10 @@ function StatPill({ label, value }: { label: string; value: string }) {
 
 // ─── Quick action card ────────────────────────────────────────────────────────
 function QuickAction({
-  emoji,
   title,
   subtitle,
   onClick,
 }: {
-  emoji: string;
   title: string;
   subtitle: string;
   onClick: () => void;
@@ -434,7 +432,6 @@ function QuickAction({
         transform: hovered ? "translateY(-1px)" : "translateY(0)",
       }}
     >
-      <div style={{ fontSize: "20px", marginBottom: "8px" }}>{emoji}</div>
       <div style={{ fontSize: "13px", fontWeight: 600, color: "#e8e8f0", marginBottom: "4px" }}>{title}</div>
       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>{subtitle}</div>
     </button>
@@ -545,7 +542,7 @@ function HomeView({ onOpenCopilot }: { onOpenCopilot: (withPerson?: boolean) => 
           (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 24px rgba(79,70,229,0.4)";
         }}
       >
-        Open Copilot ⚡
+        Open Copilot
       </button>
 
       {/* Quick actions */}
@@ -555,19 +552,16 @@ function HomeView({ onOpenCopilot }: { onOpenCopilot: (withPerson?: boolean) => 
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px" }}>
           <QuickAction
-            emoji="⚡"
             title="Leverage Loop"
             subtitle="Activate a relationship right now"
             onClick={() => onOpenCopilot()}
           />
           <QuickAction
-            emoji="🎯"
             title="Outcomes"
             subtitle="Map a goal through your network"
             onClick={() => onOpenCopilot()}
           />
           <QuickAction
-            emoji="✨"
             title="Serendipity"
             subtitle="Discover unexpected connections"
             onClick={() => onOpenCopilot()}
@@ -1062,7 +1056,6 @@ export default function Home() {
               (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(99,102,241,0.35)";
             }}
           >
-            <span style={{ fontSize: "13px" }}>⚡</span>
             Copilot
           </button>
 

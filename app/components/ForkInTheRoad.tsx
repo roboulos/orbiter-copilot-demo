@@ -27,14 +27,12 @@ const btnBase: React.CSSProperties = {
 };
 
 function ForkButton({
-  emoji,
   title,
   subtitle,
   gradient,
   border,
   onClick,
 }: {
-  emoji: string;
   title: string;
   subtitle: string;
   gradient: string;
@@ -59,7 +57,6 @@ function ForkButton({
           : "0 2px 12px rgba(0,0,0,0.15)",
       }}
     >
-      <div style={{ fontSize: "24px", marginBottom: "10px", lineHeight: 1 }}>{emoji}</div>
       <div
         style={{
           fontSize: "15px",
@@ -143,7 +140,6 @@ function SubFork({
         }}
       >
         <ForkButton
-          emoji="💡"
           title={`Suggest what ${person.name} might need`}
           subtitle="Orbiter reads the context and proposes the best options for you"
           gradient="linear-gradient(135deg, rgba(245,158,11,0.1), rgba(234,179,8,0.06))"
@@ -151,7 +147,6 @@ function SubFork({
           onClick={onSuggest}
         />
         <ForkButton
-          emoji="🎯"
           title="I already know what to help with"
           subtitle="Tell Orbiter exactly what you want — it will find the right path through your network"
           gradient="linear-gradient(135deg, rgba(52,211,153,0.08), rgba(16,185,129,0.05))"
@@ -265,7 +260,6 @@ export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
         }}
       >
         <ForkButton
-          emoji="⚡"
           title={`Leverage my Network for ${person.name}`}
           subtitle="Find who in your network to activate — and get the exact message to send today"
           gradient="linear-gradient(135deg, rgba(99,102,241,0.14), rgba(139,92,246,0.08))"
@@ -273,7 +267,6 @@ export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
           onClick={() => onChoice(leveragePrompt)}
         />
         <ForkButton
-          emoji="🎯"
           title={`Help ${person.name} with a specific task`}
           subtitle="Use your network to create real value for them — direct connection or warm intro"
           gradient="linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))"
