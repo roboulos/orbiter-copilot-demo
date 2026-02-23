@@ -76,59 +76,59 @@
 - [ ] Make sure backend structures logic for intelligent decisions
 
 ### Form Builder vs Conversational
-- [ ] **Serve two user paths**:
-  1. **Hardcore**: Minimal typing, "bam yes go" workflow
-  2. **Conversational**: Guided interview, helps refine intent
-- [ ] Allow both paths to coexist
-- [ ] Detect user preference based on behavior
+- [x] **Serve two user paths**:
+  1. **Hardcore**: Minimal typing, "bam yes go" workflow - ForkInTheRoad quick options
+  2. **Conversational**: Guided interview, helps refine intent - CrayonChat flow
+- [x] Allow both paths to coexist - User can choose via ForkInTheRoad
+- [x] Detect user preference based on behavior - ForkInTheRoad adapts based on person selection
 
 ### Results Display (SEPARATE FROM COPILOT)
-- [ ] **Never show agent results in copilot**
-- [ ] Results populate in **beautiful separate UI**
+- [x] **Never show agent results in copilot** - Dispatch modal separates concerns
+- [ ] Results populate in **beautiful separate UI** - OutcomesView exists, needs polish
   - Fold-down panels
   - Rich context
   - Visual presentation
-- [ ] Copilot is for DEFINING what to dispatch
-- [ ] Results are for REVIEWING suggestions
+- [x] Copilot is for DEFINING what to dispatch - Modal confirms before dispatch
+- [ ] Results are for REVIEWING suggestions - Needs OutcomesView integration
 
 ---
 
 ## 🔵 LONG-RUNNING PROCESSES
 
 ### Waiting Room / Status UI
-- [ ] Create **"waiting room"** for dispatched items
-- [ ] Show that process is running on machine
-- [ ] Provide **observability** into agent progress:
+- [x] Create **"waiting room"** for dispatched items - WaitingRoom component built
+- [x] Show that process is running on machine
+- [x] Provide **observability** into agent progress:
   - What step it's on
   - How long so far
   - Estimated time remaining (if possible)
-- [ ] Handle 2-5+ minute processes gracefully
-- [ ] User can leave and come back
-- [ ] Notification when complete
+- [x] Handle 2-5+ minute processes gracefully
+- [x] User can leave and come back
+- [ ] Notification when complete - Needs integration
 
 ### Status Indicators
-- [ ] Show when agent work is happening (but don't show "sausage being made")
-- [ ] Premium, high-end loading states
-- [ ] Clear "this is working" feedback
-- [ ] Avoid generic spinners/dots
+- [x] Show when agent work is happening (but don't show "sausage being made") - WaitingRoom hides internals
+- [x] Premium, high-end loading states - Glowy orb loading
+- [x] Clear "this is working" feedback - Status badges + progress
+- [x] Avoid generic spinners/dots - Custom orb animations
 
 ---
 
 ## 🟣 VISUAL & POLISH
 
 ### Premium Design Direction
-- [ ] **"Wizard of Oz"** - hide the wires, deliver magic
-- [ ] **High-end professional** aesthetic
-- [ ] **Sexy, glowy** visual language
-- [ ] No generic bouncing dots
-- [ ] Smooth animations
-- [ ] Rich micro-interactions
+- [x] **"Wizard of Oz"** - hide the wires, deliver magic - WaitingRoom + dispatch flow
+- [x] **High-end professional** aesthetic - Glassmorphism, gradients throughout
+- [x] **Sexy, glowy** visual language - Orb animations, glow effects, shadows
+- [x] No generic bouncing dots - Custom glowy orb
+- [x] Smooth animations - Pulse, fade, slide animations throughout
+- [x] Rich micro-interactions - Hover states, transforms, shadow changes
 
 ### Specific Visual Improvements
-- [ ] Better quality for all UI elements
-- [ ] Improve network analysis display
-- [ ] Polish modal/dialog presentations
-- [ ] Consistent design system
+- [x] Better quality for all UI elements - Consistent padding, borders, shadows
+- [ ] Improve network analysis display - Needs NetworkGraph component work
+- [x] Polish modal/dialog presentations - DispatchConfirmationModal is polished
+- [x] Consistent design system - Color palette, spacing, typography unified
 
 ---
 
