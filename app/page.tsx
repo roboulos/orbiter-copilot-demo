@@ -278,6 +278,44 @@ function CopilotModal({
             />
           </div>
 
+          {/* Dispatch button */}
+          <button
+            onClick={() => {
+              // TODO: Implement dispatch logic with beautified description
+              console.log("Dispatch clicked");
+            }}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              border: "1px solid rgba(99,102,241,0.3)",
+              color: "white",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexShrink: 0,
+              fontFamily: "inherit",
+              transition: "all 0.2s ease",
+              boxShadow: "0 2px 12px rgba(99,102,241,0.4)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.6)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(99,102,241,0.4)";
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M2 8L14 2L8 14L6 9L2 8Z" fill="currentColor" />
+            </svg>
+            Dispatch
+          </button>
+
           {/* Close button */}
           <button
             onClick={onClose}

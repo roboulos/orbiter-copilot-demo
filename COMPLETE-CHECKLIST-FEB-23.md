@@ -14,7 +14,7 @@
 - [ ] **Change send icon** from email icon to up arrow (like Claude)
 - [ ] **Add dispatch button** in upper right corner of copilot
 - [x] **Remove ALL remaining emojis** from interface
-- [ ] **Replace loading dots** with premium "glowy orb" or animated orb (high-end professional)
+- [x] **Replace loading dots** with premium "glowy orb" or animated orb (high-end professional)
 
 ### Dispatch Flow
 - [ ] When user dispatches, **show beautified LLM description** of leverage loop
