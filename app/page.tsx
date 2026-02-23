@@ -38,6 +38,8 @@ import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
+import { classifyIntent, detectSkipIntent, getNextQuestion, generateDispatchSummary, type IntentAnalysis } from "./lib/intent-classifier";
+import { useInterviewFlow } from "./hooks/useInterviewFlow";
 // import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
@@ -134,6 +136,9 @@ function CopilotModal({
     goal?: string;
     context?: string;
   } | null>(null);
+  
+  // Interview flow hook
+  const interview = useInterviewFlow();
 
   useEffect(() => {
     if (pendingPrompt) {
@@ -153,8 +158,12 @@ function CopilotModal({
   const defaultStarters = selectedPerson
     ? [
         {
-          displayText: `Leverage Network for ${personName}`,
-          prompt: `Leverage my network for ${personName}${personTitle ? ` (${personTitle})` : ""}. What's my single best move right now to activate this relationship? Be direct and concise — tell me what to do and draft the message.`,
+          displayText: `Explore ways to help ${personName}`,
+          prompt: `I want to explore ways to help ${personName}. Guide me through some options.`,
+        },
+        {
+          displayText: `What's my best move with ${personName}?`,
+          prompt: `What's my single best move right now to activate my relationship with ${personName}? Be direct — tell me what to do.`,
         },
         {
           displayText: `Help ${personName} with something specific`,
@@ -167,16 +176,16 @@ function CopilotModal({
       ]
     : [
         {
-          displayText: "I want to buy a house in Costa Rica",
-          prompt: "I want to buy a house in Costa Rica for relocation. Help me find connections to realtors and expats who know the area.",
+          displayText: "Help someone in my network",
+          prompt: "I want to help someone in my network. Ask me who and what they need.",
         },
         {
-          displayText: "Find investors for my startup",
-          prompt: "I'm raising a seed round for a B2B SaaS company. Find warm introductions to seed-stage investors in my network.",
+          displayText: "Explore my network for opportunities",
+          prompt: "Guide me through exploring my network to find valuable connections.",
         },
         {
-          displayText: "Help someone I know with...",
-          prompt: "I want to help someone in my network with something specific. Ask me who and what they need.",
+          displayText: "Find the right person for...",
+          prompt: "I'm looking for someone specific in my network. Help me find them.",
         },
       ];
 
