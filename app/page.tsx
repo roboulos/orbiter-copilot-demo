@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CrayonChat } from "@crayonai/react-ui";
-import { OutcomeCard } from "./components/OutcomeCard";
+import { OutcomeCardEnhanced } from "./components/OutcomeCard";
 import { LeverageLoopCard } from "./components/LeverageLoopCard";
 import { ContactCard } from "./components/ContactCard";
 import { SerendipityCard } from "./components/SerendipityCard";
@@ -41,7 +41,7 @@ import { useForceFullWidth } from "./hooks/useForceFullWidth";
 import "@crayonai/react-ui/styles/index.css";
 
 const templates = [
-  { name: "outcome_card",       Component: OutcomeCard       },
+  { name: "outcome_card",       Component: OutcomeCardEnhanced       },
   { name: "leverage_loop_card", Component: LeverageLoopCard  },
   { name: "contact_card",       Component: ContactCard       },
   { name: "serendipity_card",   Component: SerendipityCard   },
