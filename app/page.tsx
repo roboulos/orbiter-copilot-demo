@@ -35,6 +35,7 @@ import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
 import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
+import { InterviewPanel } from "./components/InterviewPanel";
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
@@ -307,17 +308,16 @@ function CopilotModal({
           {/* Dispatch button */}
           <button
             onClick={() => {
-              // Generate beautified description
               if (selectedPerson) {
-                const desc = generateDispatchDescription({
-                  personName: personName || "this person",
-                  personTitle,
-                  personCompany,
-                  goal: "activate this relationship",
-                  context: "find the best connection in my network",
-                });
-                setDispatchDescription(desc);
-                setShowDispatchModal(true);
+                // Person selected - start interview to clarify outcome
+                interview.processInput(
+                  `I want to help ${personName}. What should I do?`,
+                  selectedPerson.master_person_id,
+                  personName
+                );
+              } else {
+                // No person selected - start from person picker
+                interview.processInput("I want to help someone.", undefined, undefined);
               }
             }}
             style={{
@@ -523,6 +523,107 @@ function CopilotModal({
             console.log("Process cancelled by user");
             setShowWaitingRoom(false);
             setProcessId(null);
+          }}
+        />
+      )}
+
+      {/* Interview Panel */}
+      {interview.state.active && (
+        <InterviewPanel
+          state={interview.state}
+          question={
+            interview.state.stage === "identify_person"
+              ? "Who would you like to help?"
+              : interview.state.stage === "clarify_outcome"
+              ? `What specific outcome are you looking for${interview.state.personName ? ` with ${interview.state.personName}` : ""}?`
+              : interview.state.stage === "extract_context"
+              ? "Any specific constraints or preferences I should know about?"
+              : "Let me confirm what I understand..."
+          }
+          examples={
+            interview.state.stage === "clarify_outcome"
+              ? [
+                  "Help them find a job at a specific company",
+                  "Connect them with potential investors",
+                  "Introduce them to industry experts",
+                  "Find partnership opportunities",
+                ]
+              : interview.state.stage === "extract_context"
+              ? [
+                  "Geographic location preference",
+                  "Industry or sector focus",
+                  "Company size or stage",
+                  "Specific skills or background",
+                ]
+              : undefined
+          }
+          helpText={
+            interview.state.stage === "identify_person"
+              ? "I'll search your network and show you people you might want to help."
+              : interview.state.stage === "clarify_outcome"
+              ? "Think about what would be most valuable for them right now."
+              : interview.state.stage === "extract_context"
+              ? "This is optional but helps me find better matches."
+              : undefined
+          }
+          onPersonSelect={(personId, personName) => {
+            interview.setPerson(personId, personName);
+          }}
+          onAnswer={(answer) => {
+            const action = interview.processInput(answer, interview.state.personId, interview.state.personName);
+            
+            if (action.type === "show_confirmation") {
+              // Move to dispatch confirmation
+              setDispatchDescription(action.summary || "");
+              setCurrentDispatchData({
+                personId: interview.state.personId,
+                goal: interview.state.outcome || answer,
+                context: interview.state.constraints?.join(", "),
+              });
+              setShowDispatchModal(true);
+              interview.reset();
+            } else if (action.type === "dispatch") {
+              // Direct dispatch (skip mode)
+              setDispatchDescription(
+                generateDispatchSummary({
+                  personName: interview.state.personName!,
+                  outcome: interview.state.outcome!,
+                  constraints: interview.state.constraints,
+                })
+              );
+              setCurrentDispatchData({
+                personId: interview.state.personId,
+                goal: interview.state.outcome,
+                context: interview.state.constraints?.join(", "),
+              });
+              setShowDispatchModal(true);
+              interview.reset();
+            }
+          }}
+          onSkip={() => {
+            // Skip to confirmation with current data
+            if (interview.state.personName && interview.state.outcome) {
+              setDispatchDescription(
+                generateDispatchSummary({
+                  personName: interview.state.personName,
+                  outcome: interview.state.outcome,
+                  constraints: interview.state.constraints,
+                })
+              );
+              setCurrentDispatchData({
+                personId: interview.state.personId,
+                goal: interview.state.outcome,
+                context: interview.state.constraints?.join(", "),
+              });
+              setShowDispatchModal(true);
+              interview.reset();
+            } else {
+              // Not enough info, close interview
+              interview.reset();
+            }
+          }}
+          onReset={() => {
+            interview.reset();
           }}
         />
       )}
@@ -937,6 +1038,33 @@ export default function Home() {
       const prompt = typeof lastMessage?.message === "string"
         ? lastMessage.message
         : String(lastMessage?.message ?? "");
+
+      // Interview Mode Interception: Check if we should start or continue interview
+      if (!interview.state.active) {
+        // Not in interview - check if prompt should trigger interview mode
+        const intent = classifyIntent(prompt);
+        
+        // Trigger interview for partial or exploratory intents
+        if (intent.type === "exploratory" || intent.type === "partial") {
+          // Start interview flow
+          const action = interview.processInput(
+            prompt,
+            masterPersonIdRef.current || undefined,
+            selectedPerson?.master_person?.name || selectedPerson?.full_name
+          );
+          
+          // Interview started - don't send to backend yet
+          // The InterviewPanel will handle the user interaction
+          // Return empty streaming response
+          return new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.close();
+              }
+            })
+          );
+        }
+      }
 
       const history = messages
         .slice(0, -1)
