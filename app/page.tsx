@@ -187,15 +187,19 @@ function CopilotModal({
       
       // Not in interview - check if prompt should trigger interview mode
       const intent = classifyIntent(prompt);
+      console.log('[Interview] Intent classified:', intent);
       
       // Trigger interview for partial or exploratory intents
       if (intent.type === "exploratory" || intent.type === "partial") {
+        console.log('[Interview] Triggering interview mode');
         // Start interview flow
-        interview.processInput(
+        const action = interview.processInput(
           prompt,
           selectedPerson?.master_person?.id || selectedPerson?.master_person_id,
           selectedPerson?.master_person?.name || selectedPerson?.full_name
         );
+        console.log('[Interview] Action returned:', action);
+        console.log('[Interview] State after activation:', interview.state);
         
         // Interview started - don't send to backend yet
         // The InterviewPanel will handle the user interaction
@@ -602,7 +606,11 @@ function CopilotModal({
       )}
 
       {/* Interview Panel */}
-      {interview.state.active && (
+      {(() => {
+        console.log('[Interview] Render check - interview.state.active:', interview.state.active);
+        console.log('[Interview] Full state:', interview.state);
+        return interview.state.active;
+      })() && (
         <InterviewPanel
           state={interview.state}
           question={
