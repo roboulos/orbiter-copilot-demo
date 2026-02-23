@@ -33,8 +33,10 @@ import { BackButton } from "./components/BackButton";
 import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
 import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
+import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
+import { generateMeetingPrep } from "./lib/meeting-prep";
 // import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
@@ -102,6 +104,7 @@ interface CopilotModalProps {
   onChatStart: () => void;
   pendingPrompt: string | null;
   onPendingPromptConsumed: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
 function CopilotModal({
@@ -122,6 +125,13 @@ function CopilotModal({
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchDescription, setDispatchDescription] = useState("");
   const [isDispatching, setIsDispatching] = useState(false);
+  const [processId, setProcessId] = useState<number | null>(null);
+  const [showWaitingRoom, setShowWaitingRoom] = useState(false);
+  const [currentDispatchData, setCurrentDispatchData] = useState<{
+    personId?: number;
+    goal?: string;
+    context?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (pendingPrompt) {
@@ -438,20 +448,73 @@ function CopilotModal({
         onConfirm={async () => {
           setIsDispatching(true);
           try {
-            // TODO: Call actual dispatch API
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Create leverage loop
+            const BASE_URL = process.env.NEXT_PUBLIC_XANO_API_URL || "https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz";
+            
+            const createResponse = await fetch(`${BASE_URL}/leverage-loop`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                master_person_id: currentDispatchData?.personId || selectedPerson?.master_person_id,
+                goal: currentDispatchData?.goal || "Help with network analysis",
+                context: currentDispatchData?.context || dispatchDescription,
+                fast: false,
+              }),
+            });
+            
+            if (!createResponse.ok) throw new Error("Failed to create leverage loop");
+            
+            const { id: loopId, process_id } = await createResponse.json();
+            
+            // Dispatch the loop
+            await fetch(`${BASE_URL}/leverage-loop/${loopId}/dispatch`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ approved: true }),
+            });
+            
+            // Store process ID and show waiting room
+            setProcessId(process_id);
             setShowDispatchModal(false);
             setIsDispatching(false);
-            // Show success toast or redirect
+            setShowWaitingRoom(true);
           } catch (error) {
             console.error("Dispatch failed:", error);
             setIsDispatching(false);
+            alert("Failed to dispatch: " + (error instanceof Error ? error.message : "Unknown error"));
           }
         }}
         description={dispatchDescription}
         personName={personName}
         isDispatching={isDispatching}
       />
+
+      {/* Waiting Room for Process Monitoring */}
+      {showWaitingRoom && processId && (
+        <WaitingRoomConnected
+          processId={processId}
+          title={`Analyzing network for ${personName || "contact"}`}
+          description={dispatchDescription}
+          onComplete={(result) => {
+            console.log("Process complete!", result);
+            setShowWaitingRoom(false);
+            setProcessId(null);
+            // Navigate to Outcomes tab
+            onTabChange?.("outcomes");
+          }}
+          onError={(error) => {
+            console.error("Process failed:", error);
+            alert(`Process failed: ${error}`);
+            setShowWaitingRoom(false);
+            setProcessId(null);
+          }}
+          onCancel={() => {
+            console.log("Process cancelled by user");
+            setShowWaitingRoom(false);
+            setProcessId(null);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -1193,6 +1256,7 @@ export default function Home() {
         onChatStart={handleChatStart}
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
+        onTabChange={setActiveTab}
       />
 
       {/* ─── Confirmation Modal ───────────────────────────── */}
