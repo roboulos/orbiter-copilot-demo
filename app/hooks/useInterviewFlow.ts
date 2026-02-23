@@ -28,12 +28,16 @@ type StateAction =
   | { type: 'SET_PERSON'; personId: number; personName: string };
 
 function interviewReducer(state: InterviewState, action: StateAction): InterviewState {
-  console.log('[interviewReducer] Action:', action.type, 'Current active:', state.active);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('[interviewReducer] ⚡ ACTION RECEIVED:', action.type);
+  console.log('[interviewReducer] 📊 Current state:', { active: state.active, stage: state.stage });
+  console.log('[interviewReducer] 📦 Action payload:', JSON.stringify(action));
   
   switch (action.type) {
     case 'ACTIVATE':
       const newState = { ...state, ...action.payload, active: true };
-      console.log('[interviewReducer] ACTIVATE - New state:', newState);
+      console.log('[interviewReducer] ✅ ACTIVATE - Returning NEW state:', newState);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       return newState;
       
     case 'UPDATE_STAGE':
@@ -141,7 +145,13 @@ export function useInterviewFlow() {
       }
       
       // No person selected, start from beginning
-      console.log('[useInterviewFlow] Activating interview - stage:', analysis.nextStage);
+      console.log('╔═══════════════════════════════════════╗');
+      console.log('║  🚀 STARTING INTERVIEW (No Person)   ║');
+      console.log('╚═══════════════════════════════════════╝');
+      console.log('[useInterviewFlow] Analysis:', analysis);
+      console.log('[useInterviewFlow] Next stage:', analysis.nextStage);
+      console.log('[useInterviewFlow] About to dispatch ACTIVATE...');
+      
       dispatch({
         type: 'ACTIVATE',
         payload: {
@@ -149,7 +159,8 @@ export function useInterviewFlow() {
           intentAnalysis: analysis,
         }
       });
-      console.log('[useInterviewFlow] dispatch(ACTIVATE) called');
+      
+      console.log('[useInterviewFlow] ✓ dispatch(ACTIVATE) called!');
       
       if (analysis.nextStage === "identify_person") {
         return {
