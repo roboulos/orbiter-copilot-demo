@@ -404,34 +404,24 @@ function CopilotModal({
 
           {/* Dispatch button */}
           <button
-            onClick={() => {
-              alert('[DEBUG] Dispatch clicked! Current interview.state.active: ' + interview.state.active);
-              console.log('[Dispatch Button] Clicked! Person:', selectedPerson ? personName : 'none');
-              console.log('[Dispatch Button] Before - interview.state.active:', interview.state.active);
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('[Dispatch Button] ⚡ Clicked!');
               
               if (selectedPerson) {
                 // Person selected - start interview to clarify outcome
-                const result = interview.processInput(
+                console.log('[Dispatch Button] Starting interview with person:', personName);
+                interview.processInput(
                   `I want to help ${personName}. What should I do?`,
                   selectedPerson.master_person_id,
                   personName
                 );
-                console.log('[Dispatch Button] Interview started (with person):', result);
-                alert('[DEBUG] After processInput - result.type: ' + result.type);
               } else {
                 // No person selected - start from person picker
-                const result = interview.processInput("I want to help someone.", undefined, undefined);
-                console.log('[Dispatch Button] Interview started (no person):', result);
-                alert('[DEBUG] After processInput - result.type: ' + result.type + ', active: ' + interview.state.active);
+                console.log('[Dispatch Button] Starting interview without person');
+                interview.processInput("I want to help someone.", undefined, undefined);
               }
-              
-              console.log('[Dispatch Button] After - interview.state.active:', interview.state.active);
-              console.log('[Dispatch Button] Full state:', interview.state);
-              
-              // Force a small delay then check again
-              setTimeout(() => {
-                alert('[DEBUG] After 100ms - interview.state.active: ' + interview.state.active);
-              }, 100);
             }}
             style={{
               padding: "7px 14px",
@@ -643,22 +633,6 @@ function CopilotModal({
       )}
 
       {/* Interview Panel - Rendered outside modal, overlays everything when active */}
-      {/* Debug indicator */}
-      <div style={{
-        position: 'fixed',
-        bottom: 20,
-        right: 20,
-        background: interview.state.active ? 'green' : 'red',
-        color: 'white',
-        padding: '10px 20px',
-        borderRadius: '8px',
-        zIndex: 99999,
-        fontSize: '14px',
-        fontWeight: 'bold',
-      }}>
-        Interview: {interview.state.active ? 'ACTIVE' : 'INACTIVE'} | Stage: {interview.state.stage}
-      </div>
-      
       {interview.state.active && (
         <InterviewPanel
           state={interview.state}
@@ -1582,35 +1556,6 @@ export default function Home() {
 
       {/* ─── Confetti ────────────────────────────────────── */}
       <Confetti active={showConfetti} />
-      
-      {/* ─── TEST BUTTON: Direct Interview Trigger ─────────*/}
-      <button
-        onClick={() => {
-          console.log('[TEST BUTTON] Clicked! Activating interview...');
-          alert('[TEST] About to activate interview. Current state: ' + interview.state.active);
-          interview.processInput("I want to help someone.");
-          setTimeout(() => {
-            alert('[TEST] After processInput. State is now: ' + interview.state.active);
-          }, 100);
-        }}
-        style={{
-          position: 'fixed',
-          bottom: '80px',
-          right: '20px',
-          padding: '15px 25px',
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          border: 'none',
-          borderRadius: '12px',
-          color: 'white',
-          fontSize: '16px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
-          zIndex: 99998,
-        }}
-      >
-        🧪 TEST Interview
-      </button>
     </div>
   );
 }
