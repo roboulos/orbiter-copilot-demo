@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useReducer, useCallback } from "react";
 import { classifyIntent, detectSkipIntent, getNextQuestion, generateDispatchSummary, type IntentAnalysis } from "../lib/intent-classifier";
 
 export type InterviewStage = "identify_person" | "clarify_outcome" | "extract_context" | "confirm";
@@ -21,11 +21,52 @@ export interface InterviewAction {
   summary?: string;
 }
 
+type StateAction = 
+  | { type: 'ACTIVATE'; payload: Partial<InterviewState> }
+  | { type: 'UPDATE_STAGE'; payload: Partial<InterviewState> }
+  | { type: 'RESET' }
+  | { type: 'SET_PERSON'; personId: number; personName: string };
+
+function interviewReducer(state: InterviewState, action: StateAction): InterviewState {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('[interviewReducer] ⚡ ACTION RECEIVED:', action.type);
+  console.log('[interviewReducer] 📊 Current state:', { active: state.active, stage: state.stage });
+  console.log('[interviewReducer] 📦 Action payload:', JSON.stringify(action));
+  
+  switch (action.type) {
+    case 'ACTIVATE':
+      const newState = { ...state, ...action.payload, active: true };
+      console.log('[interviewReducer] ✅ ACTIVATE - Returning NEW state:', newState);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      return newState;
+      
+    case 'UPDATE_STAGE':
+      return { ...state, ...action.payload };
+      
+    case 'SET_PERSON':
+      return {
+        ...state,
+        personId: action.personId,
+        personName: action.personName,
+        stage: state.stage === 'identify_person' ? 'clarify_outcome' : state.stage,
+      };
+      
+    case 'RESET':
+      return {
+        active: false,
+        stage: "identify_person",
+      };
+      
+    default:
+      return state;
+  }
+}
+
 /**
  * Hook to manage interview-first copilot flow
  */
 export function useInterviewFlow() {
-  const [state, setState] = useState<InterviewState>({
+  const [state, dispatch] = useReducer(interviewReducer, {
     active: false,
     stage: "identify_person",
   });
@@ -48,7 +89,7 @@ export function useInterviewFlow() {
           constraints: state.constraints,
         });
         
-        setState(prev => ({ ...prev, stage: "confirm" }));
+        dispatch({ type: 'UPDATE_STAGE', payload: { stage: "confirm" } });
         
         return {
           type: "show_confirmation",
@@ -66,12 +107,14 @@ export function useInterviewFlow() {
       
       if (hasPerson) {
         // Person selected, update state
-        setState({
-          active: true,
-          stage: "clarify_outcome",
-          personId: selectedPersonId,
-          personName: selectedPersonName,
-          intentAnalysis: analysis,
+        dispatch({
+          type: 'ACTIVATE',
+          payload: {
+            stage: "clarify_outcome",
+            personId: selectedPersonId,
+            personName: selectedPersonName,
+            intentAnalysis: analysis,
+          }
         });
         
         // If analysis shows complete intent, skip interview
@@ -82,7 +125,7 @@ export function useInterviewFlow() {
             constraints: analysis.contextMentioned,
           });
           
-          setState(prev => ({ ...prev, stage: "confirm", outcome: input }));
+          dispatch({ type: 'UPDATE_STAGE', payload: { stage: "confirm", outcome: input } });
           
           return {
             type: "show_confirmation",
@@ -102,11 +145,22 @@ export function useInterviewFlow() {
       }
       
       // No person selected, start from beginning
-      setState({
-        active: true,
-        stage: analysis.nextStage,
-        intentAnalysis: analysis,
+      console.log('╔═══════════════════════════════════════╗');
+      console.log('║  🚀 STARTING INTERVIEW (No Person)   ║');
+      console.log('╚═══════════════════════════════════════╝');
+      console.log('[useInterviewFlow] Analysis:', analysis);
+      console.log('[useInterviewFlow] Next stage:', analysis.nextStage);
+      console.log('[useInterviewFlow] About to dispatch ACTIVATE...');
+      
+      dispatch({
+        type: 'ACTIVATE',
+        payload: {
+          stage: analysis.nextStage,
+          intentAnalysis: analysis,
+        }
       });
+      
+      console.log('[useInterviewFlow] ✓ dispatch(ACTIVATE) called!');
       
       if (analysis.nextStage === "identify_person") {
         return {
@@ -129,12 +183,14 @@ export function useInterviewFlow() {
       case "identify_person":
         if (selectedPersonId && selectedPersonName) {
           // Person selected
-          setState(prev => ({
-            ...prev,
-            stage: "clarify_outcome",
-            personId: selectedPersonId,
-            personName: selectedPersonName,
-          }));
+          dispatch({
+            type: 'UPDATE_STAGE',
+            payload: {
+              stage: "clarify_outcome",
+              personId: selectedPersonId,
+              personName: selectedPersonName,
+            }
+          });
           
           const next = getNextQuestion("clarify_outcome", { personName: selectedPersonName });
           return {
@@ -152,11 +208,13 @@ export function useInterviewFlow() {
 
       case "clarify_outcome":
         // User provided outcome
-        setState(prev => ({
-          ...prev,
-          stage: "extract_context",
-          outcome: input,
-        }));
+        dispatch({
+          type: 'UPDATE_STAGE',
+          payload: {
+            stage: "extract_context",
+            outcome: input,
+          }
+        });
         
         // Check if input has enough detail to skip context extraction
         if (input.length > 50 || input.split(" ").length > 8) {
@@ -166,7 +224,7 @@ export function useInterviewFlow() {
             outcome: input,
           });
           
-          setState(prev => ({ ...prev, stage: "confirm" }));
+          dispatch({ type: 'UPDATE_STAGE', payload: { stage: "confirm" } });
           
           return {
             type: "show_confirmation",
@@ -187,11 +245,13 @@ export function useInterviewFlow() {
         // User provided constraints (optional)
         const constraints = input.trim() ? [input] : undefined;
         
-        setState(prev => ({
-          ...prev,
-          stage: "confirm",
-          constraints,
-        }));
+        dispatch({
+          type: 'UPDATE_STAGE',
+          payload: {
+            stage: "confirm",
+            constraints,
+          }
+        });
         
         const summary = generateDispatchSummary({
           personName: state.personName!,
@@ -222,29 +282,24 @@ export function useInterviewFlow() {
    * Reset interview state
    */
   const reset = useCallback(() => {
-    setState({
-      active: false,
-      stage: "identify_person",
-    });
+    console.log('[useInterviewFlow] reset() called');
+    dispatch({ type: 'RESET' });
   }, []);
 
   /**
    * Update person in interview state
    */
   const setPerson = useCallback((personId: number, personName: string) => {
-    setState(prev => ({
-      ...prev,
-      personId,
-      personName,
-      stage: prev.stage === "identify_person" ? "clarify_outcome" : prev.stage,
-    }));
+    console.log('[useInterviewFlow] setPerson() called:', personId, personName);
+    dispatch({ type: 'SET_PERSON', personId, personName });
   }, []);
 
   /**
    * Skip to specific stage (for power users)
    */
   const skipToStage = useCallback((stage: InterviewStage) => {
-    setState(prev => ({ ...prev, stage }));
+    console.log('[useInterviewFlow] skipToStage() called:', stage);
+    dispatch({ type: 'UPDATE_STAGE', payload: { stage } });
   }, []);
 
   return {
