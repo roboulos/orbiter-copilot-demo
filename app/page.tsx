@@ -32,7 +32,9 @@ import { ProgressTracker } from "./components/ProgressTracker";
 import { BackButton } from "./components/BackButton";
 import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
+import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
 import { chat, dispatch } from "./lib/xano";
+import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 // import { orbiterTheme } from "./lib/theme"; // Using CSS-based theming instead
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
@@ -117,6 +119,9 @@ function CopilotModal({
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [dispatchDescription, setDispatchDescription] = useState("");
+  const [isDispatching, setIsDispatching] = useState(false);
 
   useEffect(() => {
     if (pendingPrompt) {
@@ -281,8 +286,18 @@ function CopilotModal({
           {/* Dispatch button */}
           <button
             onClick={() => {
-              // TODO: Implement dispatch logic with beautified description
-              console.log("Dispatch clicked");
+              // Generate beautified description
+              if (selectedPerson) {
+                const desc = generateDispatchDescription({
+                  personName: personName || "this person",
+                  personTitle,
+                  personCompany,
+                  goal: "activate this relationship",
+                  context: "find the best connection in my network",
+                });
+                setDispatchDescription(desc);
+                setShowDispatchModal(true);
+              }
             }}
             style={{
               padding: "7px 14px",
@@ -415,6 +430,28 @@ function CopilotModal({
           </div>
         </div>
       </div>
+
+      {/* Dispatch Confirmation Modal */}
+      <DispatchConfirmationModal
+        open={showDispatchModal}
+        onClose={() => setShowDispatchModal(false)}
+        onConfirm={async () => {
+          setIsDispatching(true);
+          try {
+            // TODO: Call actual dispatch API
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setShowDispatchModal(false);
+            setIsDispatching(false);
+            // Show success toast or redirect
+          } catch (error) {
+            console.error("Dispatch failed:", error);
+            setIsDispatching(false);
+          }
+        }}
+        description={dispatchDescription}
+        personName={personName}
+        isDispatching={isDispatching}
+      />
     </>
   );
 }
