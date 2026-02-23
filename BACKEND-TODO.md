@@ -17,18 +17,32 @@ This document tracks backend endpoints and integration work needed to complete t
 
 ## 🟡 Needed for Checklist Completion
 
-### Calendar Integration (Critical Items)
+### Calendar Integration (Critical Items) ✅ Frontend Ready + Mocks
+**Status Update (Feb 23):** Frontend complete with mock service. Robert can test UI now.  
+**See:** `CALENDAR-BUG-FIX.md` and `FOR-MARK-TEAM-CALENDAR.md` for details.
+
 - [ ] **POST `/calendar/connect`** - Connect Robert's email/calendar
   - Params: `{ email: string, provider: "google" | "outlook" }`
   - Returns: `{ success: boolean, calendar_id: number }`
+  - ✅ Frontend ready, mock available
+  
+- [ ] **GET `/calendar/status`** - Check if calendar connected
+  - Returns: `{ connected: boolean, email?: string, provider?: string }`
+  - ✅ Frontend ready, mock available
   
 - [ ] **GET `/calendar/events`** - Get upcoming events
   - Params: `{ days_ahead?: number, limit?: number }`
   - Returns: `{ events: Array<{ id, title, start_time, attendees[], master_person_ids[] }> }`
+  - ✅ Frontend ready, mock available (4 sample events)
 
-- [ ] **POST `/meeting-prep/generate`** - Generate meeting prep for person
+- [ ] **POST `/calendar/disconnect`** - Disconnect calendar
+  - Returns: `{ success: boolean }`
+  - ✅ Frontend ready, mock available
+
+- [ ] **POST `/meeting-prep`** - Generate meeting prep for person
   - Params: `{ master_person_id: number, meeting_id?: number, context?: string }`
   - Returns meeting_prep_card template props
+  - Frontend uses `/meeting-prep` endpoint (exists in `app/lib/meeting-prep.ts`)
 
 ### Dispatch Flow Enhancement
 - [ ] **POST `/dispatch/describe`** - Generate beautified dispatch description
