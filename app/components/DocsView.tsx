@@ -10,6 +10,8 @@ const WB_PRODUCT_DEMO         = "https://robert-storage.tor1.digitaloceanspaces.
 const WB_FEB19_BUILD_DAY      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771597446000.jpg";
 const WB_FEB20_PLANNING       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899713000.jpg";
 const WB_FEB23_CRITICAL       = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899758000.jpg";
+const CONV_FEB20_MEETING      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771899995000.jpg";
+const CONV_FEB23_SESSION      = "https://robert-storage.tor1.digitaloceanspaces.com/images/generated/img-1771900015000.jpg";
 
 type Section = "overview" | "today" | "feb19" | "feb20" | "feb23" | "architecture" | "orbiter" | "conversations" | "decisions" | "skill" | "resources";
 
@@ -554,6 +556,18 @@ function Feb20PlanningSection({ onImageClick }: { onImageClick: (url: string) =>
         ))}
       </div>
 
+      {/* Conversation Visualization */}
+      <div style={{ marginBottom: "32px" }}>
+        <SubHeader title="Meeting Participants & Discussion" />
+        <WhiteboardCard
+          url={CONV_FEB20_MEETING}
+          title="Feb 20 Planning Meeting - Mark, Jason, Josh & Robert"
+          caption="Click to enlarge — Four-way strategic planning discussion"
+          onClick={() => onImageClick(CONV_FEB20_MEETING)}
+          fullWidth
+        />
+      </div>
+
       <CalloutBox icon="🎬" title="Josh & Jason's Work Style">
         Film directors/producers/editors background. Branched spider web brain. React immediately to changes.
         Rapid iteration expected. Will generate ideas spontaneously on calls. Every meeting brings new requirements.
@@ -746,6 +760,18 @@ function Feb23BuildSection({ onImageClick }: { onImageClick: (url: string) => vo
             Branch pushed to GitHub: <code style={{ color: "#818cf8" }}>feature/complete-checklist-feb23</code>
           </div>
         </div>
+      </div>
+
+      {/* Conversation Visualization */}
+      <div style={{ marginBottom: "32px" }}>
+        <SubHeader title="Work Session with Mark" />
+        <WhiteboardCard
+          url={CONV_FEB23_SESSION}
+          title="Feb 23 Critical Implementation Session - Mark & Robert"
+          caption="Click to enlarge — Two-person video call work session completing 38 checklist items"
+          onClick={() => onImageClick(CONV_FEB23_SESSION)}
+          fullWidth
+        />
       </div>
 
       <CalloutBox icon="🎯" title="What This Means">
