@@ -37,45 +37,104 @@ export function LoadingIndicator() {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "12px",
-        padding: "16px 20px",
-        background: "rgba(99,102,241,0.08)",
-        border: "1px solid rgba(99,102,241,0.2)",
-        borderRadius: "14px",
-        margin: "6px 0",
+        gap: "16px",
+        padding: "18px 22px",
+        background: "rgba(99,102,241,0.06)",
+        border: "1px solid rgba(99,102,241,0.15)",
+        borderRadius: "16px",
+        margin: "8px 0",
         fontFamily: "Inter, sans-serif",
-        maxWidth: "400px",
+        maxWidth: "420px",
       }}
     >
-      {/* Animated dots */}
-      <div style={{ display: "flex", gap: "6px" }}>
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`,
-            }}
-          />
-        ))}
+      {/* Premium glowy orb */}
+      <div style={{ position: "relative", width: "32px", height: "32px", flexShrink: 0 }}>
+        {/* Outer glow ring */}
+        <div
+          style={{
+            position: "absolute",
+            inset: "-8px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)",
+            animation: "pulseGlow 2s ease-in-out infinite",
+          }}
+        />
+        {/* Mid glow ring */}
+        <div
+          style={{
+            position: "absolute",
+            inset: "-4px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(139,92,246,0.5) 0%, transparent 70%)",
+            animation: "pulseGlow 2s ease-in-out 0.3s infinite",
+          }}
+        />
+        {/* Core orb */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+            boxShadow: "0 0 20px rgba(99,102,241,0.6), inset 0 0 10px rgba(255,255,255,0.2)",
+            animation: "pulseOrb 2s ease-in-out infinite",
+          }}
+        />
+        {/* Shine highlight */}
+        <div
+          style={{
+            position: "absolute",
+            top: "6px",
+            left: "8px",
+            width: "12px",
+            height: "12px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%)",
+            animation: "shimmer 2s ease-in-out infinite",
+          }}
+        />
       </div>
 
       {/* Loading text */}
       <div style={{
-        fontSize: "13px",
-        color: "rgba(255,255,255,0.7)",
+        fontSize: "14px",
+        color: "rgba(255,255,255,0.75)",
         fontWeight: 500,
+        letterSpacing: "-0.01em",
       }}>
         {getLoadingMessage()}
       </div>
 
       <style>{`
-        @keyframes bounce {
-          0%, 80%, 100% { transform: translateY(0); opacity: 0.6; }
-          40% { transform: translateY(-10px); opacity: 1; }
+        @keyframes pulseGlow {
+          0%, 100% { 
+            opacity: 0.3; 
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 0.8; 
+            transform: scale(1.15);
+          }
+        }
+
+        @keyframes pulseOrb {
+          0%, 100% { 
+            transform: scale(1);
+            filter: brightness(1);
+          }
+          50% { 
+            transform: scale(1.05);
+            filter: brightness(1.2);
+          }
+        }
+
+        @keyframes shimmer {
+          0%, 100% { 
+            opacity: 0.4; 
+          }
+          50% { 
+            opacity: 0.9; 
+          }
         }
       `}</style>
     </div>
