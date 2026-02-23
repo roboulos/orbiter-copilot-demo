@@ -1011,3 +1011,27 @@ div, section, article, main, aside {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── Send Icon Override (CrayonChat) ───────────────────────────────────── */
+/* Attempt to override send icon with up arrow like Claude */
+[class*="send"] svg path[d*="M22"],
+[class*="Send"] svg path[d*="M22"],
+[class*="submit"] svg path[d*="M22"],
+button[type="submit"] svg path[d*="M22"] {
+  d: path("M12 19V5M5 12l7-7 7 7") !important;
+}
+
+/* Alternative: Hide default send icon and inject up arrow */
+.crayon-composer button[type="submit"] svg,
+[class*="composer"] button[type="submit"] svg {
+  display: none !important;
+}
+
+.crayon-composer button[type="submit"]::before,
+[class*="composer"] button[type="submit"]::before {
+  content: "↑" !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  display: inline-block !important;
+  color: currentColor !important;
+}
