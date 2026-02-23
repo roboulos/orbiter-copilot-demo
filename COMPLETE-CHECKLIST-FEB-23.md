@@ -17,17 +17,17 @@
 - [x] **Replace loading dots** with premium "glowy orb" or animated orb (high-end professional)
 
 ### Dispatch Flow
-- [ ] When user dispatches, **show beautified LLM description** of leverage loop
+- [x] When user dispatches, **show beautified LLM description** of leverage loop
   - Should be rich natural language
   - Format: "Leverage my network to help [Person] with [Goal] because..."
   - Not in copilot, appears in purple modal/separate area
-- [ ] Implement **keyword detection** for dispatch triggers:
+- [x] Implement **keyword detection** for dispatch triggers:
   - "show me"
   - "let's do this"
   - "execute"
   - "go"
   - Other action phrases
-- [ ] Make dispatch option appear when AI detects completion intent
+- [ ] Make dispatch option appear when AI detects completion intent - Needs chat message monitoring
 
 ---
 
@@ -157,10 +157,10 @@
 - [ ] Leverage network intelligence while you sleep
 
 ### User Experience Goals
-- [ ] Help user **define what to dispatch** (not give results in copilot)
-- [ ] Super interviewer that draws out real intent
-- [ ] Support power users (keyboard shortcuts, command palette)
-- [ ] Make it easy for successful people with huge networks
+- [x] Help user **define what to dispatch** (not give results in copilot) - Dispatch modal separates definition from results
+- [x] Super interviewer that draws out real intent - ForkInTheRoad component guides users
+- [x] Support power users (keyboard shortcuts, command palette) - Cmd+K to open, Escape to close
+- [ ] Make it easy for successful people with huge networks - Needs performance optimization
 
 ### What Makes This Different
 - [ ] Not just sales/leads (everyone else)
