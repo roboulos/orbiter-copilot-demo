@@ -190,28 +190,38 @@ function CopilotModal({
       
       // Trigger interview for partial or exploratory intents  
       if (intent.type === "exploratory" || intent.type === "partial") {
-        console.log('[Interview] Triggering interview mode');
+        console.log('[Interview] ✨ Triggering interview mode for:', intent.type);
         
         // Start interview flow - this updates state synchronously
-        interview.processInput(
+        const action = interview.processInput(
           prompt,
           selectedPerson?.master_person?.id || selectedPerson?.master_person_id,
           selectedPerson?.master_person?.name || selectedPerson?.full_name
         );
         
-        console.log('[Interview] State after activation:', interview.state);
+        console.log('[Interview] ✓ Interview activated:', {
+          active: interview.state.active,
+          stage: interview.state.stage,
+          action: action.type
+        });
         
-        // Interview started - return brief text to keep chat alive
-        // The InterviewPanel will overlay and handle the user interaction
+        // Don't send to backend - interview will handle interaction
+        // Return minimal response to keep CrayonChat happy
         const encoder = new TextEncoder();
         return new Response(
           new ReadableStream({
             start(controller) {
-              // Send brief starting message
-              controller.enqueue(encoder.encode('event: text\ndata: 🎯 \n\n'));
+              // Just close the stream - interview panel will overlay
               controller.close();
             }
-          })
+          }),
+          {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive'
+            }
+          }
         );
       }
       
@@ -232,6 +242,12 @@ function CopilotModal({
   const personName = selectedPerson?.master_person?.name || selectedPerson?.full_name;
   const personTitle = selectedPerson?.master_person?.current_title;
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
+
+  // Direct interview trigger handler (bypasses CrayonChat for immediate activation)
+  const handleStartInterview = useCallback(() => {
+    console.log('[Interview] Direct trigger via button');
+    interview.processInput("I want to help someone");
+  }, [interview]);
 
   // Dynamic conversation starters based on whether person is selected
   const defaultStarters = selectedPerson
@@ -610,22 +626,7 @@ function CopilotModal({
       </>
       )}
 
-      {/* Interview Panel - Always rendered, independent of modal */}
-      {/* DEBUG: Force show interview active state */}
-      {interview.state.active && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          background: 'red',
-          color: 'white',
-          padding: '20px',
-          zIndex: 99999,
-          fontSize: '24px'
-        }}>
-          INTERVIEW ACTIVE: {JSON.stringify(interview.state.stage)}
-        </div>
-      )}
+      {/* Interview Panel - Rendered outside modal, overlays everything when active */}
       {interview.state.active && (
         <InterviewPanel
           state={interview.state}
@@ -942,15 +943,6 @@ export default function Home() {
   
   // Interview flow hook at parent level (so it persists across modal open/close)
   const interview = useInterviewFlow();
-  
-  // DEBUG: Force activate interview 3 seconds after mount to test UI
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('[DEBUG] Force activating interview for test...');
-      interview.processInput("I want to help someone");
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {

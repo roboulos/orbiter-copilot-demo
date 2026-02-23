@@ -1105,3 +1105,24 @@ button[type="submit"][class*="submit"]::before {
 [class*="composer"] button[type="submit"]:disabled::before {
   color: rgba(255, 255, 255, 0.4) !important;
 }
+
+/* ─── Interview Panel Animations ─────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

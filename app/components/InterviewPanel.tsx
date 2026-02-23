@@ -64,25 +64,42 @@ export function InterviewPanel({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "min(600px, 90vw)",
-        maxHeight: "80vh",
-        background: "linear-gradient(145deg, rgba(20,20,30,0.98), rgba(15,15,25,0.98))",
-        backdropFilter: "blur(40px)",
-        border: "1px solid rgba(99,102,241,0.3)",
-        borderRadius: "24px",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(99,102,241,0.2)",
-        zIndex: 2000,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onReset}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          zIndex: 1999,
+          animation: "fadeIn 0.2s ease-out",
+        }}
+      />
+      
+      {/* Interview Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "min(600px, 90vw)",
+          maxHeight: "80vh",
+          background: "linear-gradient(145deg, rgba(20,20,30,0.98), rgba(15,15,25,0.98))",
+          backdropFilter: "blur(40px)",
+          border: "1px solid rgba(99,102,241,0.3)",
+          borderRadius: "24px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(99,102,241,0.2)",
+          zIndex: 2000,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
       {/* Header with progress */}
       <div
         style={{
@@ -380,5 +397,6 @@ export function InterviewPanel({
         )}
       </div>
     </div>
+    </>
   );
 }
