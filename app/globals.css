@@ -1169,23 +1169,14 @@ button[type="submit"][class*="submit"]::before {
 }
 
 
-/* ===== Fix for Empty Collapsed Panels ===== */
-/* Add placeholder text when panels are collapsed */
-.crayon-shell-thread > div:empty:not(:last-child),
-[role="region"]:empty {
-  position: relative;
-  min-height: 80px;
+/* ===== Fix for Empty Containers ===== */
+/* Hide truly empty divs in the thread that create weird visual boxes */
+.crayon-shell-thread > div:empty {
+  display: none !important;
 }
 
-.crayon-shell-thread > div:empty:not(:last-child)::after {
-  content: "Click to expand ▼";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 13px;
-  text-align: center;
-  pointer-events: none;
+/* Hide containers with minimum height but no content (loading states that failed) */
+.crayon-shell-thread > div[style*="min-height"]:not(:has(*)) {
+  display: none !important;
 }
 
