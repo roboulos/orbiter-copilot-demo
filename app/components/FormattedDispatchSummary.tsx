@@ -174,7 +174,7 @@ export function FormattedDispatchSummary({ text, onDispatch }: FormattedDispatch
             flexDirection: "column",
             gap: "8px",
           }}>
-            {data.quickMatches.map((match, i) => (
+            {data.quickMatches.map((match: string, i: number) => (
               <div
                 key={i}
                 style={{

@@ -45,6 +45,7 @@ export function SubmitButton({
           fontSize: "13px",
           color: "rgba(255,255,255,0.6)",
           lineHeight: 1.5,
+          whiteSpace: "pre-wrap", // Preserve \n line breaks from backend
         }}
       >
         {summary}

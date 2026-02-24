@@ -10,6 +10,7 @@ interface QuickResultCardProps {
     avatar?: string;
     reason: string; // Why this person matches
     confidence: "high" | "medium" | "low";
+    masterPersonId?: number; // Link to person profile
   }>;
   stillSearching?: boolean; // Show if deep research is ongoing
 }
@@ -77,14 +78,34 @@ export function QuickResultCard({ matches, stillSearching = true }: QuickResultC
       </div>
 
       {/* Top Match */}
-      <div style={{
-        display: "flex",
-        gap: "var(--space-md)",
-        padding: "var(--space-md)",
-        background: "rgba(255, 255, 255, 0.03)",
-        borderRadius: "var(--radius-lg)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-      }}>
+      <div 
+        style={{
+          display: "flex",
+          gap: "var(--space-md)",
+          padding: "var(--space-md)",
+          background: "rgba(255, 255, 255, 0.03)",
+          borderRadius: "var(--radius-lg)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          cursor: topMatch.masterPersonId ? "pointer" : "default",
+          transition: "all 0.2s",
+        }}
+        onClick={() => {
+          if (topMatch.masterPersonId) {
+            console.log(`[QuickResultCard] Navigate to person ${topMatch.masterPersonId}`);
+            // TODO: Implement person profile navigation
+          }
+        }}
+        onMouseEnter={(e) => {
+          if (topMatch.masterPersonId) {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+            e.currentTarget.style.borderColor = "rgba(52, 211, 153, 0.3)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
+          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+        }}
+      >
         {/* Avatar */}
         {topMatch.avatar ? (
           <img
