@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useThreadActions } from "@crayonai/react-core";
 import { PersonPicker } from "./PersonPicker";
 
 /**
@@ -19,8 +20,6 @@ interface InlineInterviewCardProps {
   };
   examples?: string[];
   helpText?: string;
-  onAnswer: (answer: string | { personId: number; personName: string }) => void;
-  onSkip?: () => void;
 }
 
 export function InlineInterviewCard({
@@ -29,26 +28,79 @@ export function InlineInterviewCard({
   context,
   examples,
   helpText,
-  onAnswer,
-  onSkip,
 }: InlineInterviewCardProps) {
+  const { processMessage } = useThreadActions();
   const [textAnswer, setTextAnswer] = useState("");
   const [showPersonPicker, setShowPersonPicker] = useState(stage === "identify_person");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<any>(null);
 
-  const handleSubmit = () => {
-    if (textAnswer.trim()) {
-      onAnswer(textAnswer.trim());
-      setTextAnswer("");
+  const handleSubmit = async () => {
+    if (textAnswer.trim() && !isProcessing) {
+      setIsProcessing(true);
+      try {
+        await processMessage({
+          role: "user",
+          type: "prompt",
+          message: textAnswer.trim(),
+        });
+        setTextAnswer("");
+      } catch (error) {
+        console.error("[InlineInterviewCard] Submit error:", error);
+      }
+      setIsProcessing(false);
     }
   };
 
-  const handleExampleClick = (example: string) => {
-    onAnswer(example);
+  const handleExampleClick = async (example: string) => {
+    if (!isProcessing) {
+      setIsProcessing(true);
+      try {
+        await processMessage({
+          role: "user",
+          type: "prompt",
+          message: example,
+        });
+      } catch (error) {
+        console.error("[InlineInterviewCard] Example error:", error);
+      }
+      setIsProcessing(false);
+    }
   };
 
-  const handlePersonSelect = (personId: number, personName: string) => {
-    onAnswer({ personId, personName });
-    setShowPersonPicker(false);
+  const handlePersonSelect = async (person: any, context: string) => {
+    if (!isProcessing) {
+      setIsProcessing(true);
+      try {
+        // Send the person's name as the message
+        const personName = person.master_person?.name || person.full_name;
+        await processMessage({
+          role: "user",
+          type: "prompt",
+          message: `Selected: ${personName}`,
+        });
+        setShowPersonPicker(false);
+      } catch (error) {
+        console.error("[InlineInterviewCard] Person select error:", error);
+      }
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!isProcessing) {
+      setIsProcessing(true);
+      try {
+        await processMessage({
+          role: "user",
+          type: "prompt",
+          message: "skip",
+        });
+      } catch (error) {
+        console.error("[InlineInterviewCard] Skip error:", error);
+      }
+      setIsProcessing(false);
+    }
   };
 
   // Dynamic styling based on stage
@@ -109,8 +161,8 @@ export function InlineInterviewCard({
         <div style={{ marginBottom: "16px" }}>
           <PersonPicker
             onSelect={handlePersonSelect}
-            compact
-            inline
+            selectedPerson={selectedPerson}
+            onClear={() => setSelectedPerson(null)}
           />
         </div>
       )}
@@ -129,6 +181,7 @@ export function InlineInterviewCard({
             <button
               key={i}
               onClick={() => handleExampleClick(example)}
+              disabled={isProcessing}
               style={{
                 background: "rgba(99,102,241,0.15)",
                 border: "1px solid rgba(99,102,241,0.3)",
@@ -137,8 +190,9 @@ export function InlineInterviewCard({
                 fontSize: "13px",
                 fontWeight: 500,
                 color: "rgba(255,255,255,0.9)",
-                cursor: "pointer",
+                cursor: isProcessing ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
+                opacity: isProcessing ? 0.5 : 1,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(99,102,241,0.25)";
@@ -204,9 +258,9 @@ export function InlineInterviewCard({
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-        {onSkip && (
+        {stage === "extract_context" && !isProcessing && (
           <button
-            onClick={onSkip}
+            onClick={handleSkip}
             style={{
               padding: "8px 16px",
               background: "rgba(255,255,255,0.05)",
@@ -230,9 +284,10 @@ export function InlineInterviewCard({
             Skip
           </button>
         )}
-        {stage !== "identify_person" && textAnswer.trim() && (
+        {stage !== "identify_person" && textAnswer.trim() && !isProcessing && (
           <button
             onClick={handleSubmit}
+            disabled={isProcessing}
             style={{
               padding: "8px 20px",
               background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
@@ -241,9 +296,10 @@ export function InlineInterviewCard({
               color: "white",
               fontSize: "13px",
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: isProcessing ? "not-allowed" : "pointer",
               boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
               transition: "all 0.2s",
+              opacity: isProcessing ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
