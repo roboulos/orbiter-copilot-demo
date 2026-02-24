@@ -142,6 +142,29 @@ function CopilotModal({
   
   // No interview mode interception - backend handles conversational flow
 
+  // Listen for interview dispatch ready event
+  useEffect(() => {
+    const handleDispatchReady = (event: CustomEvent) => {
+      const { personId, personName, outcome, constraints, description } = event.detail;
+      
+      // Set dispatch data
+      setCurrentDispatchData({
+        personId,
+        goal: outcome,
+        context: constraints?.join(", ") || "",
+      });
+      setDispatchDescription(description);
+      
+      // Show dispatch modal
+      setShowDispatchModal(true);
+    };
+
+    window.addEventListener("interview-dispatch-ready", handleDispatchReady as EventListener);
+    return () => {
+      window.removeEventListener("interview-dispatch-ready", handleDispatchReady as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     if (pendingPrompt) {
       chatKey.current += 1;

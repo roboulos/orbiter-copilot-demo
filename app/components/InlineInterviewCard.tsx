@@ -56,6 +56,23 @@ export function InlineInterviewCard({
     if (!isProcessing) {
       setIsProcessing(true);
       try {
+        // Special handling for confirm stage "Yes, dispatch now"
+        if (stage === "confirm" && example.toLowerCase().includes("yes") && example.toLowerCase().includes("dispatch")) {
+          // Trigger dispatch modal with collected context
+          const event = new CustomEvent("interview-dispatch-ready", {
+            detail: {
+              personId: context?.personId,
+              personName: context?.personName,
+              outcome: context?.outcome,
+              constraints: context?.constraints,
+              description: question, // Use the question as it contains the full summary
+            },
+          });
+          window.dispatchEvent(event);
+          setIsProcessing(false);
+          return;
+        }
+
         await processMessage({
           role: "user",
           type: "prompt",
