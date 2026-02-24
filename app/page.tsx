@@ -36,6 +36,7 @@ import { Confetti } from "./components/Confetti";
 import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
 import { InlineInterviewCard } from "./components/InlineInterviewCard";
+import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 // InterviewPanel removed - using conversational backend flow instead
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";

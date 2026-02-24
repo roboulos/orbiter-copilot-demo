@@ -1126,3 +1126,45 @@ button[type="submit"][class*="submit"]::before {
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
+/* ===== Send Button Icon Fix ===== */
+.crayon-shell-input button[type="submit"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+.crayon-shell-input button[type="submit"] svg {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
+}
+
+/* If icon is missing, show arrow */
+.crayon-shell-input button[type="submit"]:empty::after {
+  content: "→";
+  font-size: 22px;
+  font-weight: bold;
+  color: currentColor;
+}
+
+/* ===== Format Plain Text Dispatch Summaries ===== */
+.crayon-shell-message-content {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* Make structured text more readable */
+.crayon-shell-message p {
+  margin-bottom: 0.75em;
+}
+
+/* Bullet points */
+.crayon-shell-message-content:has(•) {
+  line-height: 1.8;
+}
+
