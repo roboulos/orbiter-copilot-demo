@@ -201,44 +201,101 @@ function CopilotModal({
     };
   }, []);
 
-  // Auto-send pending prompt when chat starts
+  /**
+   * ═══════════════════════════════════════════════════════════════════════
+   * AUTO-SEND INTERVIEW PROMPT - CRITICAL FLOW LOGIC
+   * ═══════════════════════════════════════════════════════════════════════
+   * 
+   * MARK'S REQUIREMENT: "Interview should start immediately, no empty chat"
+   * 
+   * PROBLEM SOLVED: After user clicks fork option "Help with specific task",
+   *                  chat was showing welcome screen instead of starting interview.
+   * 
+   * SOLUTION: Automatically inject the pending prompt into CrayonChat input
+   *           and programmatically trigger send button after mount.
+   * 
+   * HOW IT WORKS:
+   *   1. User clicks fork option → sets pendingPrompt
+   *   2. Fork closes → showFork becomes false
+   *   3. Chat appears → hasStartedConversation becomes true
+   *   4. This effect detects all three conditions met
+   *   5. Wait 500ms for CrayonChat to fully mount
+   *   6. Find textarea via DOM selector
+   *   7. Set value to pendingPrompt
+   *   8. Trigger React onChange via input event
+   *   9. Click send button (or submit form)
+   *  10. Consume prompt to prevent re-send
+   * 
+   * INTEGRATION NOTE: This is a workaround for CrayonChat limitation.
+   *                   Ideally, CrayonChat should accept initialMessage prop.
+   * 
+   * ALTERNATIVE: If backend can send first message directly, remove this
+   *              and have backend initiate interview conversation.
+   * 
+   * TIMING: 500ms delay is critical - too fast and input won't exist yet.
+   *         Too slow and user sees empty chat briefly.
+   * 
+   * KEEP: This pattern for any auto-send scenarios (Meeting Prep calendar click)
+   * ═══════════════════════════════════════════════════════════════════════
+   */
   useEffect(() => {
     if (pendingPrompt && !showFork && hasStartedConversation) {
-      // Wait a moment for CrayonChat to mount
+      // TIMING NOTE: Wait for CrayonChat to mount (500ms tested as reliable)
       const timer = setTimeout(() => {
-        // Simulate clicking a conversation starter by dispatching the prompt
+        /**
+         * DOM MANIPULATION APPROACH:
+         * Since CrayonChat doesn't expose initialMessage prop, we directly
+         * manipulate DOM to inject the message and trigger send.
+         * 
+         * SELECTORS: Try both textarea and input (CrayonChat might use either)
+         *   - '.crayon-shell-composer textarea' - Primary composer
+         *   - '.crayon-shell-composer input' - Alternative composer
+         * 
+         * INTEGRATION NOTE: Update selectors if CrayonChat structure changes.
+         */
         const inputElement = document.querySelector('.crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
+        
         if (inputElement) {
-          // Set the value
+          // STEP 1: Set the value programmatically
           inputElement.value = pendingPrompt;
           
-          // Trigger input event
+          // STEP 2: Trigger React onChange handler
+          // NOTE: Must dispatch 'input' event for React to detect change
           const inputEvent = new Event('input', { bubbles: true });
           inputElement.dispatchEvent(inputEvent);
           
-          // Find and click the send button
+          // STEP 3: Find and click the send button
+          // Try both possible button selectors
           const sendButton = document.querySelector('.crayon-shell-composer button[type="submit"], .crayon-shell-composer-send') as HTMLButtonElement;
+          
           if (sendButton) {
+            // SUCCESS PATH: Found send button, click after brief delay
             setTimeout(() => {
               sendButton.click();
-              onPendingPromptConsumed();
-            }, 100);
+              onPendingPromptConsumed(); // Clear prompt to prevent re-send
+            }, 100); // Small delay ensures React state updated
           } else {
-            // Fallback: trigger form submit
+            // FALLBACK PATH: No send button found, try form submit
             const form = inputElement.closest('form');
             if (form) {
               setTimeout(() => {
-                form.requestSubmit();
+                form.requestSubmit(); // Modern form submission
                 onPendingPromptConsumed();
               }, 100);
             } else {
+              // EDGE CASE: No button or form found
+              // This shouldn't happen, but consume prompt to prevent infinite loop
+              console.warn('[AUTO-SEND] Could not find send button or form');
               onPendingPromptConsumed();
             }
           }
         } else {
+          // ERROR CASE: Input element not found
+          // Likely CrayonChat structure changed or didn't mount
+          console.warn('[AUTO-SEND] Could not find input element');
           onPendingPromptConsumed();
         }
-      }, 500); // Wait for CrayonChat to fully mount
+      }, 500); // TIMING: 500ms tested as reliable for CrayonChat mount
       
       return () => clearTimeout(timer);
     }
@@ -248,7 +305,23 @@ function CopilotModal({
   const personTitle = selectedPerson?.master_person?.current_title;
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
 
-  // No conversation starters - keep it clean
+  /**
+   * ═══════════════════════════════════════════════════════════════════════
+   * CONVERSATION STARTERS - INTENTIONALLY EMPTY
+   * ═══════════════════════════════════════════════════════════════════════
+   * 
+   * MARK'S REQUIREMENT: "No intermediate suggestions" / "Lean and mean"
+   * 
+   * WHY: Mark wants clean chat interface without preset prompts.
+   *      Interview should flow naturally without artificial suggestions.
+   * 
+   * INTEGRATION NOTE: Keep this empty array. If you need starters for
+   *                   default mode, add them there only, NOT in leverage mode.
+   * 
+   * DURING INTEGRATION: Verify CrayonChat doesn't show its own starters.
+   *                     May need to pass a prop to disable them.
+   * ═══════════════════════════════════════════════════════════════════════
+   */
   const defaultStarters: Array<{displayText: string; prompt: string}> = [];
 
   return (
