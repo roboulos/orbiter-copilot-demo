@@ -1521,14 +1521,70 @@ export default function Home() {
       } catch (err) {
         console.error('[PARSE ERROR]', err);
         console.error('[PARSE ERROR] Raw response:', raw);
-        console.error('[PARSE ERROR] Cleaned:', cleaned);
-        console.error('[PARSE ERROR] Sanitized:', sanitized);
         
-        // Last resort: Show error with instructions
-        items = [{ 
-          type: "text", 
-          text: `⚠️ Failed to parse backend response. Please check console for details.\n\nRaw response preview: ${cleaned.substring(0, 200)}...` 
-        }];
+        // SUPER ROBUST FALLBACK: Try to extract content from malformed JSON
+        // Strategy: Look for the text between "content":" and the next "
+        // But handle escaped quotes and long text
+        
+        try {
+          // Find content or text field value using indexOf (more reliable than regex for long strings)
+          let extractedText = "";
+          
+          if (raw.includes('"content"')) {
+            const contentStart = raw.indexOf('"content"');
+            const valueStart = raw.indexOf(':"', contentStart) + 2; // After :"
+            if (valueStart > contentStart) {
+              // Find end - but need to handle escaped quotes
+              let valueEnd = valueStart;
+              let inEscape = false;
+              for (let i = valueStart; i < raw.length; i++) {
+                if (raw[i] === '\\' && !inEscape) {
+                  inEscape = true;
+                  continue;
+                }
+                if (raw[i] === '"' && !inEscape) {
+                  valueEnd = i;
+                  break;
+                }
+                inEscape = false;
+              }
+              extractedText = raw.substring(valueStart, valueEnd);
+            }
+          } else if (raw.includes('"text"')) {
+            const textStart = raw.indexOf('"text"');
+            const valueStart = raw.indexOf(':"', textStart) + 2;
+            if (valueStart > textStart) {
+              let valueEnd = valueStart;
+              let inEscape = false;
+              for (let i = valueStart; i < raw.length; i++) {
+                if (raw[i] === '\\' && !inEscape) {
+                  inEscape = true;
+                  continue;
+                }
+                if (raw[i] === '"' && !inEscape) {
+                  valueEnd = i;
+                  break;
+                }
+                inEscape = false;
+              }
+              extractedText = raw.substring(valueStart, valueEnd);
+            }
+          }
+          
+          if (extractedText && extractedText.length > 10) {
+            console.log('[FALLBACK EXTRACTION SUCCESS]', extractedText.substring(0, 100));
+            items = [{ type: "text", text: extractedText }];
+          } else {
+            throw new Error('No extractable text found');
+          }
+        } catch (extractError) {
+          // Absolute last resort: show raw response
+          console.error('[EXTRACTION FAILED]', extractError);
+          items = [{ 
+            type: "text", 
+            text: `⚠️ Response format error. Showing raw response:\n\n${raw.substring(0, 500)}` 
+          }];
+        }
       }
 
       // MARK'S REQUIREMENT: NO intermediate suggestions during conversation
