@@ -5,26 +5,34 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_XANO_API_URL || "https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz";
 
+/**
+ * UPDATED: Feb 27, 2026 to match actual backend status values
+ * 
+ * Status progression:
+ *   draft (0%) -> submitted (10%) -> processing (50%) -> suggestion (100%)
+ * 
+ * Mapping to old values:
+ *   suggestion = complete
+ *   archived = cancelled
+ */
 export interface ProcessStatus {
-  id: number;
-  status: "queued" | "running" | "complete" | "failed" | "cancelled";
+  process_id: number;  // Backend uses process_id not id
+  status: "draft" | "submitted" | "processing" | "suggestion" | "archived";
   progress: number; // 0-100
-  current_step?: string;
-  elapsed_seconds: number;
-  estimated_seconds?: number;
-  result?: unknown;
-  error?: string;
+  current_step: string;
+  is_complete: boolean;  // Backend provides this convenience field
+  mode: string;  // "loop" | "outcome" | "serendipity"
+  title?: string;  // Human-readable title
 }
 
 export interface ProcessStatusResponse {
-  id: number;
-  status: string;
+  process_id: number;
+  status: "draft" | "submitted" | "processing" | "suggestion" | "archived";
   progress: number;
-  current_step?: string;
-  elapsed_seconds: number;
-  estimated_seconds?: number;
-  result?: unknown;
-  error?: string;
+  current_step: string;
+  is_complete: boolean;
+  mode: string;
+  title?: string;
 }
 
 export interface CancelProcessResponse {
@@ -59,14 +67,13 @@ export async function getProcessStatus(
   const data: ProcessStatusResponse = await response.json();
 
   return {
-    id: data.id,
-    status: data.status as ProcessStatus["status"],
+    process_id: data.process_id,
+    status: data.status,
     progress: data.progress,
     current_step: data.current_step,
-    elapsed_seconds: data.elapsed_seconds,
-    estimated_seconds: data.estimated_seconds,
-    result: data.result,
-    error: data.error,
+    is_complete: data.is_complete,
+    mode: data.mode,
+    title: data.title,
   };
 }
 
@@ -121,7 +128,8 @@ export async function pollProcessStatus(
         const status = await getProcessStatus(processId, authToken);
         onUpdate(status);
 
-        if (status.status === "complete" || status.status === "failed" || status.status === "cancelled") {
+        // Check if complete using is_complete flag or status
+        if (status.is_complete || status.status === "suggestion" || status.status === "archived") {
           resolve(status);
           return;
         }

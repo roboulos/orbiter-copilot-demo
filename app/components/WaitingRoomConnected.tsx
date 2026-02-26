@@ -48,26 +48,19 @@ export function WaitingRoomConnected({
         
         setStatus(currentStatus);
 
-        // Handle terminal states
-        if (currentStatus.status === "complete") {
-          onComplete?.(currentStatus.result);
+        // Handle terminal states (updated for new backend status values)
+        if (currentStatus.is_complete || currentStatus.status === "suggestion") {
+          onComplete?.((currentStatus as any).result);
           return;
         }
 
-        if (currentStatus.status === "failed") {
-          const errorMsg = currentStatus.error || "Process failed";
-          setError(errorMsg);
-          onError?.(errorMsg);
-          return;
-        }
-
-        if (currentStatus.status === "cancelled") {
+        if (currentStatus.status === "archived") {
           onCancel?.();
           return;
         }
 
-        // Continue polling for running/queued states
-        if (currentStatus.status === "running" || currentStatus.status === "queued") {
+        // Continue polling if not complete
+        if (!currentStatus.is_complete) {
           timeoutId = setTimeout(poll, pollIntervalMs);
         }
       } catch (err) {
@@ -107,10 +100,9 @@ export function WaitingRoomConnected({
   }, [processId, authToken, onCancel, onError, isCancelling]);
 
   const handleViewResults = useCallback(() => {
-    if (status?.result) {
-      onComplete?.(status.result);
-    }
-  }, [status, onComplete]);
+    // Results are fetched separately from leverage-loop-suggestions endpoint
+    onComplete?.(null);
+  }, [onComplete]);
 
   if (error) {
     return (
@@ -119,7 +111,6 @@ export function WaitingRoomConnected({
         description={error}
         status="error"
         progress={status?.progress || 0}
-        elapsedSeconds={status?.elapsed_seconds || 0}
       />
     );
   }
@@ -131,18 +122,17 @@ export function WaitingRoomConnected({
         description={description || "Initializing..."}
         status="pending"
         progress={0}
-        elapsedSeconds={0}
       />
     );
   }
 
   // Map backend status to UI status
   const uiStatus: "pending" | "running" | "complete" | "error" =
-    status.status === "queued" ? "pending" :
-    status.status === "running" ? "running" :
-    status.status === "complete" ? "complete" :
-    status.status === "failed" ? "error" :
-    status.status === "cancelled" ? "error" : "running";
+    status.status === "draft" ? "pending" :
+    status.status === "submitted" ? "pending" :
+    status.status === "processing" ? "running" :
+    status.status === "suggestion" ? "complete" :
+    status.status === "archived" ? "error" : "running";
 
   return (
     <WaitingRoom
@@ -150,11 +140,9 @@ export function WaitingRoomConnected({
       description={description}
       status={uiStatus}
       progress={status.progress}
-      elapsedSeconds={status.elapsed_seconds}
-      estimatedSeconds={status.estimated_seconds}
       currentStep={status.current_step}
-      onCancel={status.status === "running" || status.status === "queued" ? handleCancel : undefined}
-      onViewResults={status.status === "complete" ? handleViewResults : undefined}
+      onCancel={!status.is_complete ? handleCancel : undefined}
+      onViewResults={status.is_complete ? handleViewResults : undefined}
     />
   );
 }

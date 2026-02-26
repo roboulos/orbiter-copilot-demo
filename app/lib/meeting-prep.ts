@@ -11,13 +11,31 @@ export interface MeetingPrepRequest {
   context?: string;
 }
 
+/**
+ * UPDATED: Feb 27, 2026 to match actual backend response structure
+ * Backend returns NESTED structure under "prep" object
+ */
 export interface MeetingPrepResponse {
-  person_summary: string;
-  talking_points: string[];
-  suggested_openers: string[];
-  why_they_care: string;
-  listen_for: string[];
-  landmines: string[];
+  success: boolean;
+  master_person_id: number;
+  person: {
+    name: string;
+    title?: string;
+    avatar?: string;
+  };
+  prep: {
+    person_summary: string;
+    talking_points: Array<{
+      topic: string;
+      opener: string;
+      why_they_care: string;
+    }>;
+    suggested_openers: string[];
+    listen_for: string[];
+    landmines: string[];
+  };
+  has_calendar: boolean;
+  model: string;
 }
 
 /**
