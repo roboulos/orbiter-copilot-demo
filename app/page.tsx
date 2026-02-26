@@ -481,14 +481,53 @@ function CopilotModal({
                     chatKey.current += 1;
                   }} />
                   
-                  {/* Right content area - chat always visible */}
+                  {/* Right content area */}
                   <div style={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
                     minWidth: 0
                   }}>
-                    <CrayonChat
+                    {selectedMode === 'leverage' && !selectedPerson ? (
+                      // Big search interface for Leverage Loops
+                      <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        padding: "48px",
+                        gap: "24px"
+                      }}>
+                        <div style={{
+                          fontSize: "28px",
+                          fontWeight: 600,
+                          color: "#f1f5f9",
+                          textAlign: "center"
+                        }}>
+                          Who would you like to help?
+                        </div>
+                        <div style={{
+                          fontSize: "14px",
+                          color: "#94a3b8",
+                          textAlign: "center",
+                          marginBottom: "16px"
+                        }}>
+                          Search your network or type a name
+                        </div>
+                        <div style={{
+                          width: "100%",
+                          maxWidth: "500px"
+                        }}>
+                          <PersonPicker
+                            onSelect={onPersonSelect}
+                            selectedPerson={selectedPerson}
+                            onClear={() => { onPersonClear(); }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <CrayonChat
                         key={chatKey.current}
                       type="standalone"
                       processMessage={processMessage}
@@ -520,7 +559,8 @@ function CopilotModal({
                       variant: "long",
                       options: defaultStarters,
                     }}
-                    />
+                      />
+                    )}
                   </div>
                 </div>
               </div>
