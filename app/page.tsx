@@ -201,13 +201,48 @@ function CopilotModal({
     };
   }, []);
 
-  // No longer resetting chat on pending prompt - let it flow smoothly
+  // Auto-send pending prompt when chat starts
   useEffect(() => {
-    if (pendingPrompt) {
-      // Just consume it, don't reset
-      onPendingPromptConsumed();
+    if (pendingPrompt && !showFork && hasStartedConversation) {
+      // Wait a moment for CrayonChat to mount
+      const timer = setTimeout(() => {
+        // Simulate clicking a conversation starter by dispatching the prompt
+        const inputElement = document.querySelector('.crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
+        if (inputElement) {
+          // Set the value
+          inputElement.value = pendingPrompt;
+          
+          // Trigger input event
+          const inputEvent = new Event('input', { bubbles: true });
+          inputElement.dispatchEvent(inputEvent);
+          
+          // Find and click the send button
+          const sendButton = document.querySelector('.crayon-shell-composer button[type="submit"], .crayon-shell-composer-send') as HTMLButtonElement;
+          if (sendButton) {
+            setTimeout(() => {
+              sendButton.click();
+              onPendingPromptConsumed();
+            }, 100);
+          } else {
+            // Fallback: trigger form submit
+            const form = inputElement.closest('form');
+            if (form) {
+              setTimeout(() => {
+                form.requestSubmit();
+                onPendingPromptConsumed();
+              }, 100);
+            } else {
+              onPendingPromptConsumed();
+            }
+          }
+        } else {
+          onPendingPromptConsumed();
+        }
+      }, 500); // Wait for CrayonChat to fully mount
+      
+      return () => clearTimeout(timer);
     }
-  }, [pendingPrompt, onPendingPromptConsumed]);
+  }, [pendingPrompt, showFork, hasStartedConversation, onPendingPromptConsumed]);
 
   const personName = selectedPerson?.master_person?.name || selectedPerson?.full_name;
   const personTitle = selectedPerson?.master_person?.current_title;
