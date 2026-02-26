@@ -166,6 +166,30 @@ function CopilotModal({
     };
   }, []);
 
+  // Listen for dispatch_confirmation template from backend
+  useEffect(() => {
+    const handleDispatchConfirmation = (event: CustomEvent) => {
+      const { person_name, goal, context, master_person_id } = event.detail;
+      console.log('[MODAL TRIGGER]', event.detail);
+      
+      // Set dispatch data
+      setDispatchDescription(`Leverage my network to help ${person_name} ${goal}\n\n${context}`);
+      setCurrentDispatchData({
+        personId: master_person_id || null,
+        goal: goal,
+        context: context,
+      });
+      
+      // Show dispatch modal
+      setShowDispatchModal(true);
+    };
+
+    window.addEventListener("dispatch-confirmation-received", handleDispatchConfirmation as EventListener);
+    return () => {
+      window.removeEventListener("dispatch-confirmation-received", handleDispatchConfirmation as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     if (pendingPrompt) {
       chatKey.current += 1;
@@ -1132,6 +1156,17 @@ export default function Home() {
                 const chunk = (i === 0 ? "" : " ") + words[i];
                 controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
               }
+            } else if ("name" in item && item.name === "dispatch_confirmation") {
+              // Special handling: dispatch_confirmation triggers modal, not a chat template
+              const props = (item as { templateProps: Record<string, unknown> }).templateProps;
+              console.log('[DISPATCH CONFIRMATION]', props);
+              
+              // Emit event to trigger modal (event listener is set up in useEffect)
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent("dispatch-confirmation-received", {
+                  detail: props
+                }));
+              }, 0);
             } else if ("name" in item && item.name) {
               controller.enqueue(encoder.encode(
                 `event: tpl\ndata: ${JSON.stringify({
