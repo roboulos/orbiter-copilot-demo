@@ -1366,10 +1366,13 @@ export default function Home() {
       ];
 
       // MOCK MODE: Use mock responses for testing frontend
-      const MOCK_ENABLED = process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
+      // Default to mock mode if no API URL configured
+      const HAS_API_URL = Boolean(process.env.NEXT_PUBLIC_XANO_API_URL);
+      const MOCK_ENABLED = !HAS_API_URL || process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
       let raw = "";
       
       if (MOCK_ENABLED) {
+        console.log('[MOCK MODE] Using mock backend (no API URL configured)');
         const { getMockResponse } = await import('./lib/mock-backend');
         raw = getMockResponse(prompt, networkSummary);
         console.log('[MOCK RESPONSE]', raw);

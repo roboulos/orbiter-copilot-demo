@@ -19,6 +19,22 @@ export function getMockResponse(prompt: string, networkData?: string): string {
     }
   }
 
+  // Fork prompts - return button group
+  if (promptLower.includes('help') && (promptLower.includes('ray') || promptLower.includes('specific'))) {
+    return JSON.stringify({
+      type: 'button_group',
+      templateProps: {
+        masterPersonId: 520,
+        buttons: [
+          { text: 'Find someone to help with a project', action: 'find_help' },
+          { text: 'Make an introduction between two people', action: 'make_intro' },
+          { text: 'Get advice on a business decision', action: 'get_advice' },
+          { text: 'Explore investment opportunities', action: 'explore_investments' }
+        ]
+      }
+    });
+  }
+
   // Costa Rica query
   if (promptLower.includes('costa rica') || promptLower.includes('house')) {
     return JSON.stringify({

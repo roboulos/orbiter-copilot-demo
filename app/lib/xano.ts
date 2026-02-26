@@ -15,20 +15,16 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-const API_URL = process.env.NEXT_PUBLIC_XANO_API_URL!;
-const USER_ID = Number(process.env.NEXT_PUBLIC_XANO_USER_ID!);
+const API_URL = process.env.NEXT_PUBLIC_XANO_API_URL || '';
+const USER_ID = Number(process.env.NEXT_PUBLIC_XANO_USER_ID || 18);
 
 // Environment variable validation
 if (typeof window !== 'undefined') {
   if (!API_URL) {
-    console.error('❌ [XANO] NEXT_PUBLIC_XANO_API_URL is not set!');
-    console.error('   Set this in Vercel Dashboard → Settings → Environment Variables');
-  }
-  if (!USER_ID || isNaN(USER_ID)) {
-    console.error('❌ [XANO] NEXT_PUBLIC_XANO_USER_ID is not set or invalid!');
-  }
-  if (API_URL && USER_ID) {
-    console.log('✅ [XANO] Environment variables configured correctly');
+    console.warn('⚠️ [XANO] No API URL configured - using mock backend');
+    console.warn('   To use real backend, set NEXT_PUBLIC_XANO_API_URL in Vercel');
+  } else {
+    console.log('✅ [XANO] Using real backend');
     console.log('   API:', API_URL);
     console.log('   User ID:', USER_ID);
   }
@@ -38,6 +34,10 @@ let cachedToken: string | null = null;
 
 export async function getAuthToken(): Promise<string> {
   if (cachedToken) return cachedToken;
+
+  if (!API_URL) {
+    throw new Error('Cannot authenticate: NEXT_PUBLIC_XANO_API_URL not configured. Using mock backend instead.');
+  }
 
   const res = await fetch(`${API_URL}/dev-token`, {
     method: "POST",
