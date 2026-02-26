@@ -256,7 +256,7 @@ export function LeverageLoopCard({
               textTransform: "uppercase", color: "rgba(99,102,241,0.65)",
               marginBottom: "3px",
             }}>
-              👤 Reach out to
+              Contact
             </div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.80)", lineHeight: 1.4 }}>
               {targetPerson}
@@ -276,7 +276,7 @@ export function LeverageLoopCard({
             textTransform: "uppercase", color: "rgba(99,102,241,0.65)",
             marginBottom: "5px",
           }}>
-            🎯 Suggested action
+            Suggested Action
           </div>
           <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.80)", lineHeight: 1.5 }}>
             {suggestedAction}

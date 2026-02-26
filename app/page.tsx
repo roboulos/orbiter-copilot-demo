@@ -147,7 +147,7 @@ function CopilotModal({
   
   // No interview mode interception - backend handles conversational flow
 
-  // When fork closes (showFork becomes false), start conversation
+  // When fork closes (showFork becomes false), start conversation  
   useEffect(() => {
     if (!showFork && selectedPerson) {
       setHasStartedConversation(true);
@@ -553,14 +553,16 @@ function CopilotModal({
                       title: selectedMode === 'default'
                         ? "How can I help you?"
                         : personName
-                          ? `${personName}`
+                          ? `Help ${personName}`
                           : selectedMode === 'leverage' ? "Leverage Loops" :
                             selectedMode === 'meeting' ? "Meeting Prep" :
                             "Outcomes",
                       description: selectedMode === 'default'
                         ? "Ask me anything"
                         : personName
-                          ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
+                          ? personTitle && personCompany
+                            ? `${personTitle} · ${personCompany}`
+                            : personTitle || personCompany || "What would you like to help them with?"
                           : selectedMode === 'leverage' ? "Help someone from your network" :
                             selectedMode === 'meeting' ? "Get context for your meetings" :
                             "Map your goals to actions",

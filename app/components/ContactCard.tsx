@@ -242,7 +242,7 @@ export function ContactCard({
           textTransform: "uppercase", color: "rgba(129,140,248,0.75)",
           marginBottom: "6px",
         }}>
-          🤝 Relationship context
+          Relationship Context
         </div>
         <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>
           {relationshipContext}

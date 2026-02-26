@@ -123,20 +123,20 @@ export function DispatchReadyCard({
           Request Details
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "16px" }}>👤</span>
-            <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{personName}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Person</div>
+            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{personName}</div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "16px" }}>🎯</span>
-            <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{outcome}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Goal</div>
+            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{outcome}</div>
           </div>
           {constraints && constraints.length > 0 && (
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-              <span style={{ fontSize: "16px", marginTop: "2px" }}>📋</span>
-              <span style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Context</div>
+              <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>
                 {constraints.join(", ")}
-              </span>
+              </div>
             </div>
           )}
         </div>
