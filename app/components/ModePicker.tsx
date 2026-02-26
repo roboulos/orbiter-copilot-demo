@@ -1,10 +1,19 @@
 "use client";
 
+import React from 'react';
+
 export interface ModePickerProps {
-  onSelectMode: (mode: 'leverage' | 'meeting' | 'outcome') => void;
+  selectedMode: 'default' | 'leverage' | 'meeting' | 'outcome';
+  onSelectMode: (mode: 'default' | 'leverage' | 'meeting' | 'outcome') => void;
 }
 
 // Linear-style SVG icons
+const ChatIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
 const LeverageIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -30,7 +39,41 @@ const OutcomeIcon = () => (
   </svg>
 );
 
-export function ModePicker({ onSelectMode }: ModePickerProps) {
+type ModeConfig = {
+  id: 'default' | 'leverage' | 'meeting' | 'outcome';
+  icon: () => React.ReactElement;
+  label: string;
+  description: string;
+};
+
+const modes: ModeConfig[] = [
+  {
+    id: 'default',
+    icon: ChatIcon,
+    label: 'Chat',
+    description: 'General conversation'
+  },
+  {
+    id: 'leverage',
+    icon: LeverageIcon,
+    label: 'Leverage Loops',
+    description: 'Help someone achieve a goal'
+  },
+  {
+    id: 'meeting',
+    icon: MeetingIcon,
+    label: 'Meeting Prep',
+    description: 'Get context and talking points'
+  },
+  {
+    id: 'outcome',
+    icon: OutcomeIcon,
+    label: 'Outcomes',
+    description: 'Map a goal to an action plan'
+  }
+];
+
+export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
   return (
     <div style={{
       display: 'flex',
@@ -54,176 +97,83 @@ export function ModePicker({ onSelectMode }: ModePickerProps) {
         </h3>
       </div>
       
-      {/* Leverage Loops */}
-      <button
-        onClick={() => onSelectMode('leverage')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '12px 14px',
-          background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-          textAlign: 'left',
-          width: '100%',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: '6px',
-          background: 'rgba(124,58,237,0.1)',
-          color: 'rgb(167,139,250)',
-          flexShrink: 0,
-        }}>
-          <LeverageIcon />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.95)',
-            marginBottom: '2px',
-          }}>
-            Leverage Loops
-          </div>
-          <div style={{
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.5)',
-            lineHeight: 1.4,
-          }}>
-            Help someone achieve a goal
-          </div>
-        </div>
-      </button>
-
-      {/* Meeting Prep */}
-      <button
-        onClick={() => onSelectMode('meeting')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '12px 14px',
-          background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-          textAlign: 'left',
-          width: '100%',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: '6px',
-          background: 'rgba(124,58,237,0.1)',
-          color: 'rgb(167,139,250)',
-          flexShrink: 0,
-        }}>
-          <MeetingIcon />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.95)',
-            marginBottom: '2px',
-          }}>
-            Meeting Prep
-          </div>
-          <div style={{
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.5)',
-            lineHeight: 1.4,
-          }}>
-            Get context and talking points
-          </div>
-        </div>
-      </button>
-
-      {/* Outcomes */}
-      <button
-        onClick={() => onSelectMode('outcome')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '12px 14px',
-          background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-          textAlign: 'left',
-          width: '100%',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '32px',
-          height: '32px',
-          borderRadius: '6px',
-          background: 'rgba(124,58,237,0.1)',
-          color: 'rgb(167,139,250)',
-          flexShrink: 0,
-        }}>
-          <OutcomeIcon />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.95)',
-            marginBottom: '2px',
-          }}>
-            Outcomes
-          </div>
-          <div style={{
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.5)',
-            lineHeight: 1.4,
-          }}>
-            Map a goal to an action plan
-          </div>
-        </div>
-      </button>
+      {modes.map((mode) => {
+        const isSelected = selectedMode === mode.id;
+        const Icon = mode.icon;
+        
+        return (
+          <button
+            key={mode.id}
+            onClick={() => onSelectMode(mode.id)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 14px',
+              background: isSelected ? 'rgba(255,255,255,0.07)' : 'transparent',
+              border: isSelected 
+                ? '1px solid rgba(255,255,255,0.15)'
+                : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+              textAlign: 'left',
+              width: '100%',
+            }}
+            onMouseEnter={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+              }
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              background: isSelected 
+                ? 'rgba(124,58,237,0.15)'
+                : 'rgba(124,58,237,0.1)',
+              color: isSelected 
+                ? 'rgb(167,139,250)'
+                : 'rgb(147,119,240)',
+              flexShrink: 0,
+            }}>
+              <Icon />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: isSelected 
+                  ? 'rgba(255,255,255,0.98)'
+                  : 'rgba(255,255,255,0.95)',
+                marginBottom: '2px',
+              }}>
+                {mode.label}
+              </div>
+              <div style={{
+                fontSize: '12px',
+                color: isSelected 
+                  ? 'rgba(255,255,255,0.6)'
+                  : 'rgba(255,255,255,0.5)',
+                lineHeight: 1.4,
+              }}>
+                {mode.description}
+              </div>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 interface ModeStartScreenProps {
-  mode: 'leverage' | 'meeting' | 'outcome';
+  mode: 'default' | 'leverage' | 'meeting' | 'outcome';
   onSubmit: (value: string) => void;
 }
 
@@ -15,6 +15,17 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
 
   // Pass 1: Enhanced typography and content structure
   const config = {
+    default: {
+      title: 'How can I help you?',
+      subtitle: 'Ask me anything',
+      placeholder: 'Type your message...',
+      examples: [
+        { text: 'Search my network', caption: 'Find connections' },
+        { text: 'Prepare for a meeting', caption: 'Get context' },
+        { text: 'Help me achieve a goal', caption: 'Create a plan' }
+      ],
+      gradient: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(99,102,241,0.08) 100%)'
+    },
     leverage: {
       title: 'Who would you like to help?',
       subtitle: 'Search your network or type a name',
@@ -350,6 +361,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
           color: 'rgba(255,255,255,0.35)',
           lineHeight: 1.6,
         }}>
+          {mode === 'default' && "Your intelligent assistant for networking and productivity"}
           {mode === 'leverage' && "We'll find the best connections in your network"}
           {mode === 'meeting' && "Get insights and talking points for better conversations"}
           {mode === 'outcome' && "We'll map your goal to actionable steps"}

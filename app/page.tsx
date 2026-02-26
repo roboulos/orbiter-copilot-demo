@@ -131,7 +131,7 @@ function CopilotModal({
   onTabChange,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
-  const [selectedMode, setSelectedMode] = useState<'leverage' | 'meeting' | 'outcome' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
   const [hasStartedConversation, setHasStartedConversation] = useState(false);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
@@ -479,12 +479,17 @@ function CopilotModal({
                   flexDirection: "row"
                 }}>
                   {/* Left sidebar - always visible */}
-                  <ModePicker onSelectMode={(mode) => {
-                    setSelectedMode(mode);
-                    setHasStartedConversation(false);
-                    setPromptToSend(null);
-                    chatKey.current += 1;
-                  }} />
+                  <ModePicker 
+                    selectedMode={selectedMode}
+                    onSelectMode={(mode) => {
+                      if (mode !== selectedMode) {
+                        setSelectedMode(mode);
+                        setHasStartedConversation(mode === 'default');
+                        setPromptToSend(null);
+                        chatKey.current += 1;
+                      }
+                    }} 
+                  />
                   
                   {/* Right content area */}
                   <div style={{
@@ -493,8 +498,8 @@ function CopilotModal({
                     flexDirection: "column",
                     minWidth: 0
                   }}>
-                    {selectedMode && !hasStartedConversation ? (
-                      // Linear-style start screen for all modes
+                    {(selectedMode !== 'default' && !hasStartedConversation) ? (
+                      // Linear-style start screen for special modes
                       <ModeStartScreen 
                         mode={selectedMode}
                         onSubmit={(value) => {
@@ -509,6 +514,7 @@ function CopilotModal({
                       type="standalone"
                       processMessage={processMessage}
                       agentName={
+                        selectedMode === 'default' ? "Copilot" :
                         selectedMode === 'leverage' ? "Leverage Loops" :
                         selectedMode === 'meeting' ? "Meeting Prep" :
                         "Outcomes"
@@ -517,15 +523,15 @@ function CopilotModal({
                     // theme={orbiterTheme} // Custom theme via CSS instead
                     messageLoadingComponent={() => <LoadingIndicator />}
                     welcomeMessage={{
-                      title: !selectedMode 
+                      title: selectedMode === 'default'
                         ? "Your network is full of doors."
                         : personName
                           ? `What do you want to do with ${personName}?`
                           : selectedMode === 'leverage' ? "Who would you like to help?" :
                             selectedMode === 'meeting' ? "Who are you meeting with?" :
                             "What outcome do you want to achieve?",
-                      description: !selectedMode
-                        ? "Select a mode on the left to get started"
+                      description: selectedMode === 'default'
+                        ? "How can I help you today?"
                         : personName
                           ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
                           : selectedMode === 'leverage' ? "Type a name or select from your network" :
