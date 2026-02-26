@@ -28,9 +28,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
    * 
    * WHAT'S HAPPENING:
    *   - This code calls getCalendarEvents() and checkCalendarStatus()
-   *   - Those functions check NEXT_PUBLIC_USE_MOCK_CALENDAR flag
-   *   - Flag is TRUE → Uses calendar-mock.ts (fake data)
-   *   - Flag is FALSE → Tries real API (will fail, not built yet)
+   *   - Those functions call the real Xano calendar endpoints
    * 
    * MOCK DATA (5 fake events):
    *   1. "Weekly Sync with Mark" (tomorrow 10 AM)
@@ -63,7 +61,6 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
       setCalendarLoading(true);
       const authToken = await getAuthToken();
       
-      // NOTE: This calls mock data if NEXT_PUBLIC_USE_MOCK_CALENDAR=true
       const status = await checkCalendarStatus(authToken);
       setCalendarConnected(status.connected);
       

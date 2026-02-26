@@ -266,14 +266,27 @@ export async function getPersonContext(masterPersonId: number): Promise<string> 
  * { "response": [ { "name": "card_name", "templateProps": { ... } } ] }
  * ──────────────────────────────────────────────────────────────────────────────
  */
+export interface ChatResponseItem {
+  type?: string;
+  text?: string;
+  content?: string;
+  name?: string;
+  templateProps?: Record<string, unknown>;
+}
+
+export interface ChatResponse {
+  response: ChatResponseItem[];
+  model: string;
+}
+
 export async function chat(
   prompt: string,
   personContext?: string,
   history?: Array<{ role: string; content: string }>,
   masterPersonId?: number,
   networkData?: string // Structured JSON of full network
-) {
-  return xanoFetch<{ raw: string; model: string }>("/chat", {
+): Promise<ChatResponse> {
+  return xanoFetch<ChatResponse>("/chat", {
     method: "POST",
     body: {
       prompt,

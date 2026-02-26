@@ -1381,226 +1381,32 @@ export default function Home() {
       ];
 
       try {
-        // MOCK MODE: Use mock responses for testing frontend
-        // Default to mock mode if no API URL configured
-        const HAS_API_URL = Boolean(process.env.NEXT_PUBLIC_XANO_API_URL);
-        const MOCK_ENABLED = !HAS_API_URL || process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
-        let raw = "";
-        
-        if (MOCK_ENABLED) {
-          console.log('[MOCK MODE] Using mock backend (no API URL configured)');
-          const { getMockResponse } = await import('./lib/mock-backend');
-          raw = getMockResponse(prompt, networkSummary);
-          console.log('[MOCK RESPONSE]', raw);
-        } else {
-          // Send person context and network data separately (network_data is structured JSON)
-          const data = await chat(
-            prompt,
-            personContextRef.current || undefined,
-            history.length > 0 ? history : undefined,
-            masterPersonIdRef.current,
-            networkSummary || undefined // Structured JSON with full network
-          );
-          raw = data.raw || "";
-          console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
-        }
-      
-      // AGGRESSIVE JSON EXTRACTION
-      // Backend sends: 'some text "type": "button_group", "templateProps": {...}'
-      // Missing opening brace!
-      
-      let cleaned = raw;
-      let textBeforeJson: string | null = null;
-      
-      // Check if we have broken JSON (has "type": but missing opening brace)
-      if (raw.includes('"type":') && !raw.trim().startsWith('{')) {
-        console.log('[BROKEN JSON DETECTED] Missing opening brace');
-        
-        // Find where the JSON-like content starts
-        const typeIndex = raw.indexOf('"type":');
-        textBeforeJson = raw.substring(0, typeIndex).trim();
-        const jsonLike = raw.substring(typeIndex).trim();
-        
-        // Wrap in braces
-        cleaned = `{${jsonLike}}`;
-        console.log('[JSON RECONSTRUCTION] Text:', textBeforeJson);
-        console.log('[JSON RECONSTRUCTION] JSON:', cleaned);
-      } else {
-        // Try to extract valid JSON object
-        const jsonMatch = raw.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          cleaned = jsonMatch[0];
-        }
-      }
-      
-      cleaned = cleaned
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```\s*$/, "")
-        .trim();
+        // Backend returns pre-parsed structured data: {response: [...items], model: "..."}
+        const data = await chat(
+          prompt,
+          personContextRef.current || undefined,
+          history.length > 0 ? history : undefined,
+          masterPersonIdRef.current,
+          networkSummary || undefined
+        );
+        console.log('[BACKEND RESPONSE]', data);
 
-      const sanitized = cleaned
-        .replace(/\n/g, "\\n")
-        .replace(/\r/g, "\\r")
-        .replace(/\t/g, "\\t");
+        type ResponseItem =
+          | { type: "text"; text: string }
+          | { name: string; templateProps: Record<string, unknown> };
 
-      type ResponseItem =
-        | { type: "text"; text: string }
-        | { name: string; templateProps: Record<string, unknown> };
-
-      let items: ResponseItem[] = [];
-      try {
-        let parsed;
-        
-        // Try standard JSON parsing first
-        try { 
-          parsed = JSON.parse(cleaned);
-          console.log('[PARSE SUCCESS] Cleaned:', parsed);
-        } catch (e1) { 
-          console.warn('[PARSE FAILED] Cleaned, trying sanitized...', e1);
-          try {
-            parsed = JSON.parse(sanitized);
-            console.log('[PARSE SUCCESS] Sanitized:', parsed);
-          } catch (e2) {
-            console.warn('[PARSE FAILED] Sanitized, checking for mixed content...', e2);
-            
-            // Check if response has both text and JSON mixed together
-            // Pattern: "some text" {"type": "button_group", ...}
-            const jsonObjectMatch = raw.match(/\{[\s\S]*"type"\s*:[\s\S]*\}/);
-            if (jsonObjectMatch) {
-              const textBefore = raw.substring(0, raw.indexOf(jsonObjectMatch[0])).trim().replace(/^["']|["']$/g, '');
-              
-              try {
-                const jsonPart = JSON.parse(jsonObjectMatch[0]);
-                console.log('[PARSE SUCCESS] Extracted mixed content:', {text: textBefore, json: jsonPart});
-                
-                // Construct proper response array
-                parsed = {
-                  response: [
-                    ...(textBefore ? [{ type: "text", text: textBefore }] : []),
-                    jsonPart
-                  ]
-                };
-              } catch (e3) {
-                console.error('[PARSE FAILED] JSON extraction failed:', e3);
-                throw e2;
-              }
-            } else if (cleaned.includes('"type"') || cleaned.includes('"name"')) {
-              // Try wrapping in braces as last resort
-              const wrapped = `{${cleaned}}`;
-              parsed = JSON.parse(wrapped);
-              console.log('[PARSE SUCCESS] Wrapped:', parsed);
-            } else {
-              throw e2;
-            }
-          }
-        }
-        
-        // Check if we extracted text before the JSON
-        if (textBeforeJson && textBeforeJson.length > 0) {
-          items.push({ type: "text", text: textBeforeJson });
-        }
-        
-        // Normalize function: convert 'content' to 'text', handle both 'name' and 'type'
+        // Normalize each item from the backend response
         const normalizeItem = (item: any): ResponseItem => {
-          // Handle text items
           if (item.type === "text" || item.name === "text") {
-            return {
-              type: "text",
-              text: item.text || item.content || ""
-            };
+            return { type: "text", text: item.text || item.content || "" };
           }
-          // Handle template/card items
           return {
             name: item.name || item.type,
             templateProps: item.templateProps || item.data || item
           };
         };
-        
-        // Support multiple backend response formats
-        if (parsed?.response && Array.isArray(parsed.response)) {
-          // Format 1: {response: [{name, templateProps}]}
-          items.push(...parsed.response.map(normalizeItem));
-        } else if (parsed?.type && typeof parsed.type === 'string') {
-          // Format 2: Single {type: "...", templateProps/content: {...}}
-          items.push(normalizeItem(parsed));
-        } else if (parsed?.template && parsed?.data) {
-          // Format 3: {template: "name", data: {...}}
-          items.push(normalizeItem({ name: parsed.template, templateProps: parsed.data }));
-        } else if (Array.isArray(parsed)) {
-          // Format 4: [{template, data}, ...] or [{type, templateProps}, ...]
-          items.push(...parsed.map(normalizeItem));
-        } else {
-          // Fallback to empty array
-          console.warn('[PARSE WARNING] Unknown response format:', parsed);
-        }
-      } catch (err) {
-        console.error('[PARSE ERROR]', err);
-        console.error('[PARSE ERROR] Raw response:', raw);
-        
-        // SUPER ROBUST FALLBACK: Try to extract content from malformed JSON
-        // Strategy: Look for the text between "content":" and the next "
-        // But handle escaped quotes and long text
-        
-        try {
-          // Find content or text field value using indexOf (more reliable than regex for long strings)
-          let extractedText = "";
-          
-          if (raw.includes('"content"')) {
-            const contentStart = raw.indexOf('"content"');
-            const valueStart = raw.indexOf(':"', contentStart) + 2; // After :"
-            if (valueStart > contentStart) {
-              // Find end - but need to handle escaped quotes
-              let valueEnd = valueStart;
-              let inEscape = false;
-              for (let i = valueStart; i < raw.length; i++) {
-                if (raw[i] === '\\' && !inEscape) {
-                  inEscape = true;
-                  continue;
-                }
-                if (raw[i] === '"' && !inEscape) {
-                  valueEnd = i;
-                  break;
-                }
-                inEscape = false;
-              }
-              extractedText = raw.substring(valueStart, valueEnd);
-            }
-          } else if (raw.includes('"text"')) {
-            const textStart = raw.indexOf('"text"');
-            const valueStart = raw.indexOf(':"', textStart) + 2;
-            if (valueStart > textStart) {
-              let valueEnd = valueStart;
-              let inEscape = false;
-              for (let i = valueStart; i < raw.length; i++) {
-                if (raw[i] === '\\' && !inEscape) {
-                  inEscape = true;
-                  continue;
-                }
-                if (raw[i] === '"' && !inEscape) {
-                  valueEnd = i;
-                  break;
-                }
-                inEscape = false;
-              }
-              extractedText = raw.substring(valueStart, valueEnd);
-            }
-          }
-          
-          if (extractedText && extractedText.length > 10) {
-            console.log('[FALLBACK EXTRACTION SUCCESS]', extractedText.substring(0, 100));
-            items = [{ type: "text", text: extractedText }];
-          } else {
-            throw new Error('No extractable text found');
-          }
-        } catch (extractError) {
-          // Absolute last resort: show raw response
-          console.error('[EXTRACTION FAILED]', extractError);
-          items = [{ 
-            type: "text", 
-            text: `⚠️ Response format error. Showing raw response:\n\n${raw.substring(0, 500)}` 
-          }];
-        }
-      }
+
+        let items: ResponseItem[] = (data.response || []).map(normalizeItem);
 
       // MARK'S REQUIREMENT: NO intermediate suggestions during conversation
       // Filter out person/leverage loop cards - only allow at dispatch confirmation
