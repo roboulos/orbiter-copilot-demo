@@ -194,10 +194,10 @@ function CopilotModal({
     };
   }, []);
 
+  // No longer resetting chat on pending prompt - let it flow smoothly
   useEffect(() => {
     if (pendingPrompt) {
-      chatKey.current += 1;
-      // TODO: Auto-send prompt when mode selected
+      // Just consume it, don't reset
       onPendingPromptConsumed();
     }
   }, [pendingPrompt, onPendingPromptConsumed]);
@@ -206,34 +206,8 @@ function CopilotModal({
   const personTitle = selectedPerson?.master_person?.current_title;
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
 
-  // Dynamic conversation starters based on whether person is selected
-  // Mode-specific conversation starters that auto-show after mode selection
-  const defaultStarters: Array<{displayText: string; prompt: string}> = 
-    !selectedMode ? [] :
-    selectedMode === 'leverage' && selectedPerson ? [
-      {
-        displayText: `Help ${personName} with something specific`,
-        prompt: `I want to help ${personName}${personTitle ? ` — ${personTitle}` : ""} with something specific. Ask me what I want to help them with.`,
-      },
-    ] :
-    selectedMode === 'leverage' ? [
-      {
-        displayText: "Help someone from my network",
-        prompt: "I want to help someone from my network. Ask me who they are and what they need.",
-      },
-    ] :
-    selectedMode === 'meeting' ? [
-      {
-        displayText: "Prepare for an upcoming meeting",
-        prompt: "I need meeting prep. Show me my upcoming calendar and help me prepare.",
-      },
-    ] :
-    selectedMode === 'outcome' ? [
-      {
-        displayText: "Set a goal to achieve",
-        prompt: "I want to achieve a specific goal through my network. Ask me what I'm trying to accomplish.",
-      },
-    ] : [];
+  // No conversation starters - keep it clean
+  const defaultStarters: Array<{displayText: string; prompt: string}> = [];
 
   return (
     <>
@@ -498,12 +472,56 @@ function CopilotModal({
                     flexDirection: "column",
                     minWidth: 0
                   }}>
-                    {(selectedMode !== 'default' && !hasStartedConversation) ? (
-                      // Linear-style start screen for special modes
+                    {(selectedMode === 'leverage' && !selectedPerson) ? (
+                      // Leverage mode: Big search interface for person
+                      <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        padding: "120px 48px 80px",
+                        gap: "32px"
+                      }}>
+                        <h1 style={{
+                          fontSize: "40px",
+                          fontWeight: 600,
+                          color: "rgba(255,255,255,0.98)",
+                          marginBottom: "16px",
+                          textAlign: "center",
+                          letterSpacing: "-0.03em",
+                          background: "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%)",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }}>
+                          Who would you like to help?
+                        </h1>
+                        <p style={{
+                          fontSize: "16px",
+                          color: "rgba(255,255,255,0.55)",
+                          textAlign: "center",
+                          marginBottom: "24px",
+                        }}>
+                          Search your network or type a name
+                        </p>
+                        <div style={{
+                          width: "100%",
+                          maxWidth: "580px"
+                        }}>
+                          <PersonPicker
+                            onSelect={onPersonSelect}
+                            selectedPerson={selectedPerson}
+                            onClear={() => { onPersonClear(); }}
+                          />
+                        </div>
+                      </div>
+                    ) : (selectedMode !== 'default' && !hasStartedConversation) ? (
+                      // Meeting/Outcome modes: Start screens
                       <ModeStartScreen 
                         mode={selectedMode}
                         onSubmit={(value) => {
-                          // Handle the submitted value (person name or goal)
+                          // Handle the submitted value
                           setPromptToSend(value);
                           setHasStartedConversation(true);
                         }}
@@ -524,23 +542,19 @@ function CopilotModal({
                     messageLoadingComponent={() => <LoadingIndicator />}
                     welcomeMessage={{
                       title: selectedMode === 'default'
-                        ? "Your network is full of doors."
+                        ? "How can I help you?"
                         : personName
-                          ? `What do you want to do with ${personName}?`
-                          : selectedMode === 'leverage' ? "Who would you like to help?" :
-                            selectedMode === 'meeting' ? "Who are you meeting with?" :
-                            "What outcome do you want to achieve?",
+                          ? `${personName}`
+                          : selectedMode === 'leverage' ? "Leverage Loops" :
+                            selectedMode === 'meeting' ? "Meeting Prep" :
+                            "Outcomes",
                       description: selectedMode === 'default'
-                        ? "How can I help you today?"
+                        ? "Ask me anything"
                         : personName
                           ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
-                          : selectedMode === 'leverage' ? "Type a name or select from your network" :
-                            selectedMode === 'meeting' ? "View calendar or type a name" :
-                            "Describe your goal",
-                    }}
-                    conversationStarters={{
-                      variant: "long",
-                      options: defaultStarters,
+                          : selectedMode === 'leverage' ? "Help someone from your network" :
+                            selectedMode === 'meeting' ? "Get context for your meetings" :
+                            "Map your goals to actions",
                     }}
                       />
                     )}
