@@ -133,7 +133,6 @@ function CopilotModal({
   const chatKey = useRef(0);
   const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
   const [hasStartedConversation, setHasStartedConversation] = useState(false);
-  const [promptToSend, setPromptToSend] = useState<string | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
 
   /**
@@ -774,7 +773,6 @@ function CopilotModal({
                         } else {
                           // Reset for fresh start
                           setHasStartedConversation(mode === 'default');
-                          setPromptToSend(null);
                           onPersonClear();
                           chatKey.current += 1;
                         }
@@ -835,12 +833,11 @@ function CopilotModal({
                       </div>
                     ) : (selectedMode !== 'default' && !hasStartedConversation) ? (
                       // Meeting/Outcome modes: Start screens
-                      <ModeStartScreen 
+                      <ModeStartScreen
                         mode={selectedMode}
                         onSubmit={(value) => {
-                          // Handle the submitted value
-                          setPromptToSend(value);
                           setHasStartedConversation(true);
+                          onForkChoice(value);
                         }}
                       />
                     ) : (
