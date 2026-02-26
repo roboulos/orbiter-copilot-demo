@@ -455,28 +455,27 @@ function CopilotModal({
                   <ModePicker onSelectMode={(mode) => {
                     setSelectedMode(mode);
                     chatKey.current += 1;
+                    
+                    // Immediately trigger the mode's flow
+                    setTimeout(() => {
+                      if (mode === 'leverage') {
+                        setPromptToSend("I want to help someone from my network");
+                      } else if (mode === 'meeting') {
+                        setPromptToSend("Meeting prep");
+                      } else if (mode === 'outcome') {
+                        setPromptToSend("I want to achieve a goal");
+                      }
+                    }, 100);
                   }} />
                   
-                  {/* Right content area */}
+                  {/* Right content area - chat always visible */}
                   <div style={{
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
                     minWidth: 0
                   }}>
-                    {!selectedMode ? (
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        color: "#64748b",
-                        fontSize: "14px"
-                      }}>
-                        Select a mode to get started
-                      </div>
-                    ) : (
-                      <CrayonChat
+                    <CrayonChat
                         key={chatKey.current}
                       type="standalone"
                       processMessage={processMessage}
@@ -489,23 +488,26 @@ function CopilotModal({
                     // theme={orbiterTheme} // Custom theme via CSS instead
                     messageLoadingComponent={() => <LoadingIndicator />}
                     welcomeMessage={{
-                      title: personName
-                        ? `What do you want to do with ${personName}?`
-                        : selectedMode === 'leverage' ? "Who would you like to help?" :
-                          selectedMode === 'meeting' ? "Who are you meeting with?" :
-                          "What outcome do you want to achieve?",
-                      description: personName
-                        ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
-                        : selectedMode === 'leverage' ? "Type a name or select from your network" :
-                          selectedMode === 'meeting' ? "View calendar or type a name" :
-                          "Describe your goal",
+                      title: !selectedMode 
+                        ? "Your network is full of doors."
+                        : personName
+                          ? `What do you want to do with ${personName}?`
+                          : selectedMode === 'leverage' ? "Who would you like to help?" :
+                            selectedMode === 'meeting' ? "Who are you meeting with?" :
+                            "What outcome do you want to achieve?",
+                      description: !selectedMode
+                        ? "Select a mode on the left to get started"
+                        : personName
+                          ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
+                          : selectedMode === 'leverage' ? "Type a name or select from your network" :
+                            selectedMode === 'meeting' ? "View calendar or type a name" :
+                            "Describe your goal",
                     }}
                     conversationStarters={{
                       variant: "long",
                       options: defaultStarters,
                     }}
-                      />
-                    )}
+                    />
                   </div>
                 </div>
               </div>
