@@ -677,9 +677,26 @@ function CopilotModal({
                 onChoice={(prompt) => {
                   console.log('[FORK CHOICE]', { prompt });
                   onForkChoice(prompt);
-                  console.log('[FORK CHOICE] After onForkChoice');
                   onChatStart();
-                  console.log('[FORK CHOICE] After onChatStart');
+                  
+                  // Auto-send fix: Direct DOM manipulation after state settles
+                  setTimeout(() => {
+                    const textarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
+                    const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                    
+                    if (textarea && submitButton) {
+                      console.log('[AUTO-SEND FIX] Found textarea and submit button');
+                      textarea.value = prompt;
+                      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                      
+                      setTimeout(() => {
+                        console.log('[AUTO-SEND FIX] Clicking submit');
+                        submitButton.click();
+                      }, 100);
+                    } else {
+                      console.warn('[AUTO-SEND FIX] Textarea or button not found');
+                    }
+                  }, 600);
                 }}
               />
             ) : (
