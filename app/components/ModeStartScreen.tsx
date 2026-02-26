@@ -161,7 +161,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'flex-start',
-      padding: '48px 48px 40px',
+      padding: '32px 48px 32px',
       height: '100%',
       overflowY: 'auto',
       background: 'transparent',
@@ -193,7 +193,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
       }}>
         {/* Pass 1 & 5: Typography with enhanced hierarchy */}
         <h1 style={{
-          fontSize: '40px',
+          fontSize: '32px',
           fontWeight: 600,
           color: 'rgba(255,255,255,0.98)',
           marginBottom: '16px',
@@ -213,7 +213,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
         <p style={{
           fontSize: '16px',
           color: 'rgba(255,255,255,0.55)',
-          marginBottom: '56px',
+          marginBottom: '32px',
           textAlign: 'center',
           lineHeight: 1.5,
           letterSpacing: '-0.01em',
@@ -308,7 +308,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
 
         {/* Pass 8: Clearer examples section structure */}
         <div style={{
-          marginTop: '48px',
+          marginTop: '28px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
@@ -530,7 +530,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
                       fontSize: '12px',
                       color: 'rgba(255,255,255,0.5)',
                     }}>
-                      <span>🕐 {timeLabel}</span>
+                      <span>{timeLabel}</span>
                       {attendeeNames && (
                         <>
                           <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
@@ -548,7 +548,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
         {/* Calendar Loading State */}
         {mode === 'meeting' && calendarLoading && (
           <div style={{
-            marginTop: '40px',
+            marginTop: '24px',
             textAlign: 'center',
             fontSize: '13px',
             color: 'rgba(255,255,255,0.4)',
@@ -560,7 +560,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
         {/* Calendar Not Connected */}
         {mode === 'meeting' && !calendarLoading && !calendarConnected && (
           <div style={{
-            marginTop: '40px',
+            marginTop: '24px',
             padding: '16px',
             background: 'rgba(251,146,60,0.08)',
             border: '1px solid rgba(251,146,60,0.2)',
@@ -572,7 +572,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
               color: 'rgba(255,255,255,0.7)',
               marginBottom: '8px',
             }}>
-              📅 Connect your calendar to see upcoming meetings
+              Connect your calendar to see upcoming meetings
             </div>
             <div style={{
               fontSize: '12px',
@@ -585,7 +585,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
 
         {/* Pass 12: Contextual help text */}
         <div style={{
-          marginTop: '40px',
+          marginTop: '24px',
           textAlign: 'center',
           fontSize: '13px',
           color: 'rgba(255,255,255,0.35)',

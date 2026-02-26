@@ -50,6 +50,10 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
 import "@crayonai/react-ui/styles/index.css";
 
+// Premium Orbiter AI avatar for chat messages
+const ORBITER_AVATAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><circle cx="28" cy="28" r="28" fill="url(#g)"/><circle cx="28" cy="28" r="10" fill="none" stroke="white" stroke-width="2" opacity="0.9"/><circle cx="28" cy="20" r="2.5" fill="white" opacity="0.9"/></svg>`;
+const ORBITER_AVATAR = `data:image/svg+xml,${encodeURIComponent(ORBITER_AVATAR_SVG)}`;
+
 // Inline dispatch confirmation card — renders in chat stream
 function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
   person_name?: string;
@@ -68,7 +72,6 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
     }));
   };
 
-  // Listen for dispatch completion
   useEffect(() => {
     const onDone = () => { setDispatching(false); setDispatched(true); };
     window.addEventListener("dispatch-completed", onDone);
@@ -77,58 +80,74 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
 
   return (
     <div style={{
-      maxWidth: "560px",
-      background: "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.08))",
-      border: "2px solid rgba(59,130,246,0.35)",
-      borderRadius: "20px",
-      padding: "28px",
-      margin: "16px 0",
-      boxShadow: "0 8px 32px rgba(59,130,246,0.15), 0 0 0 1px rgba(255,255,255,0.05)",
+      maxWidth: "480px",
+      background: "rgba(255,255,255,0.03)",
+      border: dispatched ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(99,102,241,0.15)",
+      borderRadius: "16px",
+      padding: "20px",
+      margin: "12px 0",
+      animation: "cardEntrance 0.3s cubic-bezier(0.22,1,0.36,1) both",
     }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
         <div style={{
-          width: "48px", height: "48px", borderRadius: "14px",
-          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+          width: "36px", height: "36px", borderRadius: "10px",
+          background: dispatched
+            ? "rgba(34,197,94,0.1)"
+            : "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+          border: dispatched
+            ? "1px solid rgba(34,197,94,0.2)"
+            : "1px solid rgba(99,102,241,0.2)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "24px", boxShadow: "0 4px 16px rgba(59,130,246,0.4)",
+          transition: "all 0.3s ease",
         }}>
-          {dispatched ? "\u2713" : "\u2728"}
+          {dispatched ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(34,197,94,0.8)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" />
+            </svg>
+          )}
         </div>
-        <div>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}>
-            {dispatched ? "Dispatched!" : "Ready to Dispatch"}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }}>
+            {dispatched ? "Dispatched" : "Ready to Dispatch"}
           </div>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
-            {dispatched ? "Analyzing your network now" : "Review and confirm your request"}
+          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
+            {dispatched ? "Analyzing your network now" : "Review and confirm"}
           </div>
         </div>
       </div>
 
       {/* Summary */}
       <div style={{
-        padding: "16px 18px",
-        background: "rgba(0,0,0,0.2)",
-        borderRadius: "12px",
-        border: "1px solid rgba(255,255,255,0.05)",
-        marginBottom: "16px",
+        padding: "12px 14px",
+        background: "rgba(255,255,255,0.02)",
+        borderRadius: "10px",
+        border: "1px solid rgba(255,255,255,0.06)",
+        marginBottom: "14px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
       }}>
         {person_name && (
-          <div style={{ marginBottom: "8px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Person</div>
-            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{person_name}</div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Person</div>
+            <div style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.88)" }}>{person_name}</div>
           </div>
         )}
         {goal && (
-          <div style={{ marginBottom: "8px" }}>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Goal</div>
-            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{goal}</div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Goal</div>
+            <div style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.88)" }}>{goal}</div>
           </div>
         )}
         {context && (
           <div>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Context</div>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{context}</div>
+            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Context</div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>{context}</div>
           </div>
         )}
       </div>
@@ -138,23 +157,25 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
         <button
           onClick={handleConfirm}
           disabled={dispatching}
+          className="orbiter-btn"
           style={{
             width: "100%",
-            padding: "14px 24px",
-            background: dispatching ? "rgba(99,102,241,0.4)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
+            padding: "11px 20px",
+            background: dispatching ? "rgba(99,102,241,0.3)" : "linear-gradient(135deg, #6366f1, #7c3aed)",
             border: "none",
-            borderRadius: "12px",
+            borderRadius: "10px",
             color: "white",
-            fontSize: "15px",
-            fontWeight: 700,
+            fontSize: "14px",
+            fontWeight: 600,
             cursor: dispatching ? "not-allowed" : "pointer",
-            boxShadow: dispatching ? "none" : "0 4px 16px rgba(59,130,246,0.4)",
+            boxShadow: dispatching ? "none" : "0 2px 12px rgba(99,102,241,0.25)",
             transition: "all 0.2s ease",
             fontFamily: "inherit",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
+            letterSpacing: "-0.01em",
           }}
         >
           {dispatching ? (
@@ -164,7 +185,7 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
                 border: "2px solid rgba(255,255,255,0.3)",
                 borderTopColor: "white",
                 borderRadius: "50%",
-                animation: "spin 0.7s linear infinite",
+                animation: "orbitSpin 0.7s linear infinite",
               }} />
               Dispatching...
             </>
@@ -174,12 +195,18 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
         </button>
       ) : (
         <div style={{
-          textAlign: "center",
-          padding: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+          padding: "10px",
           fontSize: "13px",
-          color: "rgba(139,92,246,0.8)",
+          color: "rgba(34,197,94,0.7)",
           fontWeight: 500,
         }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
           Results will appear in 2-5 minutes
         </div>
       )}
@@ -1138,6 +1165,7 @@ function CopilotModal({
                         key={chatKey.current}
                         type="standalone"
                         processMessage={processMessage}
+                        logoUrl={ORBITER_AVATAR}
                         agentName={
                           selectedMode === 'default' ? "Copilot" :
                           selectedMode === 'leverage' ? "Leverage Loops" :
@@ -1901,7 +1929,7 @@ export default function Home() {
         const encoder = new TextEncoder();
         const errorStream = new ReadableStream({
           start(controller) {
-            const errorText = `⚠️ Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            const errorText = `Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`;
             controller.enqueue(encoder.encode(`event: text\ndata: ${errorText}\n\n`));
             controller.close();
           }

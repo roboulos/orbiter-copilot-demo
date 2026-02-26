@@ -92,12 +92,12 @@ export function ConfirmationModal({
             }}>
               {dispatching ? (
                 <>
-                  <span style={{ animation: "spin 1s linear infinite" }}>⚡</span>
+                  <div style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "orbitSpin 0.7s linear infinite" }} />
                   Dispatching...
                 </>
               ) : (
                 <>
-                  ⚡ {title}
+                  {title}
                 </>
               )}
             </h3>

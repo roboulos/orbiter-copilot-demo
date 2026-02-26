@@ -168,7 +168,7 @@ export function InlineInterviewCard({
             borderRadius: "8px",
           }}
         >
-          👤 {context.personName}
+          {context.personName}
           {context.outcome && ` • ${context.outcome}`}
         </div>
       )}

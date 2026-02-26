@@ -448,8 +448,16 @@ div, section, article, main, aside {
   width: 28px !important;
   height: 28px !important;
   border-radius: 50% !important;
-  border: 1px solid rgba(99,102,241,0.2) !important;
-  box-shadow: 0 0 12px rgba(99,102,241,0.15) !important;
+  border: none !important;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.15), 0 2px 8px rgba(99,102,241,0.12) !important;
+  overflow: hidden !important;
+}
+
+.crayon-shell-thread-message-agent__avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 .crayon-shell-thread-message-agent__content {
