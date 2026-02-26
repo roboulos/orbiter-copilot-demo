@@ -1436,8 +1436,16 @@ export default function Home() {
           items = [];
         }
       } catch (err) {
-        console.error('[PARSE ERROR]', err, 'Raw:', raw);
-        items = [{ type: "text", text: cleaned || raw || "I encountered an error. Please try again." }];
+        console.error('[PARSE ERROR]', err);
+        console.error('[PARSE ERROR] Raw response:', raw);
+        console.error('[PARSE ERROR] Cleaned:', cleaned);
+        console.error('[PARSE ERROR] Sanitized:', sanitized);
+        
+        // Last resort: Show error with instructions
+        items = [{ 
+          type: "text", 
+          text: `⚠️ Failed to parse backend response. Please check console for details.\n\nRaw response preview: ${cleaned.substring(0, 200)}...` 
+        }];
       }
 
       // MARK'S REQUIREMENT: NO intermediate suggestions during conversation

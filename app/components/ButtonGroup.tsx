@@ -4,15 +4,27 @@ import { useState } from "react";
 import { useThreadActions } from "@crayonai/react-core";
 
 interface ButtonGroupProps {
-  question: string;
-  options: Array<{
+  question?: string;
+  options?: Array<{
     label: string;
     value: string;
     emoji?: string;
   }>;
+  // Backend format support
+  masterPersonId?: number;
+  buttons?: Array<{
+    text: string;
+    action: string;
+  }>;
 }
 
-export function ButtonGroup({ question, options }: ButtonGroupProps) {
+export function ButtonGroup({ question, options, masterPersonId, buttons }: ButtonGroupProps) {
+  // Handle both frontend format (question/options) and backend format (buttons)
+  const displayQuestion = question || "What would you like to do?";
+  const displayOptions = options || (buttons || []).map(btn => ({
+    label: btn.text,
+    value: btn.action,
+  }));
   const { appendMessages, processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
@@ -55,12 +67,12 @@ export function ButtonGroup({ question, options }: ButtonGroupProps) {
           lineHeight: 1.5,
         }}
       >
-        {question}
+        {displayQuestion}
       </div>
 
       {/* Buttons */}
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        {options.map((option) => {
+        {displayOptions.map((option) => {
           const isSelected = selectedValue === option.value;
           const isDisabled = selectedValue !== null && !isSelected;
 
