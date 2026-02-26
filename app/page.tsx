@@ -487,9 +487,9 @@ function CopilotModal({
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
-                        justifyContent: "center",
+                        justifyContent: "flex-start",
                         height: "100%",
-                        padding: "120px 48px 80px",
+                        padding: "64px 48px 80px",
                         gap: "32px"
                       }}>
                         <h1 style={{
