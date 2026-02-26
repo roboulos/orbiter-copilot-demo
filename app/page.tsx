@@ -1075,6 +1075,52 @@ export default function Home() {
         items = [{ type: "text", text: cleaned || raw || "I encountered an error. Please try again." }];
       }
 
+      // MARK'S REQUIREMENT: NO intermediate suggestions during conversation
+      // Filter out person/leverage loop cards - only allow at dispatch confirmation
+      const BLOCKED_DURING_INTERVIEW = ['contact_card', 'leverage_loop_card', 'serendipity_card'];
+      items = items.filter(item => {
+        if ('name' in item && BLOCKED_DURING_INTERVIEW.includes(item.name)) {
+          console.log('[FILTERED]', item.name, '- Mark wants NO intermediate suggestions');
+          return false; // Block these cards during conversation
+        }
+        return true; // Allow everything else (text, dispatch_confirmation, etc.)
+      });
+
+      // FRONTEND FALLBACK: If backend shows results but doesn't send dispatch_confirmation,
+      // auto-generate one to trigger the modal
+      const hasResults = items.some(item => 'name' in item && 
+        (item.name === 'quick_result_card' || item.name === 'scanning_card'));
+      const hasDispatchConfirmation = items.some(item => 'name' in item && 
+        item.name === 'dispatch_confirmation');
+      
+      if (hasResults && !hasDispatchConfirmation && history.length > 0) {
+        // Extract goal from conversation history
+        const lastUserMessages = history
+          .filter(m => m.role === 'user')
+          .map(m => typeof m.content === 'string' ? m.content : String(m.content))
+          .slice(-3); // Last 3 user messages
+        
+        const goalText = lastUserMessages.join(' ');
+        const personMatch = goalText.match(/(?:help|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+        const personName = personMatch ? personMatch[1] : 'contact';
+        
+        // Extract goal keywords
+        const goalMatch = goalText.match(/(?:find|get|help with|looking for)\s+([^.!?]+)/i);
+        const goal = goalMatch ? goalMatch[1].trim() : 'network analysis';
+        
+        console.log('[FALLBACK] Auto-generating dispatch_confirmation:', { personName, goal });
+        
+        items.push({
+          name: 'dispatch_confirmation',
+          templateProps: {
+            person_name: personName,
+            goal: goal,
+            context: `Compiled from conversation: ${lastUserMessages.join('. ')}`,
+            master_person_id: masterPersonIdRef.current || null
+          }
+        });
+      }
+
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
