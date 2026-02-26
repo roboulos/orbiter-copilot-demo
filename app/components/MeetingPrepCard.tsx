@@ -2,20 +2,36 @@
 
 import { Avatar } from "./Avatar";
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * MEETING PREP CARD - Charlotte's Backend Integration
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * UPDATED: Feb 27, 2026 to match Charlotte's actual response structure
+ * 
+ * Charlotte's response has prep.talking_points with:
+ *   - topic
+ *   - opener
+ *   - why_they_care (snake_case, NOT camelCase!)
+ * 
+ * Backend endpoint: POST /meeting-prep
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 interface TalkingPoint {
   topic: string;
   opener: string;
-  whyTheyCare: string;
+  why_they_care: string; // Charlotte uses snake_case
 }
 
 interface MeetingPrepCardProps {
   personName: string;
   personTitle?: string;
   personCompany?: string;
-  summary: string;
+  summary: string; // Maps to Charlotte's prep.person_summary
   talkingPoints: TalkingPoint[];
-  listenFor: string[];
-  landmines: string[];
+  listenFor: string[]; // Maps to Charlotte's prep.listen_for
+  landmines: string[]; // Maps to Charlotte's prep.landmines
   sharedContext?: string;
   masterPersonId?: number;
 }
@@ -35,7 +51,7 @@ function buildMarkdown(props: MeetingPrepCardProps): string {
   for (const tp of talkingPoints) {
     lines.push(`### ${tp.topic}`);
     lines.push(`**Opener:** *${tp.opener}*`);
-    lines.push(`**Why they care:** ${tp.whyTheyCare}`);
+    lines.push(`**Why they care:** ${tp.why_they_care}`);
     lines.push("");
   }
   lines.push("## Listen For");
@@ -185,7 +201,7 @@ export function MeetingPrepCard(props: MeetingPrepCardProps) {
                       lineHeight: 1.5,
                     }}
                   >
-                    {tp.whyTheyCare}
+                    {tp.why_they_care}
                   </p>
                 </div>
               ))}
