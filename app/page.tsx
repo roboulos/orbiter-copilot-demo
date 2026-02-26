@@ -130,7 +130,6 @@ function CopilotModal({
   onTabChange,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
-  const [promptToSend, setPromptToSend] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<'leverage' | 'meeting' | 'outcome' | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchDescription, setDispatchDescription] = useState("");
@@ -195,7 +194,7 @@ function CopilotModal({
   useEffect(() => {
     if (pendingPrompt) {
       chatKey.current += 1;
-      setPromptToSend(pendingPrompt);
+      // TODO: Auto-send prompt when mode selected
       onPendingPromptConsumed();
     }
   }, [pendingPrompt, onPendingPromptConsumed]);
@@ -205,8 +204,33 @@ function CopilotModal({
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
 
   // Dynamic conversation starters based on whether person is selected
-  // No conversation starters after mode selected (per Mark's feedback - mode picker is the clear entry point)
-  const defaultStarters: Array<{displayText: string; prompt: string}> = [];
+  // Mode-specific conversation starters that auto-show after mode selection
+  const defaultStarters: Array<{displayText: string; prompt: string}> = 
+    !selectedMode ? [] :
+    selectedMode === 'leverage' && selectedPerson ? [
+      {
+        displayText: `Help ${personName} with something specific`,
+        prompt: `I want to help ${personName}${personTitle ? ` — ${personTitle}` : ""} with something specific. Ask me what I want to help them with.`,
+      },
+    ] :
+    selectedMode === 'leverage' ? [
+      {
+        displayText: "Help someone from my network",
+        prompt: "I want to help someone from my network. Ask me who they are and what they need.",
+      },
+    ] :
+    selectedMode === 'meeting' ? [
+      {
+        displayText: "Prepare for an upcoming meeting",
+        prompt: "I need meeting prep. Show me my upcoming calendar and help me prepare.",
+      },
+    ] :
+    selectedMode === 'outcome' ? [
+      {
+        displayText: "Set a goal to achieve",
+        prompt: "I want to achieve a specific goal through my network. Ask me what I'm trying to accomplish.",
+      },
+    ] : [];
 
   return (
     <>
@@ -455,17 +479,6 @@ function CopilotModal({
                   <ModePicker onSelectMode={(mode) => {
                     setSelectedMode(mode);
                     chatKey.current += 1;
-                    
-                    // Immediately trigger the mode's flow
-                    setTimeout(() => {
-                      if (mode === 'leverage') {
-                        setPromptToSend("I want to help someone from my network");
-                      } else if (mode === 'meeting') {
-                        setPromptToSend("Meeting prep");
-                      } else if (mode === 'outcome') {
-                        setPromptToSend("I want to achieve a goal");
-                      }
-                    }, 100);
                   }} />
                   
                   {/* Right content area - chat always visible */}
