@@ -1,6 +1,72 @@
-/* ─────────────────────────────────────────────────────────────────────────
-   Orbiter Copilot — Global Overrides  (World-Class Edition)
-   ───────────────────────────────────────────────────────────────────────── */
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ORBITER COPILOT — GLOBAL STYLES
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * INTEGRATION NOTE: This file contains ALL custom styling for the Copilot modal.
+ *                   Extract these styles for Thursday's integration into real app.
+ * 
+ * STYLING PHILOSOPHY: Linear-Inspired Design System
+ * 
+ * KEY PRINCIPLES:
+ *   1. Monochromatic with purple accents (#6366f1)
+ *   2. Subtle gradients and shadows
+ *   3. Smooth spring animations (cubic-bezier(0.34, 1.56, 0.64, 1))
+ *   4. Consistent spacing (8px, 16px, 24px, 32px, 48px)
+ *   5. Text hierarchy (95% / 65% / 45% opacity)
+ *   6. NO EMOJIS (Mark's requirement)
+ * 
+ * COLOR PALETTE:
+ *   Primary Purple: #6366f1 (Base), #4f46e5 (Dark), #8b5cf6 (Violet)
+ *   Backgrounds: #0a0a0f (Main), rgba(255,255,255,0.02-0.08) (Surfaces)
+ *   Borders: rgba(255,255,255,0.08-0.35)
+ *   Text: rgba(255,255,255,0.95-0.45)
+ * 
+ * ANIMATION SYSTEM:
+ *   Spring: cubic-bezier(0.34, 1.56, 0.64, 1) - Bouncy, playful
+ *   Smooth: cubic-bezier(0.22, 1, 0.36, 1) - Smooth slide
+ *   Snap: cubic-bezier(0.4, 0, 0.2, 1) - Quick response
+ * 
+ * SECTIONS IN THIS FILE:
+ *   1. Base Resets & Dark Mode Force
+ *   2. CrayonChat Overrides (Messages, Composer, Welcome)
+ *   3. Scrollbar Styling
+ *   4. Card Utility Classes
+ *   5. Animation Keyframes
+ *   6. Button Styles
+ *   7. Loading States
+ *   8. Error States
+ * 
+ * REMOVE DURING INTEGRATION:
+ *   - Any "DEMO ONLY" marked styles
+ *   - Development-only utility classes
+ *   - Test/debug styling
+ * 
+ * KEEP DURING INTEGRATION:
+ *   - Color variables and palette
+ *   - Animation keyframes
+ *   - Component-specific overrides
+ *   - Accessibility improvements
+ * 
+ * MARK'S REQUIREMENTS IMPLEMENTED:
+ *   ✅ Linear styling throughout
+ *   ✅ NO emojis (all removed)
+ *   ✅ Smooth animations (spring cubic-bezier)
+ *   ✅ Purple accent color
+ *   ✅ Clean, professional design
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION 1: BASE RESETS & DARK MODE FORCE
+   ═══════════════════════════════════════════════════════════════════════════
+   
+   WHY: Ensure consistent baseline across all browsers
+        Force dark mode to prevent white flash
+   
+   INTEGRATION NOTE: May conflict with existing app styles.
+                     Scope these to .copilot-modal container if needed.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 * { box-sizing: border-box; }
 
