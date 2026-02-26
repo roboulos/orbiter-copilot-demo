@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { getCalendarEvents, checkCalendarStatus, type CalendarEvent } from '../lib/calendar';
+import { getAuthToken } from '../lib/xano';
 
 interface ModeStartScreenProps {
   mode: 'default' | 'leverage' | 'meeting' | 'outcome';
@@ -11,7 +13,40 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
   const [input, setInput] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [hoveredExample, setHoveredExample] = useState<number | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<number | null>(null);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch calendar events for Meeting Prep mode
+  useEffect(() => {
+    if (mode === 'meeting') {
+      loadCalendarEvents();
+    }
+  }, [mode]);
+
+  const loadCalendarEvents = async () => {
+    try {
+      setCalendarLoading(true);
+      const authToken = await getAuthToken();
+      
+      // Check if calendar is connected
+      const status = await checkCalendarStatus(authToken);
+      setCalendarConnected(status.connected);
+      
+      if (status.connected) {
+        // Fetch upcoming events (next 7 days)
+        const response = await getCalendarEvents(authToken, 7, 10);
+        setCalendarEvents(response.events || []);
+      }
+    } catch (error) {
+      console.error('Failed to load calendar events:', error);
+      setCalendarEvents([]);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
 
   // Pass 1: Enhanced typography and content structure
   const config = {
@@ -352,6 +387,167 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
             </button>
           ))}
         </div>
+
+        {/* Calendar Events for Meeting Prep */}
+        {mode === 'meeting' && calendarConnected && !calendarLoading && calendarEvents.length > 0 && (
+          <div style={{
+            marginTop: '40px',
+            width: '100%',
+          }}>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.45)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: '14px',
+            }}>
+              Upcoming Meetings
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}>
+              {calendarEvents.slice(0, 5).map((event, idx) => {
+                const startDate = new Date(event.start_time * 1000);
+                const isToday = startDate.toDateString() === new Date().toDateString();
+                const isTomorrow = startDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                
+                const dateLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : 
+                  startDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                
+                const timeLabel = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                
+                const attendeeNames = event.attendees
+                  .filter(a => a.name)
+                  .map(a => a.name?.split(' ')[0])
+                  .slice(0, 3)
+                  .join(', ');
+
+                return (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => {
+                      const meetingPrompt = `Meeting with ${attendeeNames || 'attendees'}: ${event.title}`;
+                      setInput(meetingPrompt);
+                      onSubmit(meetingPrompt);
+                    }}
+                    onMouseEnter={() => setHoveredEvent(idx)}
+                    onMouseLeave={() => setHoveredEvent(null)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: '12px 14px',
+                      background: hoveredEvent === idx
+                        ? 'rgba(34,197,94,0.08)'
+                        : 'rgba(255,255,255,0.02)',
+                      border: hoveredEvent === idx
+                        ? '1px solid rgba(34,197,94,0.3)'
+                        : '1px solid rgba(255,255,255,0.09)',
+                      borderRadius: '8px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      transform: hoveredEvent === idx ? 'translateY(-1px)' : 'translateY(0)',
+                      boxShadow: hoveredEvent === idx
+                        ? '0 4px 12px -2px rgba(34,197,94,0.15)'
+                        : 'none',
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '6px',
+                    }}>
+                      <span style={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        color: hoveredEvent === idx 
+                          ? 'rgba(255,255,255,0.95)' 
+                          : 'rgba(255,255,255,0.85)',
+                        letterSpacing: '-0.01em',
+                      }}>
+                        {event.title}
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: isToday 
+                          ? 'rgba(34,197,94,0.8)' 
+                          : 'rgba(255,255,255,0.4)',
+                        padding: '2px 7px',
+                        background: isToday 
+                          ? 'rgba(34,197,94,0.12)' 
+                          : 'rgba(255,255,255,0.05)',
+                        borderRadius: '4px',
+                      }}>
+                        {dateLabel}
+                      </span>
+                    </div>
+                    
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '12px',
+                      color: 'rgba(255,255,255,0.5)',
+                    }}>
+                      <span>🕐 {timeLabel}</span>
+                      {attendeeNames && (
+                        <>
+                          <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                          <span>{attendeeNames}</span>
+                        </>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Calendar Loading State */}
+        {mode === 'meeting' && calendarLoading && (
+          <div style={{
+            marginTop: '40px',
+            textAlign: 'center',
+            fontSize: '13px',
+            color: 'rgba(255,255,255,0.4)',
+          }}>
+            Loading calendar events...
+          </div>
+        )}
+
+        {/* Calendar Not Connected */}
+        {mode === 'meeting' && !calendarLoading && !calendarConnected && (
+          <div style={{
+            marginTop: '40px',
+            padding: '16px',
+            background: 'rgba(251,146,60,0.08)',
+            border: '1px solid rgba(251,146,60,0.2)',
+            borderRadius: '8px',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.7)',
+              marginBottom: '8px',
+            }}>
+              📅 Connect your calendar to see upcoming meetings
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: 'rgba(255,255,255,0.45)',
+            }}>
+              Click the calendar icon in the header to connect
+            </div>
+          </div>
+        )}
 
         {/* Pass 12: Contextual help text */}
         <div style={{

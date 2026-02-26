@@ -817,6 +817,23 @@ div, section, article, main, aside {
   max-width: 800px !important;
   margin: 0 auto !important;
   text-align: center !important;
+  position: relative !important;
+  padding: 80px 48px !important;
+  animation: welcomeFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.crayon-shell-welcome-screen::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 600px !important;
+  height: 400px !important;
+  background: radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 70%) !important;
+  filter: blur(80px) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
 }
 
 .crayon-shell-welcome-screen__header,
@@ -824,23 +841,79 @@ div, section, article, main, aside {
   width: 100% !important;
   text-align: center !important;
   padding: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 .crayon-shell-welcome-screen__title {
   font-size: 2.5rem !important;
   margin-bottom: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+  background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  animation: titleSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both !important;
 }
 
 .crayon-shell-welcome-screen__description {
   font-size: 1.1rem !important;
-  opacity: 0.8 !important;
-  margin-bottom: 32px !important;
+  color: rgba(255,255,255,0.65) !important;
+  margin-bottom: 48px !important;
+  line-height: 1.6 !important;
+  letter-spacing: -0.01em !important;
+  animation: descSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both !important;
 }
 
 .crayon-shell-welcome-screen__desktop-composer {
   width: 100% !important;
   max-width: 700px !important;
   margin: 0 auto !important;
+  animation: composerSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both !important;
+}
+
+/* Welcome screen animations */
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes titleSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes descSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes composerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* CRITICAL: Override Crayon's fixed 530px copilot shell width */
