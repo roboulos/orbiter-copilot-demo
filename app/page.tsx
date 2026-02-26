@@ -314,7 +314,9 @@ function CopilotModal({
    * ═══════════════════════════════════════════════════════════════════════
    */
   useEffect(() => {
+    console.log('[AUTO-SEND CHECK]', { pendingPrompt: !!pendingPrompt, showFork, hasStartedConversation });
     if (pendingPrompt && !showFork && hasStartedConversation) {
+      console.log('[AUTO-SEND TRIGGERED] Waiting 500ms for CrayonChat mount...');
       // TIMING NOTE: Wait for CrayonChat to mount (500ms tested as reliable)
       const timer = setTimeout(() => {
         /**
@@ -330,6 +332,8 @@ function CopilotModal({
          * INTEGRATION NOTE: Update selectors if CrayonChat structure changes.
          */
         const inputElement = document.querySelector('.crayon-shell-desktop-welcome-composer__input, .crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
+        
+        console.log('[AUTO-SEND] Input element found:', !!inputElement, inputElement?.className);
         
         if (inputElement) {
           // STEP 1: Set the value programmatically
@@ -1148,6 +1152,7 @@ export default function Home() {
   }, []);
 
   const handleForkChoice = useCallback((prompt: string) => {
+    console.log('[FORK CHOICE]', { prompt });
     setPendingPrompt(prompt);
   }, []);
 
