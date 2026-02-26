@@ -1396,15 +1396,21 @@ export default function Home() {
         // Support multiple backend response formats
         if (parsed?.response && Array.isArray(parsed.response)) {
           // Format 1: {response: [{name, templateProps}]}
-          items = parsed.response;
+          items = parsed.response.map((item: any) => ({
+            name: item.name || item.type, // Support both 'name' and 'type' fields
+            templateProps: item.templateProps
+          }));
+        } else if (parsed?.type && parsed?.templateProps && typeof parsed.type === 'string') {
+          // Format 2a: Single {type: "button_group", templateProps: {...}}
+          items = [{ name: parsed.type, templateProps: parsed.templateProps }];
         } else if (parsed?.template && parsed?.data) {
-          // Format 2: {template: "name", data: {...}}
+          // Format 2b: {template: "name", data: {...}}
           items = [{ name: parsed.template, templateProps: parsed.data }];
         } else if (Array.isArray(parsed)) {
-          // Format 3: [{template, data}, ...]
-          items = parsed.map(item => ({
-            name: item.template || item.name,
-            templateProps: item.data || item.templateProps || item
+          // Format 3: [{template, data}, ...] or [{type, templateProps}, ...]
+          items = parsed.map((item: any) => ({
+            name: item.name || item.template || item.type,
+            templateProps: item.templateProps || item.data || item
           }));
         } else {
           // Fallback to empty array
