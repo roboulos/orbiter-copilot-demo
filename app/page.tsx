@@ -682,34 +682,49 @@ function CopilotModal({
                   // Auto-send fix: Direct DOM manipulation after state settles
                   setTimeout(() => {
                     const textarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
-                    const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                    // Find submit button - could be button[type="submit"] or just a button near textarea
+                    let submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                    if (!submitButton) {
+                      // Try finding button in same container as textarea
+                      const container = textarea?.closest('.crayon-shell-thread-composer, [class*="composer"]');
+                      submitButton = container?.querySelector('button') as HTMLButtonElement;
+                    }
                     
                     if (textarea && submitButton) {
-                      console.log('[AUTO-SEND FIX] Found textarea and submit button');
+                      console.log('[AUTO-SEND FIX] Found elements, sending:', prompt);
                       textarea.value = prompt;
                       textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                      textarea.dispatchEvent(new Event('change', { bubbles: true }));
                       
                       setTimeout(() => {
-                        console.log('[AUTO-SEND FIX] Clicking submit');
+                        console.log('[AUTO-SEND FIX] Clicking submit button');
                         submitButton.click();
-                      }, 200);
+                      }, 300);
                     } else {
-                      console.warn('[AUTO-SEND FIX] Textarea or button not found, retrying...');
+                      console.warn('[AUTO-SEND FIX] Not found (textarea:', !!textarea, 'button:', !!submitButton, '), retrying...');
                       // Retry once after additional delay
                       setTimeout(() => {
                         const retryTextarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
-                        const retryButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                        let retryButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                        if (!retryButton && retryTextarea) {
+                          const retryContainer = retryTextarea.closest('.crayon-shell-thread-composer, [class*="composer"]');
+                          retryButton = retryContainer?.querySelector('button') as HTMLButtonElement;
+                        }
                         if (retryTextarea && retryButton) {
-                          console.log('[AUTO-SEND FIX] Retry successful');
+                          console.log('[AUTO-SEND FIX] Retry successful, sending:', prompt);
                           retryTextarea.value = prompt;
                           retryTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-                          setTimeout(() => retryButton.click(), 200);
+                          retryTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+                          setTimeout(() => {
+                            console.log('[AUTO-SEND FIX] Retry: clicking submit');
+                            retryButton.click();
+                          }, 300);
                         } else {
-                          console.error('[AUTO-SEND FIX] Retry failed - elements still not found');
+                          console.error('[AUTO-SEND FIX] Retry failed - textarea:', !!retryTextarea, 'button:', !!retryButton);
                         }
-                      }, 800);
+                      }, 1000);
                     }
-                  }, 1200);
+                  }, 1500);
                 }}
               />
             ) : (
