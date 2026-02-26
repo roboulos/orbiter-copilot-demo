@@ -322,13 +322,14 @@ function CopilotModal({
          * Since CrayonChat doesn't expose initialMessage prop, we directly
          * manipulate DOM to inject the message and trigger send.
          * 
-         * SELECTORS: Try both textarea and input (CrayonChat might use either)
-         *   - '.crayon-shell-composer textarea' - Primary composer
+         * SELECTORS: Try multiple possible input locations:
+         *   - '.crayon-shell-desktop-welcome-composer__input' - Welcome screen input
+         *   - '.crayon-shell-composer textarea' - Thread composer (active chat)
          *   - '.crayon-shell-composer input' - Alternative composer
          * 
          * INTEGRATION NOTE: Update selectors if CrayonChat structure changes.
          */
-        const inputElement = document.querySelector('.crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
+        const inputElement = document.querySelector('.crayon-shell-desktop-welcome-composer__input, .crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
         
         if (inputElement) {
           // STEP 1: Set the value programmatically
@@ -340,8 +341,8 @@ function CopilotModal({
           inputElement.dispatchEvent(inputEvent);
           
           // STEP 3: Find and click the send button
-          // Try both possible button selectors
-          const sendButton = document.querySelector('.crayon-shell-composer button[type="submit"], .crayon-shell-composer-send') as HTMLButtonElement;
+          // Try multiple possible button locations (welcome screen or thread composer)
+          const sendButton = document.querySelector('.crayon-shell-desktop-welcome-composer button[type="submit"], .crayon-shell-composer button[type="submit"], .crayon-shell-composer-send') as HTMLButtonElement;
           
           if (sendButton) {
             // SUCCESS PATH: Found send button, click after brief delay
