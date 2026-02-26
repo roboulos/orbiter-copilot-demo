@@ -37,6 +37,7 @@ import { DispatchConfirmationModal } from "./components/DispatchConfirmationModa
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
 import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
+import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
 import { chat, dispatch } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
@@ -130,6 +131,7 @@ function CopilotModal({
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [promptToSend, setPromptToSend] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'leverage' | 'meeting' | 'outcome' | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchDescription, setDispatchDescription] = useState("");
   const [isDispatching, setIsDispatching] = useState(false);
@@ -480,26 +482,42 @@ function CopilotModal({
                   display: "flex",
                   flexDirection: "column"
                 }}>
-                  <CrayonChat
-                    type="standalone"
-                    processMessage={processMessage}
-                    agentName="Orbiter Copilot"
-                    responseTemplates={templates}
+                  {!selectedMode ? (
+                    <ModePicker onSelectMode={(mode) => {
+                      setSelectedMode(mode);
+                      chatKey.current += 1;
+                    }} />
+                  ) : (
+                    <CrayonChat
+                      key={chatKey.current}
+                      type="standalone"
+                      processMessage={processMessage}
+                      agentName={
+                        selectedMode === 'leverage' ? "Leverage Loops" :
+                        selectedMode === 'meeting' ? "Meeting Prep" :
+                        "Outcomes"
+                      }
+                      responseTemplates={templates}
                     // theme={orbiterTheme} // Custom theme via CSS instead
                     messageLoadingComponent={() => <LoadingIndicator />}
                     welcomeMessage={{
                       title: personName
                         ? `What do you want to do with ${personName}?`
-                        : "Your network is full of doors.",
+                        : selectedMode === 'leverage' ? "Who would you like to help?" :
+                          selectedMode === 'meeting' ? "Who are you meeting with?" :
+                          "What outcome do you want to achieve?",
                       description: personName
                         ? `${personTitle || ""}${personCompany ? ` · ${personCompany}` : ""}`
-                        : "Pick someone above or ask me anything about your network.",
+                        : selectedMode === 'leverage' ? "Type a name or select from your network" :
+                          selectedMode === 'meeting' ? "View calendar or type a name" :
+                          "Describe your goal",
                     }}
                     conversationStarters={{
                       variant: "long",
                       options: defaultStarters,
                     }}
-                  />
+                    />
+                  )}
                 </div>
               </div>
             )}

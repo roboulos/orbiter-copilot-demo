@@ -169,7 +169,7 @@ export function InlineInterviewCard({
           }}
         >
           👤 {context.personName}
-          {context.outcome && ` • 🎯 ${context.outcome}`}
+          {context.outcome && ` • ${context.outcome}`}
         </div>
       )}
 
@@ -269,7 +269,7 @@ export function InlineInterviewCard({
             lineHeight: "1.4",
           }}
         >
-          💡 {helpText}
+          {helpText}
         </div>
       )}
 

@@ -159,7 +159,7 @@ export function QuickResultCard({ matches, stillSearching = true }: QuickResultC
             color: "var(--text-tertiary)",
             fontStyle: "italic",
           }}>
-            💡 {topMatch.reason}
+            {topMatch.reason}
           </div>
         </div>
 

@@ -42,7 +42,7 @@ function buildMarkdown(props: MeetingPrepCardProps): string {
   for (const item of listenFor) lines.push(`- ✅ ${item}`);
   lines.push("");
   lines.push("## Landmines (Avoid)");
-  for (const item of landmines) lines.push(`- ⚠️ ${item}`);
+  for (const item of landmines) lines.push(`- ${item}`);
   if (sharedContext) {
     lines.push("");
     lines.push("## Shared Context");
@@ -185,7 +185,7 @@ export function MeetingPrepCard(props: MeetingPrepCardProps) {
                       lineHeight: 1.5,
                     }}
                   >
-                    💡 {tp.whyTheyCare}
+                    {tp.whyTheyCare}
                   </p>
                 </div>
               ))}
