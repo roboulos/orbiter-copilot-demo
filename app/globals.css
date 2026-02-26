@@ -1063,8 +1063,8 @@ div, section, article, main, aside {
 
 /* CRITICAL: Override Crayon's fixed 530px copilot shell width */
 .crayon-copilot-shell-container {
-  width: 100dvw !important;
-  max-width: 100dvw !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* ══════════════════════════════════════════════════════

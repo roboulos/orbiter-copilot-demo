@@ -1010,7 +1010,8 @@ function CopilotModal({
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    minWidth: 0
+                    minWidth: 0,
+                    overflow: "hidden",
                   }}>
                     {(selectedMode === 'leverage' && !selectedPerson) ? (
                       // Leverage mode: Big search interface for person
@@ -1020,8 +1021,10 @@ function CopilotModal({
                         alignItems: "center",
                         justifyContent: "flex-start",
                         height: "100%",
-                        padding: "64px 48px 80px",
-                        gap: "32px"
+                        padding: "48px 32px 40px",
+                        gap: "24px",
+                        overflowY: "auto",
+                        overflowX: "hidden",
                       }}>
                         <h1 style={{
                           fontSize: "40px",
@@ -1058,7 +1061,7 @@ function CopilotModal({
 
                         {/* Suggested people from network */}
                         {suggestedPeople.length > 0 && (
-                          <div style={{ width: "100%", maxWidth: "580px", marginTop: "8px" }}>
+                          <div style={{ width: "100%", maxWidth: "100%", marginTop: "8px" }}>
                             <div style={{
                               fontSize: "11px",
                               fontWeight: 600,
@@ -1071,7 +1074,7 @@ function CopilotModal({
                             </div>
                             <div style={{
                               display: "grid",
-                              gridTemplateColumns: "repeat(3, 1fr)",
+                              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
                               gap: "8px",
                             }}>
                               {suggestedPeople.slice(0, 9).map((person) => {
