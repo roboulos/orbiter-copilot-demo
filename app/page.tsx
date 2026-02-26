@@ -1485,25 +1485,35 @@ export default function Home() {
           items.push({ type: "text", text: textBeforeJson });
         }
         
+        // Normalize function: convert 'content' to 'text', handle both 'name' and 'type'
+        const normalizeItem = (item: any): ResponseItem => {
+          // Handle text items
+          if (item.type === "text" || item.name === "text") {
+            return {
+              type: "text",
+              text: item.text || item.content || ""
+            };
+          }
+          // Handle template/card items
+          return {
+            name: item.name || item.type,
+            templateProps: item.templateProps || item.data || item
+          };
+        };
+        
         // Support multiple backend response formats
         if (parsed?.response && Array.isArray(parsed.response)) {
           // Format 1: {response: [{name, templateProps}]}
-          items.push(...parsed.response.map((item: any) => ({
-            name: item.name || item.type, // Support both 'name' and 'type' fields
-            templateProps: item.templateProps
-          })));
-        } else if (parsed?.type && parsed?.templateProps && typeof parsed.type === 'string') {
-          // Format 2a: Single {type: "button_group", templateProps: {...}}
-          items.push({ name: parsed.type, templateProps: parsed.templateProps });
+          items.push(...parsed.response.map(normalizeItem));
+        } else if (parsed?.type && typeof parsed.type === 'string') {
+          // Format 2: Single {type: "...", templateProps/content: {...}}
+          items.push(normalizeItem(parsed));
         } else if (parsed?.template && parsed?.data) {
-          // Format 2b: {template: "name", data: {...}}
-          items.push({ name: parsed.template, templateProps: parsed.data });
+          // Format 3: {template: "name", data: {...}}
+          items.push(normalizeItem({ name: parsed.template, templateProps: parsed.data }));
         } else if (Array.isArray(parsed)) {
-          // Format 3: [{template, data}, ...] or [{type, templateProps}, ...]
-          items.push(...parsed.map((item: any) => ({
-            name: item.name || item.template || item.type,
-            templateProps: item.templateProps || item.data || item
-          })));
+          // Format 4: [{template, data}, ...] or [{type, templateProps}, ...]
+          items.push(...parsed.map(normalizeItem));
         } else {
           // Fallback to empty array
           console.warn('[PARSE WARNING] Unknown response format:', parsed);
@@ -1572,8 +1582,10 @@ export default function Home() {
         start(controller) {
           if (abortController.signal.aborted) { controller.close(); return; }
           for (const item of items) {
-            if ("type" in item && item.type === "text" && item.text) {
-              const words = item.text.split(" ");
+            // Handle text items (support both 'text' and 'content' fields)
+            const textContent = ("type" in item && item.type === "text") ? (item.text || (item as any).content) : null;
+            if (textContent) {
+              const words = String(textContent).split(" ");
               for (let i = 0; i < words.length; i++) {
                 const chunk = (i === 0 ? "" : " ") + words[i];
                 controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
