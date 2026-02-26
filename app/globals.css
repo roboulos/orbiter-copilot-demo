@@ -261,9 +261,9 @@ div, section, article, main, aside {
 .crayon-shell-thread-messages {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
+  gap: 4px !important;
   overflow: visible !important;
-  padding-left: 16px !important;
+  padding-left: 12px !important;
 }
 
 /* Remove any centering from message wrappers */
@@ -287,7 +287,7 @@ div, section, article, main, aside {
 
 /* Template responses (cards, buttons, etc) */
 .crayon-shell-response-template {
-  max-width: 500px !important;
+  max-width: 440px !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -325,13 +325,13 @@ div, section, article, main, aside {
    ══════════════════════════════════════════════════════ */
 
 .crayon-shell-conversation-starter-item-long {
-  background: rgba(255,255,255,0.08) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  border-radius: 12px !important;
-  padding: 16px 20px !important;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.15s ease !important;
   animation: fadeUp 0.4s ease both !important;
-  color: rgba(255,255,255,0.9) !important;
+  color: rgba(255,255,255,0.88) !important;
 }
 
 .crayon-shell-conversation-starter-item-long,
@@ -349,14 +349,13 @@ div, section, article, main, aside {
 .crayon-shell-conversation-starter-item-long:nth-child(4) { animation-delay: 0.26s !important; }
 
 .crayon-shell-conversation-starter-item-long:hover {
-  background-color: rgba(99, 102, 241, 0.15) !important;
-  border-color: rgba(99, 102, 241, 0.4) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(99,102,241,0.2) !important;
+  background-color: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  transform: translateY(-1px) !important;
 }
 
 .crayon-shell-conversation-starter-item-long:active {
-  background-color: rgba(99, 102, 241, 0.13) !important;
+  background-color: rgba(99, 102, 241, 0.08) !important;
   transform: translateY(0) !important;
 }
 
@@ -376,34 +375,36 @@ div, section, article, main, aside {
   justify-content: flex-start !important;
   align-items: flex-start !important;
   width: 100% !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 12px !important;
   padding: 0 !important;
-  animation: cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both !important;
+  animation: cardEntrance 0.3s cubic-bezier(0.22,1,0.36,1) both !important;
 }
 
 .crayon-shell-thread-message-agent__avatar {
   flex-shrink: 0 !important;
   margin-top: 2px !important;
   margin-right: 10px !important;
-  width: 32px !important;
-  height: 32px !important;
+  width: 28px !important;
+  height: 28px !important;
   border-radius: 50% !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+  box-shadow: 0 0 12px rgba(99,102,241,0.15) !important;
 }
 
 .crayon-shell-thread-message-agent__content {
   display: inline-block !important;
-  max-width: 580px !important;
+  max-width: 560px !important;
   width: fit-content !important;
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  border-radius: 20px 20px 20px 4px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 18px 18px 18px 4px !important;
   padding: 12px 16px !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
   font-size: 14px !important;
-  line-height: 1.6 !important;
-  color: rgba(255,255,255,0.9) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  line-height: 1.65 !important;
+  color: rgba(255,255,255,0.92) !important;
+  letter-spacing: -0.008em !important;
   overflow: visible !important;
 }
 
@@ -415,26 +416,25 @@ div, section, article, main, aside {
   display: flex !important;
   justify-content: flex-end !important;
   width: 100% !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 12px !important;
   padding: 0 !important;
-  animation: slideInRight 0.25s ease both !important;
+  animation: slideInRight 0.2s ease both !important;
 }
 
 .crayon-shell-thread-message-user__content {
   display: inline-block !important;
   max-width: 480px !important;
   width: fit-content !important;
-  background: linear-gradient(135deg, rgba(99,102,241,0.20), rgba(139,92,246,0.16)) !important;
-  color: #e8e8f0 !important;
-  border: 1px solid rgba(99,102,241,0.30) !important;
-  border-radius: 20px 20px 4px 20px !important;
+  background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.10)) !important;
+  color: rgba(255,255,255,0.95) !important;
+  border: 1px solid rgba(99,102,241,0.22) !important;
+  border-radius: 18px 18px 4px 18px !important;
   font-size: 14px !important;
-  line-height: 1.6 !important;
-  backdrop-filter: blur(12px) !important;
+  line-height: 1.65 !important;
+  letter-spacing: -0.008em !important;
   padding: 12px 16px !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.15) !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -452,23 +452,24 @@ div, section, article, main, aside {
 }
 
 .crayon-shell-desktop-welcome-composer {
-  padding: 12px !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1.5px solid rgba(99,102,241,0.3) !important;
-  border-radius: 20px !important;
+  padding: 10px !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 18px !important;
   transition: all 0.2s ease !important;
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
 }
 
 .crayon-shell-desktop-welcome-composer:focus-within {
-  border-color: rgba(99,102,241,0.42) !important;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+  background-color: rgba(255,255,255,0.04) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.06), 0 4px 20px rgba(0,0,0,0.25) !important;
 }
 
 /* Input takes up ALL remaining space - SINGLE LINE ONLY */
@@ -526,21 +527,22 @@ div, section, article, main, aside {
 }
 
 .crayon-shell-thread-composer__input-wrapper {
-  padding: 10px 10px 10px 24px !important;
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  padding: 8px 8px 8px 20px !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
   width: 100% !important;
   max-width: 100% !important;
-  min-height: 64px !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
+  min-height: 56px !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
   border-radius: 16px !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
 }
 
 .crayon-shell-thread-composer:focus-within .crayon-shell-thread-composer__input-wrapper {
-  border-color: rgba(99,102,241,0.42) !important;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.09), 0 8px 32px rgba(99,102,241,0.08) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  background-color: rgba(255,255,255,0.04) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.06) !important;
 }
 
 .crayon-shell-thread-composer__input {
@@ -610,30 +612,30 @@ div, section, article, main, aside {
    ══════════════════════════════════════════════════════ */
 
 .crayon-shell-composer-submit-button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
-  border-radius: 10px !important;
+  background: linear-gradient(135deg, #6366f1, #7c3aed) !important;
+  border-radius: 12px !important;
   border: none !important;
-  width: 36px !important;
-  height: 36px !important;
+  width: 38px !important;
+  height: 38px !important;
   flex-shrink: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: opacity 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+  transition: all 0.15s ease !important;
 }
 
 .crayon-shell-composer-submit-button:not(:disabled):hover {
-  opacity: 0.9 !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 16px rgba(99,102,241,0.45) !important;
+  background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+  transform: scale(1.04) !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.35) !important;
 }
 
 .crayon-shell-composer-submit-button:not(:disabled):active {
-  transform: scale(0.97) !important;
+  transform: scale(0.96) !important;
 }
 
 .crayon-shell-composer-submit-button:disabled {
-  background: rgba(255,255,255,0.08) !important;
+  background: rgba(255,255,255,0.06) !important;
   transform: none !important;
 }
 
@@ -880,12 +882,12 @@ div, section, article, main, aside {
 /* Center and constrain welcome content */
 .crayon-shell-welcome-screen {
   width: 100% !important;
-  max-width: 800px !important;
+  max-width: 700px !important;
   margin: 0 auto !important;
   text-align: center !important;
   position: relative !important;
-  padding: 80px 48px !important;
-  animation: welcomeFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+  padding: 60px 40px !important;
+  animation: welcomeFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 
 .crayon-shell-welcome-screen::before {
@@ -894,10 +896,10 @@ div, section, article, main, aside {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  width: 600px !important;
-  height: 400px !important;
-  background: radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 70%) !important;
-  filter: blur(80px) !important;
+  width: 500px !important;
+  height: 350px !important;
+  background: radial-gradient(ellipse at center, rgba(99,102,241,0.04) 0%, transparent 70%) !important;
+  filter: blur(100px) !important;
   pointer-events: none !important;
   z-index: 0 !important;
 }
@@ -912,24 +914,22 @@ div, section, article, main, aside {
 }
 
 .crayon-shell-welcome-screen__title {
-  font-size: 2.5rem !important;
-  margin-bottom: 16px !important;
+  font-size: 1.75rem !important;
+  margin-bottom: 12px !important;
   font-weight: 600 !important;
   letter-spacing: -0.03em !important;
-  background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  animation: titleSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both !important;
+  color: rgba(255,255,255,0.95) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.95) !important;
+  animation: titleSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both !important;
 }
 
 .crayon-shell-welcome-screen__description {
-  font-size: 1.1rem !important;
-  color: rgba(255,255,255,0.65) !important;
-  margin-bottom: 48px !important;
+  font-size: 0.95rem !important;
+  color: rgba(255,255,255,0.45) !important;
+  margin-bottom: 36px !important;
   line-height: 1.6 !important;
   letter-spacing: -0.01em !important;
-  animation: descSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both !important;
+  animation: descSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both !important;
 }
 
 .crayon-shell-welcome-screen__desktop-composer {
