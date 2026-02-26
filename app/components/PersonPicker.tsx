@@ -1,3 +1,50 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PERSON PICKER - Search & Select Network Contacts
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * MARK'S REQUIREMENT: "PersonPicker high on screen, not at bottom"
+ * 
+ * USAGE: Leverage Loops mode - search network to select person to help
+ * 
+ * INTEGRATION NOTE: This component handles:
+ *   1. Real-time search (debounced 300ms)
+ *   2. Person selection
+ *   3. Context loading (fetches person details from Xano)
+ *   4. Loading states (orbital spinner)
+ *   5. Empty states (no results)
+ * 
+ * FLOW:
+ *   1. User types name → debounced search after 300ms
+ *   2. Results appear → click person
+ *   3. Loading overlay → "Loading context for [Name]..."
+ *   4. Context fetched → onSelect callback with person + context
+ *   5. Parent shows fork (2 options)
+ * 
+ * STYLING:
+ *   - Linear design (purple accents, smooth animations)
+ *   - Search input: Focus glow, purple border
+ *   - Results: Hover lift (-2px), subtle shadows
+ *   - Loading: Orbital spinner with shimmer effect
+ * 
+ * POSITIONING: 
+ *   - Parent sets padding: "64px 48px 80px" (high on screen)
+ *   - justifyContent: "flex-start" (not center)
+ *   - maxWidth: "580px" for comfortable search
+ * 
+ * BACKEND:
+ *   - searchPersons() - Xano /search endpoint
+ *   - getPersonContext() - Xano /person-context/{id} endpoint
+ * 
+ * ACCESSIBILITY:
+ *   - Input has aria-label
+ *   - Results are keyboard navigable
+ *   - Loading state announced
+ * 
+ * KEEP: This component is core to Leverage Loops flow
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
