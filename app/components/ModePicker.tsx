@@ -47,10 +47,10 @@ type ModeConfig = {
 
 const modes: ModeConfig[] = [
   {
-    id: 'default',
-    icon: ChatIcon,
-    label: 'Chat',
-    description: 'General conversation'
+    id: 'outcome',
+    icon: OutcomeIcon,
+    label: 'Outcomes',
+    description: 'Map a goal to an action plan'
   },
   {
     id: 'leverage',
@@ -65,11 +65,11 @@ const modes: ModeConfig[] = [
     description: 'Get context and talking points'
   },
   {
-    id: 'outcome',
-    icon: OutcomeIcon,
-    label: 'Outcomes',
-    description: 'Map a goal to an action plan'
-  }
+    id: 'default',
+    icon: ChatIcon,
+    label: 'Chat',
+    description: 'General conversation'
+  },
 ];
 
 export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
