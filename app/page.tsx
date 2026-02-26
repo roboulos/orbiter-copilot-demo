@@ -1365,29 +1365,30 @@ export default function Home() {
         { role: "user", content: prompt }
       ];
 
-      // MOCK MODE: Use mock responses for testing frontend
-      // Default to mock mode if no API URL configured
-      const HAS_API_URL = Boolean(process.env.NEXT_PUBLIC_XANO_API_URL);
-      const MOCK_ENABLED = !HAS_API_URL || process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
-      let raw = "";
-      
-      if (MOCK_ENABLED) {
-        console.log('[MOCK MODE] Using mock backend (no API URL configured)');
-        const { getMockResponse } = await import('./lib/mock-backend');
-        raw = getMockResponse(prompt, networkSummary);
-        console.log('[MOCK RESPONSE]', raw);
-      } else {
-        // Send person context and network data separately (network_data is structured JSON)
-        const data = await chat(
-          prompt,
-          personContextRef.current || undefined,
-          history.length > 0 ? history : undefined,
-          masterPersonIdRef.current,
-          networkSummary || undefined // Structured JSON with full network
-        );
-        raw = data.raw || "";
-        console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
-      }
+      try {
+        // MOCK MODE: Use mock responses for testing frontend
+        // Default to mock mode if no API URL configured
+        const HAS_API_URL = Boolean(process.env.NEXT_PUBLIC_XANO_API_URL);
+        const MOCK_ENABLED = !HAS_API_URL || process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
+        let raw = "";
+        
+        if (MOCK_ENABLED) {
+          console.log('[MOCK MODE] Using mock backend (no API URL configured)');
+          const { getMockResponse } = await import('./lib/mock-backend');
+          raw = getMockResponse(prompt, networkSummary);
+          console.log('[MOCK RESPONSE]', raw);
+        } else {
+          // Send person context and network data separately (network_data is structured JSON)
+          const data = await chat(
+            prompt,
+            personContextRef.current || undefined,
+            history.length > 0 ? history : undefined,
+            masterPersonIdRef.current,
+            networkSummary || undefined // Structured JSON with full network
+          );
+          raw = data.raw || "";
+          console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
+        }
       
       // AGGRESSIVE JSON EXTRACTION
       // Backend sends: 'some text "type": "button_group", "templateProps": {...}'
@@ -1601,13 +1602,39 @@ export default function Home() {
         },
       });
 
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache, no-transform",
-          Connection: "keep-alive",
-        },
-      });
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+          },
+        });
+      } catch (error) {
+        console.error('[PROCESS MESSAGE ERROR]', error);
+        console.error('[ERROR DETAILS]', {
+          prompt,
+          hasNetworkSummary: !!networkSummary,
+          historyLength: history?.length || 0
+        });
+        
+        // Return error as text stream
+        const encoder = new TextEncoder();
+        const errorStream = new ReadableStream({
+          start(controller) {
+            const errorText = `⚠️ Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            controller.enqueue(encoder.encode(`event: text\ndata: ${errorText}\n\n`));
+            controller.close();
+          }
+        });
+        
+        return new Response(errorStream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            Connection: "keep-alive",
+          },
+        });
+      }
     },
     [networkSummary]
   );
