@@ -338,46 +338,50 @@ function CopilotModal({
          * INTEGRATION NOTE: Update selectors if CrayonChat structure changes.
          */
         const inputElement = document.querySelector('.crayon-shell-desktop-welcome-composer__input, .crayon-shell-composer textarea, .crayon-shell-composer input') as HTMLTextAreaElement | HTMLInputElement;
-        
+
         console.log('[AUTO-SEND] Input element found:', !!inputElement, inputElement?.className);
-        
+
         if (inputElement) {
-          // STEP 1: Set the value programmatically
-          inputElement.value = pendingPrompt;
-          
-          // STEP 2: Trigger React onChange handler
-          // NOTE: Must dispatch 'input' event for React to detect change
-          const inputEvent = new Event('input', { bubbles: true });
-          inputElement.dispatchEvent(inputEvent);
-          
-          // STEP 3: Find and click the send button
-          // Try multiple possible button locations (welcome screen or thread composer)
-          const sendButton = document.querySelector('.crayon-shell-desktop-welcome-composer button[type="submit"], .crayon-shell-composer button[type="submit"], .crayon-shell-composer-send') as HTMLButtonElement;
-          
-          if (sendButton) {
-            // SUCCESS PATH: Found send button, click after brief delay
-            setTimeout(() => {
-              sendButton.click();
-              onPendingPromptConsumed(); // Clear prompt to prevent re-send
-            }, 100); // Small delay ensures React state updated
+          // Use React's native input setter to properly update controlled state
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype, 'value'
+          )?.set || Object.getOwnPropertyDescriptor(
+            window.HTMLInputElement.prototype, 'value'
+          )?.set;
+
+          if (nativeInputValueSetter) {
+            nativeInputValueSetter.call(inputElement, pendingPrompt);
           } else {
-            // FALLBACK PATH: No send button found, try form submit
-            const form = inputElement.closest('form');
-            if (form) {
-              setTimeout(() => {
-                form.requestSubmit(); // Modern form submission
-                onPendingPromptConsumed();
-              }, 100);
+            inputElement.value = pendingPrompt;
+          }
+
+          // Dispatch both input and change events for React to detect
+          inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+          inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+
+          // Wait for React to process the state update and enable the button
+          setTimeout(() => {
+            // Find send button - broader selector (no type="submit" requirement)
+            const sendButton = document.querySelector(
+              '.crayon-shell-desktop-welcome-composer button:not([disabled]), ' +
+              '.crayon-shell-composer button:not([disabled]):last-child, ' +
+              '.crayon-shell-composer-send'
+            ) as HTMLButtonElement;
+
+            console.log('[AUTO-SEND] Button found:', !!sendButton, sendButton?.className);
+
+            if (sendButton) {
+              sendButton.click();
+              onPendingPromptConsumed();
             } else {
-              // EDGE CASE: No button or form found
-              // This shouldn't happen, but consume prompt to prevent infinite loop
-              console.warn('[AUTO-SEND] Could not find send button or form');
+              // Fallback: try Enter key on the input
+              inputElement.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
+              }));
               onPendingPromptConsumed();
             }
-          }
+          }, 200);
         } else {
-          // ERROR CASE: Input element not found
-          // Likely CrayonChat structure changed or didn't mount
           console.warn('[AUTO-SEND] Could not find input element');
           onPendingPromptConsumed();
         }
@@ -679,48 +683,58 @@ function CopilotModal({
                   onForkChoice(prompt);
                   onChatStart();
                   
-                  // Auto-send fix: Direct DOM manipulation after state settles
+                  // Auto-send: use native setter to properly update React controlled input
                   setTimeout(() => {
-                    const textarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
-                    // Find submit button - could be button[type="submit"] or just a button near textarea
-                    let submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-                    if (!submitButton) {
-                      // Try finding button in same container as textarea
-                      const container = textarea?.closest('.crayon-shell-thread-composer, [class*="composer"]');
-                      submitButton = container?.querySelector('button') as HTMLButtonElement;
-                    }
-                    
-                    if (textarea && submitButton) {
-                      console.log('[AUTO-SEND FIX] Found elements, sending:', prompt);
-                      textarea.value = prompt;
+                    const textarea = document.querySelector(
+                      '.crayon-shell-desktop-welcome-composer__input, ' +
+                      'textarea[placeholder*="Type your message"]'
+                    ) as HTMLTextAreaElement;
+
+                    if (textarea) {
+                      // Use native setter to bypass React's controlled input
+                      const setter = Object.getOwnPropertyDescriptor(
+                        window.HTMLTextAreaElement.prototype, 'value'
+                      )?.set;
+                      if (setter) setter.call(textarea, prompt);
+                      else textarea.value = prompt;
+
                       textarea.dispatchEvent(new Event('input', { bubbles: true }));
                       textarea.dispatchEvent(new Event('change', { bubbles: true }));
-                      
+
+                      // Wait for React to enable the button
                       setTimeout(() => {
-                        console.log('[AUTO-SEND FIX] Clicking submit button');
-                        submitButton.click();
+                        const container = textarea.closest('[class*="composer"]');
+                        const btn = container?.querySelector('button:not([disabled])') as HTMLButtonElement;
+                        if (btn) {
+                          console.log('[AUTO-SEND FIX] Clicking send button');
+                          btn.click();
+                        } else {
+                          // Fallback: Enter key
+                          textarea.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
+                          }));
+                        }
                       }, 300);
                     } else {
-                      console.warn('[AUTO-SEND FIX] Not found (textarea:', !!textarea, 'button:', !!submitButton, '), retrying...');
-                      // Retry once after additional delay
+                      console.warn('[AUTO-SEND FIX] Textarea not found, retrying...');
                       setTimeout(() => {
-                        const retryTextarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
-                        let retryButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-                        if (!retryButton && retryTextarea) {
-                          const retryContainer = retryTextarea.closest('.crayon-shell-thread-composer, [class*="composer"]');
-                          retryButton = retryContainer?.querySelector('button') as HTMLButtonElement;
-                        }
-                        if (retryTextarea && retryButton) {
-                          console.log('[AUTO-SEND FIX] Retry successful, sending:', prompt);
-                          retryTextarea.value = prompt;
-                          retryTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-                          retryTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+                        const retryInput = document.querySelector(
+                          '.crayon-shell-desktop-welcome-composer__input, ' +
+                          'textarea[placeholder*="Type your message"]'
+                        ) as HTMLTextAreaElement;
+                        if (retryInput) {
+                          const s = Object.getOwnPropertyDescriptor(
+                            window.HTMLTextAreaElement.prototype, 'value'
+                          )?.set;
+                          if (s) s.call(retryInput, prompt);
+                          else retryInput.value = prompt;
+                          retryInput.dispatchEvent(new Event('input', { bubbles: true }));
+                          retryInput.dispatchEvent(new Event('change', { bubbles: true }));
                           setTimeout(() => {
-                            console.log('[AUTO-SEND FIX] Retry: clicking submit');
-                            retryButton.click();
+                            const c = retryInput.closest('[class*="composer"]');
+                            const b = c?.querySelector('button:not([disabled])') as HTMLButtonElement;
+                            if (b) b.click();
                           }, 300);
-                        } else {
-                          console.error('[AUTO-SEND FIX] Retry failed - textarea:', !!retryTextarea, 'button:', !!retryButton);
                         }
                       }, 1000);
                     }
