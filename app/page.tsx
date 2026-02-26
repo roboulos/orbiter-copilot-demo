@@ -40,7 +40,7 @@ import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
-import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions, searchPersons } from "./lib/xano";
+import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions, searchPersons, createConversation, addMessage, getConversations, type CopilotConversation } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
 // Interview classifier imports removed - backend handles conversational flow
@@ -254,6 +254,8 @@ interface CopilotModalProps {
   onTabChange?: (tab: string) => void;
   hasConversationContext: boolean;
   onResetContext: () => void;
+  conversations: CopilotConversation[];
+  onSelectConversation: (conv: CopilotConversation) => void;
 }
 
 function CopilotModal({
@@ -271,6 +273,8 @@ function CopilotModal({
   onTabChange,
   hasConversationContext,
   onResetContext,
+  conversations,
+  onSelectConversation,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
@@ -944,15 +948,15 @@ function CopilotModal({
                   flexDirection: "row"
                 }}>
                   {/* Left sidebar - always visible */}
-                  <ModePicker 
+                  <ModePicker
                     selectedMode={selectedMode}
                     onSelectMode={(mode) => {
                       if (mode !== selectedMode) {
                         setSelectedMode(mode);
-                        
+
                         // Preserve conversation if switching within same mode or has active person
                         const shouldPreserveConversation = selectedPerson !== null;
-                        
+
                         if (shouldPreserveConversation) {
                           // Keep conversation active, don't reset
                           setHasStartedConversation(true);
@@ -964,7 +968,14 @@ function CopilotModal({
                           chatKey.current += 1;
                         }
                       }
-                    }} 
+                    }}
+                    conversations={conversations}
+                    onSelectConversation={(conv) => {
+                      setSelectedMode((conv.mode || 'default') as typeof selectedMode);
+                      setHasStartedConversation(true);
+                      onSelectConversation(conv);
+                      chatKey.current += 1;
+                    }}
                   />
                   
                   {/* Right content area */}
@@ -1469,6 +1480,8 @@ export default function Home() {
   const [processId, setProcessId] = useState<number | null>(null);
   const [showWaitingRoom, setShowWaitingRoom] = useState(false);
   const [hasConversationContext, setHasConversationContext] = useState(false);
+  const [conversations, setConversations] = useState<CopilotConversation[]>([]);
+  const conversationIdRef = useRef<number | null>(null);
   const [currentDispatchData, setCurrentDispatchData] = useState<{
     summary: string;
     mode: "loop" | "outcome";
@@ -1495,6 +1508,17 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [modalOpen, conversationHistoryRef.current.length]);
+
+  // Fetch conversations for sidebar
+  const fetchConversations = useCallback(() => {
+    getConversations({ per_page: 10 })
+      .then((data) => setConversations(data.items || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   // Force full width (JavaScript override since CSS isn't working)
   useForceFullWidth();
@@ -1525,6 +1549,7 @@ export default function Home() {
     setSelectedPerson(null);
     personContextRef.current = "";
     masterPersonIdRef.current = undefined;
+    conversationIdRef.current = null;
     setShowFork(false);
     setPendingPrompt(null);
   }, []);
@@ -1714,6 +1739,24 @@ export default function Home() {
         { role: "user", content: prompt }
       ];
 
+      // Persist: create conversation on first message, save user message
+      if (!conversationIdRef.current) {
+        const title = prompt.length > 60 ? prompt.slice(0, 57) + "..." : prompt;
+        createConversation({
+          mode: "default",
+          title,
+          master_person_id: masterPersonIdRef.current,
+        })
+          .then((conv) => {
+            conversationIdRef.current = conv.id;
+            addMessage(conv.id, { role: "user", content: prompt }).catch(() => {});
+            fetchConversations();
+          })
+          .catch(() => {});
+      } else {
+        addMessage(conversationIdRef.current, { role: "user", content: prompt }).catch(() => {});
+      }
+
       try {
         // Backend returns pre-parsed structured data: {response: [...items], model: "..."}
         const data = await chat(
@@ -1745,6 +1788,26 @@ export default function Home() {
       // Signal that we have conversation context (enables dispatch button)
       if (items.length > 0) {
         setHasConversationContext(true);
+      }
+
+      // Persist assistant response
+      if (conversationIdRef.current && items.length > 0) {
+        const textParts = items
+          .filter((i): i is { type: "text"; text: string } => "type" in i && i.type === "text")
+          .map((i) => i.text);
+        const templateParts = items
+          .filter((i): i is { name: string; templateProps: Record<string, unknown> } => "name" in i && !!i.name);
+        const content = textParts.join(" ") || (templateParts.length > 0 ? `[${templateParts[0].name}]` : "");
+        if (content) {
+          addMessage(conversationIdRef.current, {
+            role: "assistant",
+            content,
+            ...(templateParts.length > 0 ? {
+              template_name: templateParts[0].name,
+              template_props: templateParts[0].templateProps,
+            } : {}),
+          }).catch(() => {});
+        }
       }
 
       // MARK'S REQUIREMENT: NO intermediate suggestions during conversation
@@ -1853,7 +1916,7 @@ export default function Home() {
         });
       }
     },
-    [networkSummary]
+    [networkSummary, fetchConversations]
   );
 
   const tabs: Array<{ id: Tab; icon: string }> = [
@@ -2087,7 +2150,12 @@ export default function Home() {
         onPendingPromptConsumed={() => setPendingPrompt(null)}
         onTabChange={(tab) => setActiveTab(tab as Tab | "Home")}
         hasConversationContext={hasConversationContext}
-        onResetContext={() => setHasConversationContext(false)}
+        onResetContext={() => { setHasConversationContext(false); conversationIdRef.current = null; }}
+        conversations={conversations}
+        onSelectConversation={(conv) => {
+          conversationIdRef.current = conv.id;
+          setHasConversationContext(true);
+        }}
       />
 
       {/* ─── Calendar Settings Modal ──────────────────────── */}

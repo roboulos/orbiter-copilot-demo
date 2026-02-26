@@ -657,3 +657,68 @@ export async function getMeetingPrep(masterPersonId: number, context?: string) {
     },
   });
 }
+
+// ── Chat History Persistence ─────────────────────────────────────────────────
+
+export interface CopilotConversation {
+  id: number;
+  created_at: number;
+  updated_at: number;
+  user_id: number;
+  mode: string;
+  title: string;
+  master_person_id: number | null;
+}
+
+export interface CopilotMessage {
+  id: number;
+  created_at: number;
+  conversation_id: number;
+  role: string;
+  content: string;
+  template_name: string;
+  template_props: Record<string, unknown> | null;
+}
+
+export async function createConversation(data: {
+  mode: string;
+  title: string;
+  master_person_id?: number;
+}) {
+  return xanoFetch<CopilotConversation>("/conversations", {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function getConversations(opts: { page?: number; per_page?: number } = {}) {
+  const params: Record<string, string> = {};
+  if (opts.page) params.page = String(opts.page);
+  if (opts.per_page) params.per_page = String(opts.per_page);
+  return xanoFetch<PaginatedResponse<CopilotConversation>>("/conversations", { params });
+}
+
+export async function addMessage(conversationId: number, data: {
+  role: string;
+  content: string;
+  template_name?: string;
+  template_props?: Record<string, unknown>;
+}) {
+  return xanoFetch<CopilotMessage>(`/conversations/${conversationId}/messages`, {
+    method: "POST",
+    body: { conversation_id: conversationId, ...data },
+  });
+}
+
+export async function getMessages(conversationId: number) {
+  return xanoFetch<CopilotMessage[]>(`/conversations/${conversationId}/messages`, {
+    params: { conversation_id: String(conversationId) },
+  });
+}
+
+export async function deleteConversation(conversationId: number) {
+  return xanoFetch<{ success: boolean }>(`/conversations/${conversationId}`, {
+    method: "DELETE",
+    body: { conversation_id: conversationId },
+  });
+}

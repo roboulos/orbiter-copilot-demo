@@ -1,10 +1,13 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
+import type { CopilotConversation } from '../lib/xano';
 
 export interface ModePickerProps {
   selectedMode: 'default' | 'leverage' | 'meeting' | 'outcome';
   onSelectMode: (mode: 'default' | 'leverage' | 'meeting' | 'outcome') => void;
+  conversations?: CopilotConversation[];
+  onSelectConversation?: (conv: CopilotConversation) => void;
 }
 
 const ChatIcon = () => (
@@ -72,7 +75,27 @@ const modes: ModeConfig[] = [
   },
 ];
 
-export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
+const modeIcons: Record<string, () => React.ReactElement> = {
+  default: ChatIcon,
+  leverage: LeverageIcon,
+  meeting: MeetingIcon,
+  outcome: OutcomeIcon,
+};
+
+function timeAgo(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
+
+export function ModePicker({ selectedMode, onSelectMode, conversations, onSelectConversation }: ModePickerProps) {
   return (
     <div style={{
       display: 'flex',
@@ -82,6 +105,8 @@ export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
       width: '280px',
       background: 'rgba(255,255,255,0.015)',
       borderRight: '1px solid rgba(255,255,255,0.05)',
+      height: '100%',
+      overflowY: 'auto',
     }}>
       <div style={{ marginBottom: '8px', paddingLeft: '12px' }}>
         <h3 style={{
@@ -181,6 +206,111 @@ export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
           </button>
         );
       })}
+
+      {/* Recent Conversations */}
+      {conversations && conversations.length > 0 && (
+        <>
+          <div style={{
+            marginTop: '16px',
+            marginBottom: '4px',
+            paddingLeft: '12px',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            paddingTop: '16px',
+          }}>
+            <h3 style={{
+              fontSize: '11px',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.35)',
+              marginBottom: '0',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}>
+              Recent
+            </h3>
+          </div>
+
+          {conversations.slice(0, 8).map((conv) => {
+            const ModeIcon = modeIcons[conv.mode] || ChatIcon;
+            return (
+              <ConversationRow
+                key={conv.id}
+                conv={conv}
+                ModeIcon={ModeIcon}
+                onClick={() => onSelectConversation?.(conv)}
+              />
+            );
+          })}
+        </>
+      )}
     </div>
+  );
+}
+
+function ConversationRow({
+  conv,
+  ModeIcon,
+  onClick,
+}: {
+  conv: CopilotConversation;
+  ModeIcon: () => React.ReactElement;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '8px 12px',
+        background: hovered ? 'rgba(255,255,255,0.035)' : 'transparent',
+        border: '1px solid transparent',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        textAlign: 'left',
+        width: '100%',
+        outline: 'none',
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '24px',
+        height: '24px',
+        borderRadius: '6px',
+        background: 'rgba(255,255,255,0.04)',
+        color: 'rgba(255,255,255,0.3)',
+        flexShrink: 0,
+      }}>
+        <div style={{ transform: 'scale(0.7)' }}>
+          <ModeIcon />
+        </div>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: '12px',
+          fontWeight: 500,
+          color: 'rgba(255,255,255,0.6)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          letterSpacing: '-0.01em',
+        }}>
+          {conv.title}
+        </div>
+        <div style={{
+          fontSize: '10px',
+          color: 'rgba(255,255,255,0.25)',
+          lineHeight: 1.35,
+        }}>
+          {timeAgo(conv.updated_at)}
+        </div>
+      </div>
+    </button>
   );
 }
