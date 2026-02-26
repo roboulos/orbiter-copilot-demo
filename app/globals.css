@@ -274,6 +274,7 @@ div, section, article, main, aside {
 
 /* Force message bodies to not expand */
 .crayon-shell-thread-message-agent__body,
+.crayon-shell-thread-message-assistant__body,
 .crayon-shell-thread-message-user__body {
   width: auto !important;
   max-width: 500px !important;
@@ -281,6 +282,7 @@ div, section, article, main, aside {
 
 /* Any inner content containers */
 .crayon-shell-thread-message-agent__content > *,
+.crayon-shell-thread-message-assistant__content > *,
 .crayon-shell-thread-message-user__content > * {
   max-width: 100% !important;
 }
@@ -431,7 +433,8 @@ div, section, article, main, aside {
    ══════════════════════════════════════════════════════ */
 
 /* AI Messages - LEFT aligned */
-.crayon-shell-thread-message-agent {
+.crayon-shell-thread-message-agent,
+.crayon-shell-thread-message-assistant {
   display: flex !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
@@ -441,7 +444,8 @@ div, section, article, main, aside {
   animation: cardEntrance 0.3s cubic-bezier(0.22,1,0.36,1) both !important;
 }
 
-.crayon-shell-thread-message-agent__avatar {
+.crayon-shell-thread-message-agent__avatar,
+.crayon-shell-thread-message-assistant__avatar {
   flex-shrink: 0 !important;
   margin-top: 2px !important;
   margin-right: 10px !important;
@@ -453,14 +457,16 @@ div, section, article, main, aside {
   overflow: hidden !important;
 }
 
-.crayon-shell-thread-message-agent__avatar img {
+.crayon-shell-thread-message-agent__avatar img,
+.crayon-shell-thread-message-assistant__avatar img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   border-radius: 50% !important;
 }
 
-.crayon-shell-thread-message-agent__content {
+.crayon-shell-thread-message-agent__content,
+.crayon-shell-thread-message-assistant__content {
   display: inline-block !important;
   max-width: 560px !important;
   width: fit-content !important;
@@ -475,6 +481,11 @@ div, section, article, main, aside {
   color: rgba(255,255,255,0.92) !important;
   letter-spacing: -0.008em !important;
   overflow: visible !important;
+  white-space: pre-line !important;
+}
+
+.crayon-shell-thread-message-assistant__text {
+  white-space: pre-line !important;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -717,7 +728,13 @@ div, section, article, main, aside {
 .crayon-shell-thread-message-agent__body,
 .crayon-shell-thread-message-agent p,
 .crayon-shell-thread-message-agent span,
-.crayon-shell-thread-message-agent div {
+.crayon-shell-thread-message-agent div,
+.crayon-shell-thread-message-assistant__text,
+.crayon-shell-thread-message-assistant__content,
+.crayon-shell-thread-message-assistant__body,
+.crayon-shell-thread-message-assistant p,
+.crayon-shell-thread-message-assistant span,
+.crayon-shell-thread-message-assistant div {
   font-size: 14px !important;
   line-height: 1.7 !important;
   color: #e8e8f0 !important;
@@ -755,7 +772,8 @@ div, section, article, main, aside {
    THINKING/LOADING INDICATOR — Custom typing dots
    ══════════════════════════════════════════════════════ */
 
-.crayon-shell-thread-message-agent__loading {
+.crayon-shell-thread-message-agent__loading,
+.crayon-shell-thread-message-assistant__loading {
   color: rgba(99,102,241,0.6) !important;
 }
 

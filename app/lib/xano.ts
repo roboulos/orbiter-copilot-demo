@@ -284,7 +284,8 @@ export async function chat(
   personContext?: string,
   history?: Array<{ role: string; content: string }>,
   masterPersonId?: number,
-  networkData?: string // Structured JSON of full network
+  networkData?: string, // Structured JSON of full network
+  mode?: string // Chat mode: default, leverage, outcome, meeting
 ): Promise<ChatResponse> {
   return xanoFetch<ChatResponse>("/chat", {
     method: "POST",
@@ -294,6 +295,7 @@ export async function chat(
       ...(masterPersonId ? { master_person_id: masterPersonId } : {}),
       ...(history?.length ? { history } : {}),
       ...(networkData ? { network_data: networkData } : {}),
+      ...(mode && mode !== "default" ? { mode } : {}),
     },
   });
 }

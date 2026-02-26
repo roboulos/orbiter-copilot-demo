@@ -65,6 +65,7 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
 }) {
   const [dispatching, setDispatching] = useState(false);
   const [dispatched, setDispatched] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const handleConfirm = () => {
     if (dispatching || dispatched) return;
@@ -83,135 +84,182 @@ function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
   return (
     <div style={{
       maxWidth: "480px",
-      background: "rgba(255,255,255,0.03)",
+      background: dispatched
+        ? "linear-gradient(145deg, rgba(34,197,94,0.06) 0%, rgba(34,197,94,0.02) 100%)"
+        : "linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%)",
       border: dispatched ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(99,102,241,0.15)",
       borderRadius: "16px",
-      padding: "20px",
+      padding: "4px",
       margin: "12px 0",
       animation: "cardEntrance 0.3s cubic-bezier(0.22,1,0.36,1) both",
+      overflow: "hidden",
+      fontFamily: "Inter, -apple-system, sans-serif",
     }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+      {/* Top accent line */}
+      <div style={{
+        height: "2px",
+        background: dispatched
+          ? "linear-gradient(90deg, transparent, rgba(34,197,94,0.5), transparent)"
+          : "linear-gradient(90deg, transparent, rgba(99,102,241,0.5), transparent)",
+        margin: "0 20%",
+        borderRadius: "1px",
+      }} />
+
+      <div style={{ padding: "18px 18px 16px" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "10px",
+            background: dispatched
+              ? "rgba(34,197,94,0.1)"
+              : "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+            border: dispatched
+              ? "1px solid rgba(34,197,94,0.2)"
+              : "1px solid rgba(99,102,241,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.3s ease",
+          }}>
+            {dispatched ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(34,197,94,0.8)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" />
+              </svg>
+            )}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }}>
+              {dispatched ? "Dispatched" : "Ready to Dispatch"}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
+              {dispatched ? "Analyzing your network now" : "Review and confirm"}
+            </div>
+          </div>
+        </div>
+
+        {/* Person + Goal row */}
         <div style={{
-          width: "36px", height: "36px", borderRadius: "10px",
-          background: dispatched
-            ? "rgba(34,197,94,0.1)"
-            : "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
-          border: dispatched
-            ? "1px solid rgba(34,197,94,0.2)"
-            : "1px solid rgba(99,102,241,0.2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "all 0.3s ease",
+          display: "flex",
+          gap: "8px",
+          marginBottom: context ? "10px" : "16px",
         }}>
-          {dispatched ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(34,197,94,0.8)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" />
-            </svg>
+          {person_name && (
+            <div style={{
+              flex: 1,
+              padding: "10px 12px",
+              background: "rgba(255,255,255,0.03)",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(167,139,250,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "4px" }}>Person</div>
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>{person_name}</div>
+            </div>
+          )}
+          {goal && (
+            <div style={{
+              flex: 2,
+              padding: "10px 12px",
+              background: "rgba(255,255,255,0.03)",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(167,139,250,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "4px" }}>Goal</div>
+              <div style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.88)" }}>{goal}</div>
+            </div>
           )}
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }}>
-            {dispatched ? "Dispatched" : "Ready to Dispatch"}
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "1px" }}>
-            {dispatched ? "Analyzing your network now" : "Review and confirm"}
-          </div>
-        </div>
-      </div>
 
-      {/* Summary */}
-      <div style={{
-        padding: "12px 14px",
-        background: "rgba(255,255,255,0.02)",
-        borderRadius: "10px",
-        border: "1px solid rgba(255,255,255,0.06)",
-        marginBottom: "14px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-      }}>
-        {person_name && (
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Person</div>
-            <div style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.88)" }}>{person_name}</div>
-          </div>
-        )}
-        {goal && (
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Goal</div>
-            <div style={{ fontSize: "14px", fontWeight: 500, color: "rgba(255,255,255,0.88)" }}>{goal}</div>
-          </div>
-        )}
+        {/* Context — only if present */}
         {context && (
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: "3px" }}>Context</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>{context}</div>
+          <div style={{
+            padding: "10px 12px",
+            background: "rgba(255,255,255,0.02)",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.05)",
+            marginBottom: "16px",
+          }}>
+            <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(167,139,250,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: "6px" }}>Context</div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{context}</div>
           </div>
         )}
-      </div>
 
-      {/* Action */}
-      {!dispatched ? (
-        <button
-          onClick={handleConfirm}
-          disabled={dispatching}
-          className="orbiter-btn"
-          style={{
-            width: "100%",
-            padding: "11px 20px",
-            background: dispatching ? "rgba(99,102,241,0.3)" : "linear-gradient(135deg, #6366f1, #7c3aed)",
-            border: "none",
-            borderRadius: "10px",
-            color: "white",
-            fontSize: "14px",
-            fontWeight: 600,
-            cursor: dispatching ? "not-allowed" : "pointer",
-            boxShadow: dispatching ? "none" : "0 2px 12px rgba(99,102,241,0.25)",
-            transition: "all 0.2s ease",
-            fontFamily: "inherit",
+        {/* Action */}
+        {!dispatched ? (
+          <button
+            onClick={handleConfirm}
+            disabled={dispatching}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+              width: "100%",
+              padding: "12px 20px",
+              background: dispatching
+                ? "rgba(99,102,241,0.3)"
+                : hovered
+                ? "linear-gradient(135deg, #7c3aed, #6366f1)"
+                : "linear-gradient(135deg, #6366f1, #7c3aed)",
+              border: "none",
+              borderRadius: "10px",
+              color: "white",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: dispatching ? "not-allowed" : "pointer",
+              boxShadow: dispatching ? "none" : hovered
+                ? "0 4px 20px rgba(99,102,241,0.4)"
+                : "0 2px 12px rgba(99,102,241,0.25)",
+              transition: "all 0.2s ease",
+              fontFamily: "inherit",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              letterSpacing: "-0.01em",
+              transform: hovered && !dispatching ? "translateY(-1px)" : "translateY(0)",
+            }}
+          >
+            {dispatching ? (
+              <>
+                <div style={{
+                  width: "14px", height: "14px",
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  borderTopColor: "white",
+                  borderRadius: "50%",
+                  animation: "orbitSpin 0.7s linear infinite",
+                }} />
+                Dispatching...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                </svg>
+                Confirm & Dispatch
+              </>
+            )}
+          </button>
+        ) : (
+          <div style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {dispatching ? (
-            <>
-              <div style={{
-                width: "14px", height: "14px",
-                border: "2px solid rgba(255,255,255,0.3)",
-                borderTopColor: "white",
-                borderRadius: "50%",
-                animation: "orbitSpin 0.7s linear infinite",
-              }} />
-              Dispatching...
-            </>
-          ) : (
-            "Confirm & Dispatch"
-          )}
-        </button>
-      ) : (
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "6px",
-          padding: "10px",
-          fontSize: "13px",
-          color: "rgba(34,197,94,0.7)",
-          fontWeight: 500,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-          </svg>
-          Results will appear in 2-5 minutes
-        </div>
-      )}
+            padding: "12px",
+            fontSize: "13px",
+            color: "rgba(34,197,94,0.7)",
+            fontWeight: 500,
+            background: "rgba(34,197,94,0.05)",
+            borderRadius: "10px",
+            border: "1px solid rgba(34,197,94,0.1)",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
+            Results will appear in 2-5 minutes
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -285,6 +333,7 @@ interface CopilotModalProps {
   onResetContext: () => void;
   conversations: CopilotConversation[];
   onSelectConversation: (conv: CopilotConversation) => void;
+  onModeChange?: (mode: string) => void;
 }
 
 function CopilotModal({
@@ -304,6 +353,7 @@ function CopilotModal({
   onResetContext,
   conversations,
   onSelectConversation,
+  onModeChange,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
@@ -874,52 +924,46 @@ function CopilotModal({
             />
           </div>
 
-          {/* Dispatch button - disabled until conversation has context */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!hasConversationContext) return;
-              // Dispatch via chat prompt — backend returns dispatch_confirmation template
-              onForkChoice("I'm ready to dispatch. Create the dispatch confirmation now.");
-            }}
-            disabled={!hasConversationContext}
-            style={{
-              padding: "7px 14px",
-              borderRadius: "10px",
-              background: hasConversationContext
-                ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
-                : "rgba(99,102,241,0.2)",
-              border: `1px solid rgba(99,102,241,${hasConversationContext ? 0.3 : 0.1})`,
-              color: hasConversationContext ? "white" : "rgba(255,255,255,0.35)",
-              fontSize: "12px",
-              fontWeight: 600,
-              cursor: hasConversationContext ? "pointer" : "not-allowed",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              flexShrink: 0,
-              fontFamily: "inherit",
-              transition: "all 0.2s ease",
-              boxShadow: hasConversationContext ? "0 2px 12px rgba(99,102,241,0.4)" : "none",
-              opacity: hasConversationContext ? 1 : 0.6,
-            }}
-            onMouseEnter={(e) => {
-              if (hasConversationContext) {
+          {/* Dispatch button - only visible when conversation has context AND not in meeting prep mode */}
+          {hasConversationContext && selectedMode !== 'meeting' && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onForkChoice("I'm ready to dispatch. Create the dispatch confirmation now.");
+              }}
+              style={{
+                padding: "7px 14px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                border: "1px solid rgba(99,102,241,0.3)",
+                color: "white",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                flexShrink: 0,
+                fontFamily: "inherit",
+                transition: "all 0.2s ease",
+                boxShadow: "0 2px 12px rgba(99,102,241,0.4)",
+              }}
+              onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
                 (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.6)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = hasConversationContext ? "0 2px 12px rgba(99,102,241,0.4)" : "none";
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M2 8L14 2L8 14L6 9L2 8Z" fill="currentColor" />
-            </svg>
-            Dispatch
-          </button>
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(99,102,241,0.4)";
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M2 8L14 2L8 14L6 9L2 8Z" fill="currentColor" />
+              </svg>
+              Dispatch
+            </button>
+          )}
 
           {/* Close button */}
           <button
@@ -1038,6 +1082,7 @@ function CopilotModal({
                     onSelectMode={(mode) => {
                       if (mode !== selectedMode) {
                         setSelectedMode(mode);
+                        onModeChange?.(mode);
                         // Always reset conversation state when switching modes
                         setHasStartedConversation(mode === 'default');
                         setLoadThreadId(null); // Clear loaded conversation
@@ -1051,7 +1096,9 @@ function CopilotModal({
                     }}
                     conversations={conversations}
                     onSelectConversation={(conv) => {
-                      setSelectedMode((conv.mode || 'default') as typeof selectedMode);
+                      const convMode = (conv.mode || 'default') as typeof selectedMode;
+                      setSelectedMode(convMode);
+                      onModeChange?.(convMode);
                       setHasStartedConversation(true);
                       setLoadThreadId(String(conv.id));
                       onSelectConversation(conv);
@@ -1577,6 +1624,7 @@ export default function Home() {
   } | null>(null);
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
+  const selectedModeRef = useRef<string>("default");
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -1831,7 +1879,7 @@ export default function Home() {
       if (!conversationIdRef.current) {
         const title = prompt.length > 60 ? prompt.slice(0, 57) + "..." : prompt;
         createConversation({
-          mode: "default",
+          mode: selectedModeRef.current || "default",
           title,
           master_person_id: masterPersonIdRef.current,
         })
@@ -1852,7 +1900,8 @@ export default function Home() {
           personContextRef.current || undefined,
           history.length > 0 ? history : undefined,
           masterPersonIdRef.current,
-          networkSummary || undefined
+          networkSummary || undefined,
+          selectedModeRef.current
         );
         console.log('[BACKEND RESPONSE]', data);
 
@@ -1872,6 +1921,44 @@ export default function Home() {
         };
 
         let items: ResponseItem[] = (data.response || []).map(normalizeItem);
+
+      // Enrich button_group options with avatar/subtitle from network data
+      if (networkSummary) {
+        try {
+          const network = JSON.parse(networkSummary);
+          const connections: Array<{ name: string; title?: string; company?: string; avatar?: string }> = network.connections || [];
+
+          items = items.map(item => {
+            if (!('name' in item) || item.name !== 'button_group') return item;
+            const props = item.templateProps;
+            const opts = (props.options as Array<Record<string, unknown>>) || [];
+
+            const enrichedOpts = opts.map(opt => {
+              const label = String(opt.label || '');
+              // Try to match option label to a person in the network
+              const match = connections.find(c => {
+                if (!c.name) return false;
+                const nameNorm = c.name.toLowerCase();
+                const labelNorm = label.toLowerCase();
+                // Exact name match or label starts with the name
+                return labelNorm === nameNorm || labelNorm.startsWith(nameNorm + ' ') || labelNorm.includes(nameNorm);
+              });
+
+              if (match) {
+                const subtitle = [match.title, match.company].filter(Boolean).join(' at ');
+                return {
+                  ...opt,
+                  ...(match.avatar ? { avatar_url: match.avatar } : {}),
+                  ...(subtitle && !opt.subtitle ? { subtitle } : {}),
+                };
+              }
+              return opt;
+            });
+
+            return { ...item, templateProps: { ...props, options: enrichedOpts } };
+          });
+        } catch { /* network parse failed, skip enrichment */ }
+      }
 
       // Signal that we have conversation context (enables dispatch button)
       if (items.length > 0) {
@@ -1952,10 +2039,22 @@ export default function Home() {
             // Handle text items (support both 'text' and 'content' fields)
             const textContent = ("type" in item && item.type === "text") ? (item.text || (item as any).content) : null;
             if (textContent) {
-              const words = String(textContent).split(" ");
-              for (let i = 0; i < words.length; i++) {
-                const chunk = (i === 0 ? "" : " ") + words[i];
-                controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
+              // Split on newlines first to preserve line breaks, then words within each line
+              const lines = String(textContent).split(/\n/);
+              let firstWord = true;
+              for (let l = 0; l < lines.length; l++) {
+                if (l > 0) {
+                  // Emit newline as text chunk - SSE multi-line data format
+                  // data: first line\ndata: second line\n\n → "first line\nsecond line"
+                  // But we just need a standalone newline character in the stream
+                  controller.enqueue(encoder.encode("event: text\ndata: \ndata: \n\n"));
+                }
+                const words = lines[l].split(" ").filter(w => w.length > 0);
+                for (let i = 0; i < words.length; i++) {
+                  const chunk = (firstWord ? "" : " ") + words[i];
+                  firstWord = false;
+                  controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
+                }
               }
             } else if ("name" in item && item.name) {
               controller.enqueue(encoder.encode(
@@ -2244,6 +2343,7 @@ export default function Home() {
           conversationIdRef.current = conv.id;
           setHasConversationContext(true);
         }}
+        onModeChange={(mode) => { selectedModeRef.current = mode; }}
       />
 
       {/* ─── Calendar Settings Modal ──────────────────────── */}

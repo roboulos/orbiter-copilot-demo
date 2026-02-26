@@ -9,6 +9,8 @@ interface ButtonGroupProps {
     label: string;
     value: string;
     emoji?: string;
+    avatar_url?: string;
+    subtitle?: string;
   }>;
   // Backend format support
   masterPersonId?: number;
@@ -54,10 +56,11 @@ function CheckIcon({ size = 14 }: { size?: number }) {
 
 export function ButtonGroup({ question, options, masterPersonId, buttons }: ButtonGroupProps) {
   const displayQuestion = question || "";
-  const displayOptions = options || (buttons || []).map(btn => ({
-    label: btn.text,
-    value: btn.action,
-  }));
+  const displayOptions: Array<{ label: string; value: string; emoji?: string; avatar_url?: string; subtitle?: string }> =
+    options || (buttons || []).map(btn => ({
+      label: btn.text,
+      value: btn.action,
+    }));
   const { processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
@@ -179,12 +182,49 @@ export function ButtonGroup({ question, options, masterPersonId, buttons }: Butt
                 transition: "opacity 0.2s ease",
               }} />
 
+              {/* Avatar (when available) */}
+              {option.avatar_url && (
+                <img
+                  src={option.avatar_url}
+                  alt=""
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    flexShrink: 0,
+                    border: isSelected
+                      ? "2px solid rgba(99,102,241,0.5)"
+                      : "2px solid rgba(255,255,255,0.1)",
+                    transition: "border-color 0.2s ease",
+                  }}
+                />
+              )}
+
               <span style={{
                 flex: 1,
                 paddingLeft: isSelected || isHovered ? "4px" : "0px",
                 transition: "padding-left 0.2s ease",
+                display: "flex",
+                flexDirection: "column",
+                gap: option.subtitle ? "2px" : "0px",
               }}>
-                {option.label}
+                <span>{option.label}</span>
+                {option.subtitle && (
+                  <span style={{
+                    fontSize: "12px",
+                    fontWeight: 400,
+                    color: isSelected
+                      ? "rgba(167,139,250,0.6)"
+                      : isDisabled
+                      ? "rgba(255,255,255,0.15)"
+                      : "rgba(255,255,255,0.4)",
+                    lineHeight: 1.3,
+                    transition: "color 0.2s ease",
+                  }}>
+                    {option.subtitle}
+                  </span>
+                )}
               </span>
 
               <span
