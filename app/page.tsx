@@ -692,11 +692,24 @@ function CopilotModal({
                       setTimeout(() => {
                         console.log('[AUTO-SEND FIX] Clicking submit');
                         submitButton.click();
-                      }, 100);
+                      }, 200);
                     } else {
-                      console.warn('[AUTO-SEND FIX] Textarea or button not found');
+                      console.warn('[AUTO-SEND FIX] Textarea or button not found, retrying...');
+                      // Retry once after additional delay
+                      setTimeout(() => {
+                        const retryTextarea = document.querySelector('textarea[placeholder*="Type your message"]') as HTMLTextAreaElement;
+                        const retryButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+                        if (retryTextarea && retryButton) {
+                          console.log('[AUTO-SEND FIX] Retry successful');
+                          retryTextarea.value = prompt;
+                          retryTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                          setTimeout(() => retryButton.click(), 200);
+                        } else {
+                          console.error('[AUTO-SEND FIX] Retry failed - elements still not found');
+                        }
+                      }, 800);
                     }
-                  }, 600);
+                  }, 1200);
                 }}
               />
             ) : (
