@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@crayonai/react-ui/styles/index.css";
 import "./globals.css";
 import "./design-system.css";
+import { ClientAgentation } from "./components/ClientAgentation";
 
 export const metadata: Metadata = {
   title: "Orbiter Copilot",
@@ -15,7 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ClientAgentation />
+      </body>
     </html>
   );
 }
