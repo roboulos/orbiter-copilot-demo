@@ -1,3 +1,20 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BACKEND INTEGRATION - Charlotte's 60 Verified Endpoints
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * INTEGRATION DATE: Feb 26/27, 2026
+ * BACKEND AI: Charlotte
+ * FRONTEND AI: Zora
+ * 
+ * BASE URL: https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz
+ * AUTH: POST /dev-token with {"user_id": 18}
+ * TEST PERSON: Ray Deck (master_person_id: 520)
+ * 
+ * ALL 60 ENDPOINTS VERIFIED WITH curl
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 const API_URL = process.env.NEXT_PUBLIC_XANO_API_URL!;
 const USER_ID = Number(process.env.NEXT_PUBLIC_XANO_USER_ID!);
 
@@ -416,9 +433,28 @@ export async function archiveOutcome(id: number) {
 
 // ── Dispatch ─────────────────────────────────────────────
 
+/**
+ * CRITICAL: context.copilot_mode is REQUIRED
+ * Must be "loop" | "outcome" | "serendipity"
+ * 
+ * Charlotte's spec:
+ * {
+ *   "summary": "Find seed investors for social graph product",
+ *   "context": {
+ *     "copilot_mode": "loop",  // ← REQUIRED!
+ *     "budget": "seed round",
+ *     "requirements": ["web3 focused", "strategic"]
+ *   },
+ *   "person_id": 520,
+ *   "conversation_history": [...]
+ * }
+ */
 export interface DispatchRequest {
   summary: string;
-  context: Record<string, unknown>;
+  context: {
+    copilot_mode: "loop" | "outcome" | "serendipity"; // REQUIRED
+    [key: string]: unknown;
+  };
   person_id: number | null;
   conversation_history: Array<{ role: string; content: string }>;
 }
@@ -427,12 +463,168 @@ export interface DispatchResponse {
   success: boolean;
   dispatch_id: string;
   suggestion_request_id: number;
-  status: string;
+  status: "draft" | "submitted" | "processing" | "suggestion";
+  mode: string;
 }
 
 export async function dispatch(data: DispatchRequest) {
   return xanoFetch<DispatchResponse>("/dispatch", {
     method: "POST",
     body: data,
+  });
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CHARLOTTE'S NEW ENDPOINTS - Feb 26/27, 2026
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+// ── Dispatch Describe (beautified description) ──────────────────────────────
+
+export interface DispatchDescribeRequest {
+  suggestion_request_id: number;
+  master_person_id: number;
+  goal: string;
+}
+
+export interface DispatchDescribeResponse {
+  success: boolean;
+  description: string;
+  model: string;
+}
+
+export async function dispatchDescribe(data: DispatchDescribeRequest) {
+  return xanoFetch<DispatchDescribeResponse>("/dispatch-describe", {
+    method: "POST",
+    body: data,
+  });
+}
+
+// ── Process Status (polling) ─────────────────────────────────────────────────
+
+export interface ProcessStatus {
+  process_id: number;
+  status: "draft" | "submitted" | "processing" | "suggestion" | "archived";
+  progress: number; // 0-100
+  current_step: string;
+  is_complete: boolean;
+  mode: string;
+  title?: string;
+}
+
+export async function getProcessStatus(processId: number) {
+  return xanoFetch<ProcessStatus>("/process-status", {
+    params: { process_id: String(processId) },
+  });
+}
+
+// ── Process Cancel ────────────────────────────────────────────────────────────
+
+export async function cancelProcess(processId: number) {
+  return xanoFetch<{ success: boolean; message: string }>("/process-cancel", {
+    method: "POST",
+    body: { process_id: processId },
+  });
+}
+
+// ── Leverage Loop Suggestions ─────────────────────────────────────────────────
+
+export interface LeverageLoopSuggestion {
+  id: number;
+  suggestion_request_id: number;
+  master_person_id: number;
+  person_name: string;
+  person_title?: string;
+  person_company?: string;
+  person_avatar?: string;
+  relevance_score: number;
+  reason: string;
+  connection_type: string;
+  actions?: Array<{ action: string; description: string }>;
+}
+
+export async function getLeverageLoopSuggestions(suggestionRequestId: number) {
+  return xanoFetch<{ suggestions: LeverageLoopSuggestion[]; total: number }>(
+    "/leverage-loop-suggestions",
+    {
+      params: { suggestion_request_id: String(suggestionRequestId) },
+    }
+  );
+}
+
+// ── Leverage Loop Actions ─────────────────────────────────────────────────────
+
+export async function getLeverageLoopActions(suggestionId: number) {
+  return xanoFetch<{ actions: Array<{ action: string; description: string }> }>(
+    "/leverage-loop-actions",
+    {
+      params: { leverage_loop_suggestion_id: String(suggestionId) },
+    }
+  );
+}
+
+// ── Leverage Loop Trajectories ────────────────────────────────────────────────
+
+export async function getLeverageLoopTrajectories(suggestionId: number) {
+  return xanoFetch<{ trajectories: Array<unknown> }>(
+    "/leverage-loop-trajectories",
+    {
+      params: { leverage_loop_suggestion_id: String(suggestionId) },
+    }
+  );
+}
+
+// ── Meeting Prep (REAL ENDPOINT) ──────────────────────────────────────────────
+
+/**
+ * CRITICAL: Backend returns NESTED structure under "prep"
+ * 
+ * Charlotte's actual response:
+ * {
+ *   "success": true,
+ *   "master_person_id": 520,
+ *   "person": {...},
+ *   "prep": {
+ *     "person_summary": "...",
+ *     "talking_points": [...],
+ *     "suggested_openers": [...],
+ *     "listen_for": [...],
+ *     "landmines": [...]
+ *   },
+ *   "has_calendar": true,
+ *   "model": "anthropic/claude-sonnet-4"
+ * }
+ */
+export interface MeetingPrepResponse {
+  success: boolean;
+  master_person_id: number;
+  person: {
+    name: string;
+    title?: string;
+    avatar?: string;
+  };
+  prep: {
+    person_summary: string;
+    talking_points: Array<{
+      topic: string;
+      opener: string;
+      why_they_care: string;
+    }>;
+    suggested_openers: string[];
+    listen_for: string[];
+    landmines: string[];
+  };
+  has_calendar: boolean;
+  model: string;
+}
+
+export async function getMeetingPrep(masterPersonId: number, context?: string) {
+  return xanoFetch<MeetingPrepResponse>("/meeting-prep", {
+    method: "POST",
+    body: {
+      master_person_id: masterPersonId,
+      ...(context ? { context } : {}),
+    },
   });
 }
