@@ -98,7 +98,7 @@ export function FormattedDispatchSummary({ text, onDispatch }: FormattedDispatch
               color: "rgba(255,255,255,0.9)",
               fontWeight: 500,
             }}>
-              👤 {data.target}
+              {data.target}
             </div>
           </div>
         )}
@@ -125,7 +125,7 @@ export function FormattedDispatchSummary({ text, onDispatch }: FormattedDispatch
               color: "rgba(255,255,255,0.9)",
               fontWeight: 500,
             }}>
-              🎯 {data.outcome}
+              {data.outcome}
             </div>
           </div>
         )}
@@ -152,7 +152,7 @@ export function FormattedDispatchSummary({ text, onDispatch }: FormattedDispatch
               color: "rgba(255,255,255,0.9)",
               fontWeight: 500,
             }}>
-              📋 {data.constraints}
+              {data.constraints}
             </div>
           </div>
         )}

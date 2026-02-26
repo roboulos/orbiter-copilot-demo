@@ -273,7 +273,7 @@ export function MeetingPrepCard(props: MeetingPrepCardProps) {
             (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.12)";
           }}
         >
-          📋 Copy Brief
+          Copy Brief
         </button>
       </div>
     </div>
