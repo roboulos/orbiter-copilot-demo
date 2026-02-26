@@ -1390,8 +1390,26 @@ export default function Home() {
       let items: ResponseItem[] = [];
       try {
         let parsed;
-        try { parsed = JSON.parse(cleaned); }
-        catch { parsed = JSON.parse(sanitized); }
+        try { 
+          parsed = JSON.parse(cleaned);
+          console.log('[PARSE SUCCESS] Cleaned:', parsed);
+        } catch (e1) { 
+          console.warn('[PARSE FAILED] Cleaned, trying sanitized...', e1);
+          try {
+            parsed = JSON.parse(sanitized);
+            console.log('[PARSE SUCCESS] Sanitized:', parsed);
+          } catch (e2) {
+            // Try wrapping in braces if it looks like object content
+            if (cleaned.includes('"type"') || cleaned.includes('"name"')) {
+              console.warn('[PARSE FAILED] Sanitized, trying wrapped...', e2);
+              const wrapped = `{${cleaned}}`;
+              parsed = JSON.parse(wrapped);
+              console.log('[PARSE SUCCESS] Wrapped:', parsed);
+            } else {
+              throw e2;
+            }
+          }
+        }
         
         // Support multiple backend response formats
         if (parsed?.response && Array.isArray(parsed.response)) {
