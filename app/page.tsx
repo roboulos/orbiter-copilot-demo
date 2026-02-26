@@ -40,7 +40,7 @@ import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
-import { chat, dispatch } from "./lib/xano";
+import { chat, dispatch, getLeverageLoopSuggestions } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
 // Interview classifier imports removed - backend handles conversational flow
@@ -215,9 +215,9 @@ function CopilotModal({
   const [processId, setProcessId] = useState<number | null>(null);
   const [showWaitingRoom, setShowWaitingRoom] = useState(false);
   const [currentDispatchData, setCurrentDispatchData] = useState<{
-    personId?: number;
-    goal?: string;
-    context?: string;
+    summary: string;
+    mode: "loop" | "outcome";
+    personName?: string;
   } | null>(null);
   
   // No interview mode interception - backend handles conversational flow
@@ -234,11 +234,11 @@ function CopilotModal({
     const handleDispatchReady = (event: CustomEvent) => {
       const { personId, personName, outcome, constraints, description } = event.detail;
       
-      // Set dispatch data
+      // Set dispatch data (using new format)
       setCurrentDispatchData({
-        personId,
-        goal: outcome,
-        context: constraints?.join(", ") || "",
+        summary: outcome || "Help with outcome",
+        mode: "outcome", // This looks like an outcome dispatch
+        personName: personName,
       });
       setDispatchDescription(description);
       
@@ -258,12 +258,12 @@ function CopilotModal({
       const { person_name, goal, context, master_person_id } = event.detail;
       console.log('[MODAL TRIGGER]', event.detail);
       
-      // Set dispatch data
+      // Set dispatch data (using new format)
       setDispatchDescription(`Leverage my network to help ${person_name} ${goal}\n\n${context}`);
       setCurrentDispatchData({
-        personId: master_person_id || null,
-        goal: goal,
-        context: context,
+        summary: `${goal} - ${context}`,
+        mode: "loop", // This is a leverage loop
+        personName: person_name,
       });
       
       // Show dispatch modal
@@ -570,9 +570,9 @@ function CopilotModal({
                 // Person selected - show dispatch modal directly
                 setDispatchDescription(`Help ${personName} with...`);
                 setCurrentDispatchData({
-                  personId: selectedPerson.master_person_id,
-                  goal: "",
-                  context: "",
+                  summary: "Help with...",
+                  mode: "loop",
+                  personName: personName,
                 });
                 setShowDispatchModal(true);
               } else {
@@ -826,9 +826,9 @@ function CopilotModal({
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                master_person_id: currentDispatchData?.personId || selectedPerson?.master_person_id,
-                goal: currentDispatchData?.goal || "Help with network analysis",
-                context: currentDispatchData?.context || dispatchDescription,
+                master_person_id: selectedPerson?.master_person_id || null,
+                goal: currentDispatchData?.summary || "Help with network analysis",
+                context: dispatchDescription,
                 fast: false,
               }),
             });
@@ -860,32 +860,6 @@ function CopilotModal({
         isDispatching={isDispatching}
       />
 
-      {/* Waiting Room for Process Monitoring */}
-      {showWaitingRoom && processId && (
-        <WaitingRoomConnected
-          processId={processId}
-          title={`Analyzing network for ${personName || "contact"}`}
-          description={dispatchDescription}
-          onComplete={(result) => {
-            console.log("Process complete!", result);
-            setShowWaitingRoom(false);
-            setProcessId(null);
-            // Navigate to Outcomes tab
-            onTabChange?.("outcomes");
-          }}
-          onError={(error) => {
-            console.error("Process failed:", error);
-            alert(`Process failed: ${error}`);
-            setShowWaitingRoom(false);
-            setProcessId(null);
-          }}
-          onCancel={() => {
-            console.log("Process cancelled by user");
-            setShowWaitingRoom(false);
-            setProcessId(null);
-          }}
-        />
-      )}
       </>
       )}
 
@@ -1100,6 +1074,13 @@ export default function Home() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [networkSummary, setNetworkSummary] = useState<string>("");
+  const [processId, setProcessId] = useState<number | null>(null);
+  const [showWaitingRoom, setShowWaitingRoom] = useState(false);
+  const [currentDispatchData, setCurrentDispatchData] = useState<{
+    summary: string;
+    mode: "loop" | "outcome";
+    personName?: string;
+  } | null>(null);
   const personContextRef = useRef<string>("");
   const masterPersonIdRef = useRef<number | undefined>(undefined);
   const conversationHistoryRef = useRef<Array<{ role: string; content: string }>>([]);
@@ -1262,22 +1243,18 @@ export default function Home() {
       
       console.log("Dispatch success:", result);
       
-      // Success - close modal and reset
-      setDispatching(false);
+      // Success - close confirmation modal but keep main modal open
       setShowConfirmation(false);
-      setModalOpen(false);
+      setDispatching(false);
       
-      // Show success toast with dispatch ID
-      setSuccessMessage(
-        `Your network has been activated! (${result.dispatch_id}) We'll notify you when connections are found.`
-      );
-      setShowSuccessToast(true);
-      
-      // Trigger confetti celebration!
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
-      
-      handlePersonClear();
+      // Show waiting room and poll for results
+      setProcessId(result.suggestion_request_id);
+      setShowWaitingRoom(true);
+      setCurrentDispatchData({
+        summary: dispatchSummary,
+        mode: selectedPerson ? "loop" : "outcome",
+        personName: selectedPerson?.master_person?.name || selectedPerson?.full_name,
+      });
     } catch (error) {
       console.error("Dispatch failed:", error);
       setDispatching(false);
@@ -1758,6 +1735,67 @@ export default function Home() {
 
       {/* ─── Confetti ────────────────────────────────────── */}
       <Confetti active={showConfetti} />
+
+      {/* ─── Waiting Room (Process Monitoring) ──────────── */}
+      {showWaitingRoom && processId && currentDispatchData && (
+        <WaitingRoomConnected
+          processId={processId}
+          title={currentDispatchData.personName 
+            ? `Finding connections for ${currentDispatchData.personName}` 
+            : `Analyzing your network`}
+          description={currentDispatchData.summary}
+          onComplete={async () => {
+            console.log("Process complete! Fetching results...");
+            
+            try {
+              // Fetch results based on mode
+              if (currentDispatchData.mode === "loop") {
+                const results = await getLeverageLoopSuggestions(processId);
+                console.log("Leverage loop suggestions:", results);
+              } else if (currentDispatchData.mode === "outcome") {
+                // TODO: Fetch outcome suggestions endpoint TBD
+                console.log("Outcome suggestions - endpoint TBD");
+              }
+              
+              // Close waiting room and modal
+              setShowWaitingRoom(false);
+              setProcessId(null);
+              setModalOpen(false);
+              
+              // Navigate to Outcomes tab
+              setActiveTab("Outcomes");
+              
+              // Clear person selection
+              handlePersonClear();
+              
+              // Show success
+              setSuccessMessage("Found connections! Check the Outcomes tab.");
+              setShowSuccessToast(true);
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 3000);
+            } catch (error) {
+              console.error("Failed to fetch results:", error);
+              setShowWaitingRoom(false);
+              setProcessId(null);
+              setSuccessMessage("Results ready but couldn't load. Check Outcomes tab.");
+              setShowSuccessToast(true);
+            }
+          }}
+          onError={(error) => {
+            console.error("Process failed:", error);
+            setShowWaitingRoom(false);
+            setProcessId(null);
+            setModalOpen(false);
+            setSuccessMessage(`Process failed: ${error}`);
+            setShowSuccessToast(true);
+          }}
+          onCancel={() => {
+            console.log("Process cancelled by user");
+            setShowWaitingRoom(false);
+            setProcessId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
