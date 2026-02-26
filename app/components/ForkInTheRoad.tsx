@@ -159,27 +159,16 @@ function SubFork({
 }
 
 export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
-  const [showSubFork, setShowSubFork] = useState(false);
-
   const displayTitle =
     [person.title, person.company].filter(Boolean).join(" · ");
 
+  // Path 1: Direct dispatch (no interview)
   const leveragePrompt = `Leverage my network for ${person.name}${displayTitle ? ` (${displayTitle})` : ""}. What's my single best move right now to activate this relationship? Be direct and concise — tell me what to do and draft the message.`;
 
-  const suggestPrompt = `I want to help ${person.name}${displayTitle ? ` — ${displayTitle}` : ""}. Based on what you know about them, what are the top 2–3 specific things I could leverage my network to help them with right now? Give me clickable options.`;
+  // Path 2: Interview flow (ask questions)
+  const interviewPrompt = `I want to help ${person.name}${displayTitle ? ` (${displayTitle})` : ""} with something specific. What would I like to help them with?`;
 
-  const iKnowPrompt = `I want to help ${person.name}${displayTitle ? ` (${displayTitle})` : ""} with something specific. Ask me what I want to help them with — keep it brief.`;
-
-  if (showSubFork) {
-    return (
-      <SubFork
-        person={person}
-        onSuggest={() => onChoice(suggestPrompt)}
-        onIKnow={() => onChoice(iKnowPrompt)}
-        onBack={() => setShowSubFork(false)}
-      />
-    );
-  }
+  // Removed SubFork - direct to chat after choice
 
   return (
     <div
@@ -261,17 +250,17 @@ export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
       >
         <ForkButton
           title={`Leverage my Network for ${person.name}`}
-          subtitle="Find who in your network to activate — and get the exact message to send today"
+          subtitle="Skip the interview — get instant suggestions and message draft"
           gradient="linear-gradient(135deg, rgba(99,102,241,0.14), rgba(139,92,246,0.08))"
           border="rgba(99,102,241,0.35)"
           onClick={() => onChoice(leveragePrompt)}
         />
         <ForkButton
-          title={`Help ${person.name} with a specific task`}
-          subtitle="Use your network to create real value for them — direct connection or warm intro"
-          gradient="linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))"
-          border="rgba(255,255,255,0.1)"
-          onClick={() => setShowSubFork(true)}
+          title={`Help ${person.name} with something specific`}
+          subtitle="Answer a few questions — we'll find the best path through your network"
+          gradient="linear-gradient(135deg, rgba(236,72,153,0.12), rgba(219,39,119,0.08))"
+          border="rgba(236,72,153,0.35)"
+          onClick={() => onChoice(interviewPrompt)}
         />
       </div>
     </div>
