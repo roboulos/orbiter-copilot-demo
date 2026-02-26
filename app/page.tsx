@@ -317,6 +317,10 @@ function CopilotModal({
    */
   useEffect(() => {
     console.log('[AUTO-SEND CHECK]', { pendingPrompt: !!pendingPrompt, showFork, hasStartedConversation });
+    // Write to DOM for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).debugAutoSend = { pendingPrompt: !!pendingPrompt, showFork, hasStartedConversation };
+    }
     if (pendingPrompt && !showFork && hasStartedConversation) {
       console.log('[AUTO-SEND TRIGGERED] Waiting 500ms for CrayonChat mount...');
       // TIMING NOTE: Wait for CrayonChat to mount (500ms tested as reliable)
