@@ -147,6 +147,13 @@ function CopilotModal({
   
   // No interview mode interception - backend handles conversational flow
 
+  // When fork closes (showFork becomes false), start conversation
+  useEffect(() => {
+    if (!showFork && selectedPerson) {
+      setHasStartedConversation(true);
+    }
+  }, [showFork, selectedPerson]);
+
   // Listen for interview dispatch ready event
   useEffect(() => {
     const handleDispatchReady = (event: CustomEvent) => {
@@ -460,6 +467,8 @@ function CopilotModal({
                         setSelectedMode(mode);
                         setHasStartedConversation(mode === 'default');
                         setPromptToSend(null);
+                        // Clear person when switching modes
+                        onPersonClear();
                         chatKey.current += 1;
                       }
                     }} 
@@ -925,6 +934,7 @@ export default function Home() {
 
   const handleChatStart = useCallback(() => {
     setShowFork(false);
+    // hasStartedConversation will be set by useEffect watching showFork
   }, []);
 
   const handleReadyToDispatch = useCallback((summary: string) => {
