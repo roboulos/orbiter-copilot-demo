@@ -9,63 +9,66 @@ export function ModePicker({ onSelectMode }: ModePickerProps) {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '16px',
-      padding: '32px 24px',
-      maxWidth: '500px',
-      margin: '0 auto',
+      gap: '8px',
+      padding: '16px',
+      width: '240px',
+      borderRight: '1px solid rgba(255,255,255,0.1)',
     }}>
-      <h2 style={{
-        fontSize: '20px',
+      <h3 style={{
+        fontSize: '12px',
         fontWeight: 600,
-        color: '#f1f5f9',
-        marginBottom: '8px',
-        textAlign: 'center',
+        color: '#94a3b8',
+        marginBottom: '12px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
       }}>
-        Choose what you want to do
-      </h2>
+        Mode
+      </h3>
       
       {/* Leverage Loops */}
       <button
         onClick={() => onSelectMode('leverage')}
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          gap: '8px',
-          padding: '20px',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))',
-          border: '1px solid rgba(99,102,241,0.3)',
-          borderRadius: '12px',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: '8px',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.15s ease',
           textAlign: 'left',
+          width: '100%',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))';
-          e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)';
-          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.background = 'rgba(99,102,241,0.1)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))';
-          e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)';
-          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'transparent';
         }}
       >
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color: '#f1f5f9',
-          margin: 0,
-        }}>
-          Leverage Loops
-        </h3>
-        <p style={{
-          fontSize: '14px',
-          color: '#94a3b8',
-          margin: 0,
-        }}>
-          Help someone from your network
-        </p>
+        <div style={{
+          fontSize: '20px',
+          lineHeight: 1,
+        }}>🤝</div>
+        <div>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#f1f5f9',
+            marginBottom: '2px',
+          }}>
+            Leverage Loops
+          </div>
+          <div style={{
+            fontSize: '11px',
+            color: '#64748b',
+            lineHeight: 1.3,
+          }}>
+            Help someone
+          </div>
+        </div>
       </button>
 
       {/* Meeting Prep */}
@@ -73,43 +76,45 @@ export function ModePicker({ onSelectMode }: ModePickerProps) {
         onClick={() => onSelectMode('meeting')}
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          gap: '8px',
-          padding: '20px',
-          background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))',
-          border: '1px solid rgba(34,197,94,0.3)',
-          borderRadius: '12px',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: '8px',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.15s ease',
           textAlign: 'left',
+          width: '100%',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(16,185,129,0.2))';
-          e.currentTarget.style.borderColor = 'rgba(34,197,94,0.5)';
-          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.background = 'rgba(34,197,94,0.1)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.1))';
-          e.currentTarget.style.borderColor = 'rgba(34,197,94,0.3)';
-          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'transparent';
         }}
       >
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color: '#f1f5f9',
-          margin: 0,
-        }}>
-          Meeting Prep
-        </h3>
-        <p style={{
-          fontSize: '14px',
-          color: '#94a3b8',
-          margin: 0,
-        }}>
-          Prepare for an upcoming meeting
-        </p>
+        <div style={{
+          fontSize: '20px',
+          lineHeight: 1,
+        }}>📅</div>
+        <div>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#f1f5f9',
+            marginBottom: '2px',
+          }}>
+            Meeting Prep
+          </div>
+          <div style={{
+            fontSize: '11px',
+            color: '#64748b',
+            lineHeight: 1.3,
+          }}>
+            Prepare for meeting
+          </div>
+        </div>
       </button>
 
       {/* Outcomes */}
@@ -117,43 +122,45 @@ export function ModePicker({ onSelectMode }: ModePickerProps) {
         onClick={() => onSelectMode('outcome')}
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          gap: '8px',
-          padding: '20px',
-          background: 'linear-gradient(135deg, rgba(251,146,60,0.1), rgba(249,115,22,0.1))',
-          border: '1px solid rgba(251,146,60,0.3)',
-          borderRadius: '12px',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: '8px',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.15s ease',
           textAlign: 'left',
+          width: '100%',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(251,146,60,0.2), rgba(249,115,22,0.2))';
-          e.currentTarget.style.borderColor = 'rgba(251,146,60,0.5)';
-          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.background = 'rgba(251,146,60,0.1)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(251,146,60,0.1), rgba(249,115,22,0.1))';
-          e.currentTarget.style.borderColor = 'rgba(251,146,60,0.3)';
-          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'transparent';
         }}
       >
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color: '#f1f5f9',
-          margin: 0,
-        }}>
-          Outcomes
-        </h3>
-        <p style={{
-          fontSize: '14px',
-          color: '#94a3b8',
-          margin: 0,
-        }}>
-          Achieve a goal through your network
-        </p>
+        <div style={{
+          fontSize: '20px',
+          lineHeight: 1,
+        }}>🎯</div>
+        <div>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#f1f5f9',
+            marginBottom: '2px',
+          }}>
+            Outcomes
+          </div>
+          <div style={{
+            fontSize: '11px',
+            color: '#64748b',
+            lineHeight: 1.3,
+          }}>
+            Achieve a goal
+          </div>
+        </div>
       </button>
     </div>
   );

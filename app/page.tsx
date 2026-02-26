@@ -449,16 +449,35 @@ function CopilotModal({
                   width: "100%",
                   height: "100%",
                   display: "flex",
-                  flexDirection: "column"
+                  flexDirection: "row"
                 }}>
-                  {!selectedMode ? (
-                    <ModePicker onSelectMode={(mode) => {
-                      setSelectedMode(mode);
-                      chatKey.current += 1;
-                    }} />
-                  ) : (
-                    <CrayonChat
-                      key={chatKey.current}
+                  {/* Left sidebar - always visible */}
+                  <ModePicker onSelectMode={(mode) => {
+                    setSelectedMode(mode);
+                    chatKey.current += 1;
+                  }} />
+                  
+                  {/* Right content area */}
+                  <div style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: 0
+                  }}>
+                    {!selectedMode ? (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        color: "#64748b",
+                        fontSize: "14px"
+                      }}>
+                        Select a mode to get started
+                      </div>
+                    ) : (
+                      <CrayonChat
+                        key={chatKey.current}
                       type="standalone"
                       processMessage={processMessage}
                       agentName={
@@ -485,8 +504,9 @@ function CopilotModal({
                       variant: "long",
                       options: defaultStarters,
                     }}
-                    />
-                  )}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             )}
