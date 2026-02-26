@@ -465,11 +465,20 @@ function CopilotModal({
                     onSelectMode={(mode) => {
                       if (mode !== selectedMode) {
                         setSelectedMode(mode);
-                        setHasStartedConversation(mode === 'default');
-                        setPromptToSend(null);
-                        // Clear person when switching modes
-                        onPersonClear();
-                        chatKey.current += 1;
+                        
+                        // Preserve conversation if switching within same mode or has active person
+                        const shouldPreserveConversation = selectedPerson !== null;
+                        
+                        if (shouldPreserveConversation) {
+                          // Keep conversation active, don't reset
+                          setHasStartedConversation(true);
+                        } else {
+                          // Reset for fresh start
+                          setHasStartedConversation(mode === 'default');
+                          setPromptToSend(null);
+                          onPersonClear();
+                          chatKey.current += 1;
+                        }
                       }
                     }} 
                   />
