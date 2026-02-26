@@ -772,18 +772,19 @@ div, section, article, main, aside {
   padding-bottom: 32px !important;
 }
 
-/* Desktop welcome container needs full height */
+/* Desktop welcome container — flex-start + auto margins centers without clipping top */
 .crayon-shell-desktop-welcome-container {
   height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: center !important;
   gap: 32px !important;
   position: relative !important;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   width: 100% !important;
-  padding: 48px 80px !important;
+  padding: 24px 80px !important;
   box-sizing: border-box !important;
   max-width: 1000px !important;
   margin: 0 auto !important;
@@ -855,7 +856,7 @@ div, section, article, main, aside {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 /* Full-width standalone shell */
@@ -867,10 +868,10 @@ div, section, article, main, aside {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
-/* Force all internal containers to fill height */
+/* Force all internal containers to fill height — flex-start prevents top-clipping */
 .crayon-shell-main,
 .crayon-shell-main-content,
 .crayon-shell-thread,
@@ -880,9 +881,17 @@ div, section, article, main, aside {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   width: 100% !important;
   max-width: 100% !important;
+  overflow: visible !important;
+}
+
+/* CrayonChat internal panels — allow scrolling so welcome icon is reachable */
+.crayon-shell-thread-chat-panel,
+.crayon-shell-thread-wrapper {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Welcome screen — WIDE for full-width input */
@@ -891,7 +900,7 @@ div, section, article, main, aside {
   width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: center !important;
   gap: 28px !important;
   box-sizing: border-box !important;
@@ -940,14 +949,15 @@ div, section, article, main, aside {
   box-sizing: border-box !important;
 }
 
-/* Center and constrain welcome content */
+/* Center and constrain welcome content — flex-start so icon isn't pushed above container */
 .crayon-shell-welcome-screen {
   width: 100% !important;
   max-width: 700px !important;
   margin: 0 auto !important;
   text-align: center !important;
   position: relative !important;
-  padding: 60px 40px !important;
+  padding: 32px 40px !important;
+  justify-content: flex-start !important;
   animation: welcomeFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 
@@ -1222,21 +1232,15 @@ div, section, article, main, aside {
    
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─── Step 1: Hide all SVG icons in submit buttons ───────────────────────── */
+/* ─── Step 1: Hide all SVG icons in composer send buttons ────────────────── */
 .crayon-shell-composer-submit-button svg,
 .crayon-shell-composer-submit-button svg *,
-.crayon-shell-desktop-welcome-composer button[type="submit"] svg,
-.crayon-shell-desktop-welcome-composer button[type="submit"] svg *,
-.crayon-shell-thread-composer button[type="submit"] svg,
-.crayon-shell-thread-composer button[type="submit"] svg *,
+.crayon-shell-desktop-welcome-composer button svg,
+.crayon-shell-desktop-welcome-composer button svg *,
 .crayon-shell-thread-composer__input-wrapper button svg,
 .crayon-shell-thread-composer__input-wrapper button svg *,
-[class*="composer"] button[type="submit"] svg,
-[class*="composer"] button[type="submit"] svg *,
 [class*="composer-submit"] svg,
-[class*="composer-submit"] svg *,
-button[type="submit"][class*="submit"] svg,
-button[type="submit"][class*="submit"] svg * {
+[class*="composer-submit"] svg * {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -1247,12 +1251,9 @@ button[type="submit"][class*="submit"] svg * {
 
 /* ─── Step 2: Position button container for pseudo-element ───────────────── */
 .crayon-shell-composer-submit-button,
-.crayon-shell-desktop-welcome-composer button[type="submit"],
-.crayon-shell-thread-composer button[type="submit"],
-.crayon-shell-thread-composer__input-wrapper button[type="submit"],
-[class*="composer"] button[type="submit"],
-[class*="composer-submit"],
-button[type="submit"][class*="submit"] {
+.crayon-shell-desktop-welcome-composer button,
+.crayon-shell-thread-composer__input-wrapper button,
+[class*="composer-submit"] {
   position: relative !important;
   overflow: visible !important;
   display: flex !important;
@@ -1262,12 +1263,9 @@ button[type="submit"][class*="submit"] {
 
 /* ─── Step 3: Add up arrow icon using ::before ───────────────────────────── */
 .crayon-shell-composer-submit-button::before,
-.crayon-shell-desktop-welcome-composer button[type="submit"]::before,
-.crayon-shell-thread-composer button[type="submit"]::before,
-.crayon-shell-thread-composer__input-wrapper button[type="submit"]::before,
-[class*="composer"] button[type="submit"]::before,
-[class*="composer-submit"]::before,
-button[type="submit"][class*="submit"]::before {
+.crayon-shell-desktop-welcome-composer button::before,
+.crayon-shell-thread-composer__input-wrapper button::before,
+[class*="composer-submit"]::before {
   content: "↑" !important;
   font-size: 24px !important;
   font-weight: 800 !important;
@@ -1292,17 +1290,15 @@ button[type="submit"][class*="submit"]::before {
 
 /* ─── Step 4: Ensure proper button state styling ─────────────────────────── */
 .crayon-shell-composer-submit-button:hover::before,
-.crayon-shell-desktop-welcome-composer button[type="submit"]:hover::before,
-.crayon-shell-thread-composer button[type="submit"]:hover::before,
-[class*="composer"] button[type="submit"]:hover::before {
+.crayon-shell-desktop-welcome-composer button:hover::before,
+.crayon-shell-thread-composer__input-wrapper button:hover::before {
   color: #ffffff !important;
   opacity: 1 !important;
 }
 
 .crayon-shell-composer-submit-button:disabled::before,
-.crayon-shell-desktop-welcome-composer button[type="submit"]:disabled::before,
-.crayon-shell-thread-composer button[type="submit"]:disabled::before,
-[class*="composer"] button[type="submit"]:disabled::before {
+.crayon-shell-desktop-welcome-composer button:disabled::before,
+.crayon-shell-thread-composer__input-wrapper button:disabled::before {
   color: rgba(255, 255, 255, 0.4) !important;
 }
 
@@ -1327,29 +1323,17 @@ button[type="submit"][class*="submit"]::before {
   }
 }
 
-/* ===== Send Button Icon Fix ===== */
-.crayon-shell-input button[type="submit"] {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
+/* ===== Send Button — Ensure gradient shows on all composer buttons ===== */
+.crayon-shell-desktop-welcome-composer button,
+.crayon-shell-thread-composer__input-wrapper button {
+  background: linear-gradient(135deg, #6366f1, #7c3aed) !important;
+  border: none !important;
+  border-radius: 12px !important;
 }
 
-.crayon-shell-input button[type="submit"] svg {
-  display: block !important;
-  width: 20px !important;
-  height: 20px !important;
-  fill: currentColor !important;
-  opacity: 1 !important;
-}
-
-/* If icon is missing, show arrow */
-.crayon-shell-input button[type="submit"]:empty::after {
-  content: "→";
-  font-size: 22px;
-  font-weight: bold;
-  color: currentColor;
+.crayon-shell-desktop-welcome-composer button:disabled,
+.crayon-shell-thread-composer__input-wrapper button:disabled {
+  background: rgba(255,255,255,0.06) !important;
 }
 
 /* ===== Format Plain Text Dispatch Summaries ===== */
