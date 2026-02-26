@@ -18,7 +18,7 @@ interface ButtonGroupProps {
   }>;
 }
 
-function ChevronRight({ size = 14 }: { size?: number }) {
+function ArrowIcon({ size = 14 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -30,12 +30,12 @@ function ChevronRight({ size = 14 }: { size?: number }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M6 4l4 4-4 4" />
+      <path d="M3 8h10M9 4l4 4-4 4" />
     </svg>
   );
 }
 
-function CheckIcon({ size = 16 }: { size?: number }) {
+function CheckIcon({ size = 14 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -53,19 +53,17 @@ function CheckIcon({ size = 16 }: { size?: number }) {
 }
 
 export function ButtonGroup({ question, options, masterPersonId, buttons }: ButtonGroupProps) {
-  // Handle both frontend format (question/options) and backend format (buttons)
   const displayQuestion = question || "";
   const displayOptions = options || (buttons || []).map(btn => ({
     label: btn.text,
     value: btn.action,
   }));
-  const { appendMessages, processMessage } = useThreadActions();
+  const { processMessage } = useThreadActions();
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
 
   const handleSelect = async (option: { label: string; value: string }) => {
     if (selectedValue !== null) return;
-
     setSelectedValue(option.value);
 
     try {
@@ -83,23 +81,36 @@ export function ButtonGroup({ question, options, masterPersonId, buttons }: Butt
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.025)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: "18px",
-        padding: "6px",
+        position: "relative",
+        background: "linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "16px",
+        padding: "4px",
         margin: "4px 0",
         fontFamily: "Inter, -apple-system, sans-serif",
+        overflow: "hidden",
         animation: "cardEntrance 0.35s cubic-bezier(0.22,1,0.36,1) both",
       }}
     >
-      {/* Question header - only show if there's a question */}
+      {/* Top shimmer accent */}
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: "15%",
+        right: "15%",
+        height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.4), transparent)",
+        opacity: 0.6,
+      }} />
+
+      {/* Question header */}
       {displayQuestion && (
         <div
           style={{
             fontSize: "13px",
             fontWeight: 500,
-            color: "rgba(255,255,255,0.55)",
-            padding: "12px 16px 8px",
+            color: "rgba(255,255,255,0.5)",
+            padding: "12px 14px 8px",
             lineHeight: 1.5,
             letterSpacing: "-0.01em",
           }}
@@ -109,7 +120,7 @@ export function ButtonGroup({ question, options, masterPersonId, buttons }: Butt
       )}
 
       {/* Button options */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
         {displayOptions.map((option, index) => {
           const isSelected = selectedValue === option.value;
           const isDisabled = selectedValue !== null && !isSelected;
@@ -123,21 +134,20 @@ export function ButtonGroup({ question, options, masterPersonId, buttons }: Butt
               onMouseEnter={() => setHoveredValue(option.value)}
               onMouseLeave={() => setHoveredValue(null)}
               style={{
-                padding: "13px 16px",
+                position: "relative",
+                padding: "14px 16px",
                 background: isSelected
-                  ? "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))"
+                  ? "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.12))"
                   : isHovered
-                  ? "rgba(255,255,255,0.05)"
+                  ? "rgba(255,255,255,0.06)"
                   : "transparent",
-                border: isSelected
-                  ? "1px solid rgba(99,102,241,0.4)"
-                  : "1px solid transparent",
-                borderRadius: "14px",
+                border: "none",
+                borderRadius: "12px",
                 color: isSelected
                   ? "rgba(167,139,250,1)"
                   : isDisabled
-                  ? "rgba(255,255,255,0.3)"
-                  : "rgba(255,255,255,0.88)",
+                  ? "rgba(255,255,255,0.25)"
+                  : "rgba(255,255,255,0.9)",
                 fontSize: "14px",
                 fontWeight: isSelected ? 600 : 500,
                 cursor: isDisabled ? "default" : "pointer",
@@ -146,36 +156,61 @@ export function ButtonGroup({ question, options, masterPersonId, buttons }: Butt
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                opacity: isDisabled ? 0.35 : 1,
-                transition: "all 0.18s cubic-bezier(0.22,1,0.36,1)",
+                opacity: isDisabled ? 0.3 : 1,
+                transition: "all 0.2s cubic-bezier(0.22,1,0.36,1)",
                 letterSpacing: "-0.01em",
                 lineHeight: 1.4,
-                animation: `fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) ${0.04 * index}s both`,
+                overflow: "hidden",
+                animation: `fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) ${0.05 * index}s both`,
               }}
             >
-              <span style={{ flex: 1 }}>{option.label}</span>
+              {/* Left accent bar on hover/select */}
+              <div style={{
+                position: "absolute",
+                left: 0,
+                top: "20%",
+                bottom: "20%",
+                width: "3px",
+                borderRadius: "0 3px 3px 0",
+                background: isSelected
+                  ? "linear-gradient(180deg, #6366f1, #a78bfa)"
+                  : "linear-gradient(180deg, rgba(99,102,241,0.6), rgba(167,139,250,0.4))",
+                opacity: isSelected ? 1 : isHovered ? 0.7 : 0,
+                transition: "opacity 0.2s ease",
+              }} />
+
+              <span style={{
+                flex: 1,
+                paddingLeft: isSelected || isHovered ? "4px" : "0px",
+                transition: "padding-left 0.2s ease",
+              }}>
+                {option.label}
+              </span>
+
               <span
                 style={{
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "7px",
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "8px",
                   background: isSelected
                     ? "rgba(99,102,241,0.25)"
+                    : isHovered
+                    ? "rgba(255,255,255,0.06)"
                     : "transparent",
                   color: isSelected
                     ? "rgba(167,139,250,1)"
                     : isHovered
-                    ? "rgba(255,255,255,0.4)"
-                    : "rgba(255,255,255,0.15)",
-                  transition: "all 0.18s ease",
+                    ? "rgba(255,255,255,0.5)"
+                    : "rgba(255,255,255,0.12)",
+                  transition: "all 0.2s ease",
                   transform: isHovered && !isSelected ? "translateX(2px)" : "translateX(0)",
                 }}
               >
-                {isSelected ? <CheckIcon size={13} /> : <ChevronRight size={13} />}
+                {isSelected ? <CheckIcon size={13} /> : <ArrowIcon size={13} />}
               </span>
             </button>
           );
