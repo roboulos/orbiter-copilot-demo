@@ -1373,7 +1373,24 @@ export default function Home() {
         console.log('[BACKEND RESPONSE]', raw); // DEBUG: See what backend returned
       }
       
-      const cleaned = raw
+      // AGGRESSIVE JSON EXTRACTION
+      // 1. Try to find valid JSON object in response (handles mixed text+JSON)
+      let jsonMatch = raw.match(/\{[\s\S]*\}/);
+      let cleaned = jsonMatch ? jsonMatch[0] : raw;
+      
+      // 2. If no JSON found, check if response contains "type": which indicates broken JSON
+      if (!jsonMatch && raw.includes('"type":')) {
+        // Try to reconstruct JSON from fragments
+        const typeMatch = raw.match(/"type"\s*:\s*"([^"]+)"/);
+        const propsMatch = raw.match(/"templateProps"\s*:\s*(\{[\s\S]*\})/);
+        
+        if (typeMatch && propsMatch) {
+          cleaned = `{"type": "${typeMatch[1]}", "templateProps": ${propsMatch[1]}}`;
+          console.log('[JSON RECONSTRUCTION]', cleaned);
+        }
+      }
+      
+      cleaned = cleaned
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```\s*$/, "")
         .trim();
@@ -1390,6 +1407,8 @@ export default function Home() {
       let items: ResponseItem[] = [];
       try {
         let parsed;
+        
+        // Try standard JSON parsing first
         try { 
           parsed = JSON.parse(cleaned);
           console.log('[PARSE SUCCESS] Cleaned:', parsed);
@@ -1399,9 +1418,31 @@ export default function Home() {
             parsed = JSON.parse(sanitized);
             console.log('[PARSE SUCCESS] Sanitized:', parsed);
           } catch (e2) {
-            // Try wrapping in braces if it looks like object content
-            if (cleaned.includes('"type"') || cleaned.includes('"name"')) {
-              console.warn('[PARSE FAILED] Sanitized, trying wrapped...', e2);
+            console.warn('[PARSE FAILED] Sanitized, checking for mixed content...', e2);
+            
+            // Check if response has both text and JSON mixed together
+            // Pattern: "some text" {"type": "button_group", ...}
+            const jsonObjectMatch = raw.match(/\{[\s\S]*"type"\s*:[\s\S]*\}/);
+            if (jsonObjectMatch) {
+              const textBefore = raw.substring(0, raw.indexOf(jsonObjectMatch[0])).trim().replace(/^["']|["']$/g, '');
+              
+              try {
+                const jsonPart = JSON.parse(jsonObjectMatch[0]);
+                console.log('[PARSE SUCCESS] Extracted mixed content:', {text: textBefore, json: jsonPart});
+                
+                // Construct proper response array
+                parsed = {
+                  response: [
+                    ...(textBefore ? [{ type: "text", text: textBefore }] : []),
+                    jsonPart
+                  ]
+                };
+              } catch (e3) {
+                console.error('[PARSE FAILED] JSON extraction failed:', e3);
+                throw e2;
+              }
+            } else if (cleaned.includes('"type"') || cleaned.includes('"name"')) {
+              // Try wrapping in braces as last resort
               const wrapped = `{${cleaned}}`;
               parsed = JSON.parse(wrapped);
               console.log('[PARSE SUCCESS] Wrapped:', parsed);
