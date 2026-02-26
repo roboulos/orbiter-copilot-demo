@@ -1374,19 +1374,30 @@ export default function Home() {
       }
       
       // AGGRESSIVE JSON EXTRACTION
-      // 1. Try to find valid JSON object in response (handles mixed text+JSON)
-      let jsonMatch = raw.match(/\{[\s\S]*\}/);
-      let cleaned = jsonMatch ? jsonMatch[0] : raw;
+      // Backend sends: 'some text "type": "button_group", "templateProps": {...}'
+      // Missing opening brace!
       
-      // 2. If no JSON found, check if response contains "type": which indicates broken JSON
-      if (!jsonMatch && raw.includes('"type":')) {
-        // Try to reconstruct JSON from fragments
-        const typeMatch = raw.match(/"type"\s*:\s*"([^"]+)"/);
-        const propsMatch = raw.match(/"templateProps"\s*:\s*(\{[\s\S]*\})/);
+      let cleaned = raw;
+      let textBeforeJson: string | null = null;
+      
+      // Check if we have broken JSON (has "type": but missing opening brace)
+      if (raw.includes('"type":') && !raw.trim().startsWith('{')) {
+        console.log('[BROKEN JSON DETECTED] Missing opening brace');
         
-        if (typeMatch && propsMatch) {
-          cleaned = `{"type": "${typeMatch[1]}", "templateProps": ${propsMatch[1]}}`;
-          console.log('[JSON RECONSTRUCTION]', cleaned);
+        // Find where the JSON-like content starts
+        const typeIndex = raw.indexOf('"type":');
+        textBeforeJson = raw.substring(0, typeIndex).trim();
+        const jsonLike = raw.substring(typeIndex).trim();
+        
+        // Wrap in braces
+        cleaned = `{${jsonLike}}`;
+        console.log('[JSON RECONSTRUCTION] Text:', textBeforeJson);
+        console.log('[JSON RECONSTRUCTION] JSON:', cleaned);
+      } else {
+        // Try to extract valid JSON object
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleaned = jsonMatch[0];
         }
       }
       
@@ -1452,29 +1463,33 @@ export default function Home() {
           }
         }
         
+        // Check if we extracted text before the JSON
+        if (textBeforeJson && textBeforeJson.length > 0) {
+          items.push({ type: "text", text: textBeforeJson });
+        }
+        
         // Support multiple backend response formats
         if (parsed?.response && Array.isArray(parsed.response)) {
           // Format 1: {response: [{name, templateProps}]}
-          items = parsed.response.map((item: any) => ({
+          items.push(...parsed.response.map((item: any) => ({
             name: item.name || item.type, // Support both 'name' and 'type' fields
             templateProps: item.templateProps
-          }));
+          })));
         } else if (parsed?.type && parsed?.templateProps && typeof parsed.type === 'string') {
           // Format 2a: Single {type: "button_group", templateProps: {...}}
-          items = [{ name: parsed.type, templateProps: parsed.templateProps }];
+          items.push({ name: parsed.type, templateProps: parsed.templateProps });
         } else if (parsed?.template && parsed?.data) {
           // Format 2b: {template: "name", data: {...}}
-          items = [{ name: parsed.template, templateProps: parsed.data }];
+          items.push({ name: parsed.template, templateProps: parsed.data });
         } else if (Array.isArray(parsed)) {
           // Format 3: [{template, data}, ...] or [{type, templateProps}, ...]
-          items = parsed.map((item: any) => ({
+          items.push(...parsed.map((item: any) => ({
             name: item.name || item.template || item.type,
             templateProps: item.templateProps || item.data || item
-          }));
+          })));
         } else {
           // Fallback to empty array
           console.warn('[PARSE WARNING] Unknown response format:', parsed);
-          items = [];
         }
       } catch (err) {
         console.error('[PARSE ERROR]', err);
