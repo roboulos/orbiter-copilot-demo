@@ -440,18 +440,22 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
               gap: '8px',
             }}>
               {calendarEvents.slice(0, 5).map((event, idx) => {
-                const startDate = new Date(event.start_time * 1000);
+                // Support both Nylas format (when.start_time) and flat format (start_time)
+                const rawStart = (event as any).when?.start_time || event.start_time;
+                const startDate = rawStart ? new Date(rawStart * 1000) : new Date();
                 const isToday = startDate.toDateString() === new Date().toDateString();
                 const isTomorrow = startDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                
-                const dateLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : 
+
+                const dateLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' :
                   startDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                
+
                 const timeLabel = startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-                
-                const attendeeNames = event.attendees
-                  .filter(a => a.name)
-                  .map(a => a.name?.split(' ')[0])
+
+                // Support both Nylas format (participants) and our format (attendees)
+                const people = (event.attendees || (event as any).participants || []) as Array<{ email: string; name?: string }>;
+                const attendeeNames = people
+                  .filter(a => a.name || a.email)
+                  .map(a => a.name?.split(' ')[0] || a.email?.split('@')[0])
                   .slice(0, 3)
                   .join(', ');
 
