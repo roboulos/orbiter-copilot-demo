@@ -832,35 +832,121 @@ function CopilotModal({
                     ) : (
                       <CrayonChat
                         key={chatKey.current}
-                      type="standalone"
-                      processMessage={processMessage}
-                      agentName={
-                        selectedMode === 'default' ? "Copilot" :
-                        selectedMode === 'leverage' ? "Leverage Loops" :
-                        selectedMode === 'meeting' ? "Meeting Prep" :
-                        "Outcomes"
-                      }
-                      responseTemplates={templates}
-                    // theme={orbiterTheme} // Custom theme via CSS instead
-                    messageLoadingComponent={() => <LoadingIndicator />}
-                    welcomeMessage={{
-                      title: selectedMode === 'default'
-                        ? "How can I help you?"
-                        : personName
-                          ? `Help ${personName}`
-                          : selectedMode === 'leverage' ? "Leverage Loops" :
-                            selectedMode === 'meeting' ? "Meeting Prep" :
-                            "Outcomes",
-                      description: selectedMode === 'default'
-                        ? "Ask me anything"
-                        : personName
-                          ? personTitle && personCompany
-                            ? `${personTitle} · ${personCompany}`
-                            : personTitle || personCompany || "What would you like to help them with?"
-                          : selectedMode === 'leverage' ? "Help someone from your network" :
-                            selectedMode === 'meeting' ? "Get context for your meetings" :
-                            "Map your goals to actions",
-                    }}
+                        type="standalone"
+                        processMessage={processMessage}
+                        agentName={
+                          selectedMode === 'default' ? "Copilot" :
+                          selectedMode === 'leverage' ? "Leverage Loops" :
+                          selectedMode === 'meeting' ? "Meeting Prep" :
+                          "Outcomes"
+                        }
+                        responseTemplates={templates}
+                        messageLoadingComponent={() => <LoadingIndicator />}
+                        scrollVariant="user-message-anchor"
+                        welcomeMessage={{
+                          title: selectedMode === 'default'
+                            ? "How can I help you?"
+                            : personName
+                              ? `Help ${personName}`
+                              : selectedMode === 'leverage' ? "Leverage Loops" :
+                                selectedMode === 'meeting' ? "Meeting Prep" :
+                                "Outcomes",
+                          description: selectedMode === 'default'
+                            ? "Ask me anything about your network"
+                            : personName
+                              ? personTitle && personCompany
+                                ? `${personTitle} · ${personCompany}`
+                                : personTitle || personCompany || "What would you like to help them with?"
+                              : selectedMode === 'leverage' ? "Help someone from your network" :
+                                selectedMode === 'meeting' ? "Get context for your meetings" :
+                                "Map your goals to actions",
+                          image: (
+                            <div style={{
+                              width: 56,
+                              height: 56,
+                              borderRadius: 16,
+                              background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+                              border: "1px solid rgba(99,102,241,0.2)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}>
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.9)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                                <path d="M2 12h20" />
+                              </svg>
+                            </div>
+                          ),
+                        }}
+                        conversationStarters={selectedMode === 'default' ? {
+                          variant: "long",
+                          options: [
+                            {
+                              displayText: "Search my network for investors",
+                              prompt: "Help me find investors in my network who might be relevant for funding conversations.",
+                              icon: (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="11" cy="11" r="8" />
+                                  <path d="M21 21l-4.35-4.35" />
+                                </svg>
+                              ),
+                            },
+                            {
+                              displayText: "Prepare for my next meeting",
+                              prompt: "Help me prepare for my next meeting. Pull context on the people I'm meeting with.",
+                              icon: (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                  <line x1="16" y1="2" x2="16" y2="6" />
+                                  <line x1="8" y1="2" x2="8" y2="6" />
+                                  <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                              ),
+                            },
+                            {
+                              displayText: "Find warm introductions",
+                              prompt: "Who in my network can make warm introductions to people I want to connect with?",
+                              icon: (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                  <circle cx="9" cy="7" r="4" />
+                                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                              ),
+                            },
+                            {
+                              displayText: "Analyze my network strength",
+                              prompt: "Give me an overview of my network. Where are my strongest connections and where are the gaps?",
+                              icon: (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                                  <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                                </svg>
+                              ),
+                            },
+                          ],
+                        } : selectedMode === 'leverage' && personName ? {
+                          variant: "short",
+                          options: [
+                            {
+                              displayText: "Find investors",
+                              prompt: `Find investors in my network who could help ${personName}.`,
+                              icon: <></>,
+                            },
+                            {
+                              displayText: "Make introductions",
+                              prompt: `Who in my network should I introduce to ${personName}?`,
+                              icon: <></>,
+                            },
+                            {
+                              displayText: "Get advice",
+                              prompt: `Help ${personName} find mentors or advisors in my network.`,
+                              icon: <></>,
+                            },
+                          ],
+                        } : undefined}
                       />
                     )}
                   </div>

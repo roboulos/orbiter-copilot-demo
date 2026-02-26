@@ -7,7 +7,7 @@ export function LoadingIndicator() {
 
   if (!isRunning) return null;
 
-  const lastUserMessage = messages
+  const lastUserMessage = (messages || [])
     .filter(m => m.role === "user")
     .slice(-1)[0];
 

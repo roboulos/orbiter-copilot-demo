@@ -365,6 +365,67 @@ div, section, article, main, aside {
   transition: transform 0.12s ease !important;
 }
 
+/* Short pill starters (leverage mode) */
+.crayon-shell-conversation-starter-item-short {
+  background: rgba(99,102,241,0.06) !important;
+  border: 1px solid rgba(99,102,241,0.15) !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.crayon-shell-conversation-starter-item-short:hover {
+  background: rgba(99,102,241,0.12) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+.crayon-shell-conversation-starter-item-short__text {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* Welcome screen image container */
+.crayon-shell-welcome-screen__image-container {
+  display: flex !important;
+  justify-content: center !important;
+  margin-bottom: 20px !important;
+  animation: iconPulseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both !important;
+}
+
+@keyframes iconPulseIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Desktop starters container within welcome screen */
+.crayon-shell-welcome-screen__desktop-starters {
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
+  animation: startersSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both !important;
+}
+
+@keyframes startersSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ══════════════════════════════════════════════════════
    CHAT MESSAGES — Proper alignment like iMessage
    ══════════════════════════════════════════════════════ */
