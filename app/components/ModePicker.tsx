@@ -110,26 +110,42 @@ export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
               alignItems: 'center',
               gap: '12px',
               padding: '12px 14px',
-              background: isSelected ? 'rgba(255,255,255,0.07)' : 'transparent',
+              background: isSelected 
+                ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(124,58,237,0.08))'
+                : 'transparent',
               border: isSelected 
-                ? '1px solid rgba(255,255,255,0.15)'
+                ? '1px solid rgba(99,102,241,0.35)'
                 : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '6px',
+              borderRadius: '10px',
               cursor: 'pointer',
-              transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
               textAlign: 'left',
               width: '100%',
+              boxShadow: isSelected 
+                ? '0 4px 16px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
+                : 'none',
+              transform: 'translateY(0)',
             }}
             onMouseEnter={(e) => {
               if (!isSelected) {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+              } else {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.08)';
               }
             }}
             onMouseLeave={(e) => {
               if (!isSelected) {
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              } else {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.08)';
               }
             }}
           >
@@ -137,16 +153,20 @@ export function ModePicker({ selectedMode, onSelectMode }: ModePickerProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
               background: isSelected 
-                ? 'rgba(124,58,237,0.15)'
-                : 'rgba(124,58,237,0.1)',
+                ? 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(124,58,237,0.2))'
+                : 'rgba(124,58,237,0.08)',
               color: isSelected 
                 ? 'rgb(167,139,250)'
-                : 'rgb(147,119,240)',
+                : 'rgba(167,139,250,0.7)',
               flexShrink: 0,
+              boxShadow: isSelected 
+                ? '0 2px 8px rgba(99,102,241,0.25)'
+                : 'none',
+              transition: 'all 0.2s ease',
             }}>
               <Icon />
             </div>
