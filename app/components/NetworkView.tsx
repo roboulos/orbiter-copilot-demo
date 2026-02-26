@@ -445,7 +445,7 @@ export function NetworkView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab
                       marginBottom: "14px",
                     }}
                   >
-                    {connected ? "🔗 Connected" : c.status_connected === "connect_requested" ? "⏳ Pending" : "👤 In network"}
+                    {connected ? "Connected" : c.status_connected === "connect_requested" ? "Pending" : "In Network"}
                   </div>
 
                   {/* Activity recency */}
@@ -583,7 +583,7 @@ export function NetworkView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab
                     border: selectedContact.status_connected === "connected" ? "1px solid rgba(52,211,153,0.25)" : "1px solid rgba(99,102,241,0.2)",
                     color: selectedContact.status_connected === "connected" ? "#34d399" : "#a5b4fc",
                   }}>
-                    {selectedContact.status_connected === "connected" ? "🔗 Connected" : "👤 In network"}
+                    {selectedContact.status_connected === "connected" ? "Connected" : "In Network"}
                   </span>
                 </div>
               </div>

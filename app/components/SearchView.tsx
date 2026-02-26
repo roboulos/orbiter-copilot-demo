@@ -79,7 +79,7 @@ function ConnectionPathDisplay({ path }: { path: ConnectionPath }) {
   if (path.in_network && path.hop_count === 0) {
     return (
       <div style={{ fontSize: "11px", color: "#a5b4fc", padding: "8px 10px", background: "rgba(99,102,241,0.06)", borderRadius: "7px", marginTop: "8px" }}>
-        👤 In your network
+        In Your Network
       </div>
     );
   }
@@ -328,7 +328,7 @@ export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab:
               fontFamily: "Inter, sans-serif",
             }}
           >
-            {m === "network" ? "👤 My Network" : "🌐 Orbiter Universe"}
+            {m === "network" ? "My Network" : "Orbiter Universe"}
           </button>
         ))}
       </div>
@@ -347,7 +347,6 @@ export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab:
           alignItems: "center",
           gap: "8px",
         }}>
-          <span style={{ fontSize: "16px" }}>🌐</span>
           <span>Universe search is coming soon — showing results from your network in the meantime.</span>
         </div>
       )}
@@ -479,7 +478,7 @@ export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab:
                       flexShrink: 0,
                     }}
                   >
-                    {isUniverse ? "🌐 Universe" : (person.in_my_network ? "👤 In network" : "🔗 Extended")}
+                    {isUniverse ? "Universe" : (person.in_my_network ? "In Network" : "Extended")}
                   </span>
                 </div>
 
@@ -527,7 +526,7 @@ export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab:
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {pathState === "loading" ? "…" : "🔗 Path"}
+                    {pathState === "loading" ? "…" : "Path"}
                   </button>
                   <button
                     onClick={() => handleTrack(person)}
@@ -638,7 +637,7 @@ export function SearchView({ onSwitchTab, onSelectPerson }: { onSwitchTab: (tab:
                       color: isUniverse ? "#38bdf8" : "#a5b4fc",
                     }}
                   >
-                    {isUniverse ? "🌐 Universe" : "👤 In network"}
+                    {isUniverse ? "Universe" : "In Network"}
                   </span>
                 </div>
               </div>
