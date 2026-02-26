@@ -1,7 +1,35 @@
 /**
- * Mock Calendar Service
- * Simulates calendar API responses for development/testing
- * Remove when real Xano calendar endpoints are implemented
+ * ═══════════════════════════════════════════════════════════════════════════
+ * ⚠️ MOCK CALENDAR SERVICE - FOR DEMO ONLY ⚠️
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * WARNING: This is NOT connected to real calendar data!
+ * 
+ * PURPOSE: Demonstrates calendar integration UX for Mark's demo
+ *          Shows how the feature will work once backend is built
+ * 
+ * STATUS: Backend endpoints DO NOT EXIST yet
+ * 
+ * REQUIRED BACKEND (TODO):
+ *   1. POST /calendar/connect - OAuth flow (Google/Outlook)
+ *   2. GET  /calendar/events  - Fetch upcoming events
+ *   3. GET  /calendar/status  - Check connection status
+ *   4. POST /calendar/disconnect - Unlink calendar
+ * 
+ * MOCK DATA INCLUDES:
+ *   - 5 fake calendar events (Mark, Charles, Josh, etc.)
+ *   - Realistic timestamps (tomorrow, day after, etc.)
+ *   - Attendee names matching Orbiter team
+ * 
+ * INTEGRATION NOTE:
+ *   - Keep this for demo (shows feature beautifully)
+ *   - Build real backend before production
+ *   - Replace with OAuth implementation (Google Calendar API, Outlook API)
+ *   - Delete this file when real endpoints exist
+ * 
+ * CONTROLLED BY:
+ *   .env.local → NEXT_PUBLIC_USE_MOCK_CALENDAR=true
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import type { CalendarConnection, CalendarEvent, CalendarEventsResponse } from "./calendar";

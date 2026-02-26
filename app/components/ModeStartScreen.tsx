@@ -19,7 +19,39 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
   const [calendarConnected, setCalendarConnected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch calendar events for Meeting Prep mode
+  /**
+   * ═══════════════════════════════════════════════════════════════════════
+   * CALENDAR INTEGRATION - ⚠️ CURRENTLY USING MOCK DATA
+   * ═══════════════════════════════════════════════════════════════════════
+   * 
+   * STATUS: UI is complete, backend endpoints DO NOT EXIST yet
+   * 
+   * WHAT'S HAPPENING:
+   *   - This code calls getCalendarEvents() and checkCalendarStatus()
+   *   - Those functions check NEXT_PUBLIC_USE_MOCK_CALENDAR flag
+   *   - Flag is TRUE → Uses calendar-mock.ts (fake data)
+   *   - Flag is FALSE → Tries real API (will fail, not built yet)
+   * 
+   * MOCK DATA (5 fake events):
+   *   1. "Weekly Sync with Mark" (tomorrow 10 AM)
+   *   2. "Demo Review with Charles" (day after 2 PM)
+   *   3. "Strategy Session with Josh" (2 days 9 AM)
+   *   4. "Investor Update Call" (3 days 3 PM)
+   *   5. "Product Review with Dennis" (4 days 11 AM)
+   * 
+   * FOR DEMO:
+   *   - ✅ Perfect for Mark's Thursday demo
+   *   - ✅ Shows UX flow beautifully
+   *   - ✅ Events are clickable, auto-populate chat
+   * 
+   * FOR PRODUCTION:
+   *   - ❌ Need to build real Xano calendar endpoints
+   *   - ❌ Need OAuth flow (Google Calendar, Outlook)
+   *   - ❌ Need calendar connection UI
+   * 
+   * INTEGRATION NOTE: Keep mock for demo, build backend before launch
+   * ═══════════════════════════════════════════════════════════════════════
+   */
   useEffect(() => {
     if (mode === 'meeting') {
       loadCalendarEvents();
@@ -31,12 +63,12 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
       setCalendarLoading(true);
       const authToken = await getAuthToken();
       
-      // Check if calendar is connected
+      // NOTE: This calls mock data if NEXT_PUBLIC_USE_MOCK_CALENDAR=true
       const status = await checkCalendarStatus(authToken);
       setCalendarConnected(status.connected);
       
       if (status.connected) {
-        // Fetch upcoming events (next 7 days)
+        // NOTE: Returns mock events (5 fake meetings)
         const response = await getCalendarEvents(authToken, 7, 10);
         setCalendarEvents(response.events || []);
       }

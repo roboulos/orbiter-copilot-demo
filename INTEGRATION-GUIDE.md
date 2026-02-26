@@ -198,7 +198,46 @@ useEffect(() => {
 
 ## 🚨 KNOWN ISSUES / TODO
 
+### ⚠️ CRITICAL: Calendar Integration is MOCK DATA
+
+**Status:** Calendar UI is complete, backend does NOT exist
+
+**What Works:**
+- ✅ UI displays "upcoming meetings" in Meeting Prep mode
+- ✅ Events are clickable and auto-populate chat
+- ✅ Beautiful date/time/attendee formatting
+- ✅ Perfect UX for demo
+
+**What Doesn't Work:**
+- ❌ No real Xano calendar endpoints
+- ❌ No OAuth calendar connection (Google/Outlook)
+- ❌ Currently using mock data from `calendar-mock.ts`
+
+**Flag:** `NEXT_PUBLIC_USE_MOCK_CALENDAR=true` in `.env.local`
+
+**Required Backend (NOT BUILT):**
+```typescript
+// Xano Endpoints Needed:
+POST /calendar/connect      // OAuth flow for Google/Outlook
+GET  /calendar/events       // Fetch upcoming events (next 7 days)
+GET  /calendar/status       // Check if calendar connected
+POST /calendar/disconnect   // Unlink calendar
+```
+
+**Mock Events (for demo):**
+1. "Weekly Sync with Mark" (tomorrow 10 AM)
+2. "Demo Review with Charles" (day after 2 PM)
+3. "Strategy Session with Josh" (2 days 9 AM)
+4. "Investor Update Call" (3 days 3 PM)
+5. "Product Review with Dennis" (4 days 11 AM)
+
+**For Thursday Integration:**
+- Keep mock for Mark's demo (shows feature beautifully)
+- Build real backend before production launch
+- OAuth implementation needed (Google Calendar API, Outlook API)
+
 ### Before Integration
+- [ ] **BUILD CALENDAR BACKEND** (critical, not built yet)
 - [ ] Test with real Xano endpoints (currently uses mock)
 - [ ] Verify calendar OAuth flow works
 - [ ] Test error states comprehensively
