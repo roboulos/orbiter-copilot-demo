@@ -1353,6 +1353,23 @@ div, section, article, main, aside {
 }
 
 
+/* ══════════════════════════════════════════════════════
+   AUTO-SEND TRANSITION — Hide welcome screen during prompt injection
+   ══════════════════════════════════════════════════════ */
+
+.auto-sending .crayon-shell-desktop-welcome-wrapper,
+.auto-sending .crayon-shell-desktop-welcome-composer,
+.auto-sending [class*="welcome"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+@keyframes autoSendPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
 /* ===== Fix for Empty Containers ===== */
 /* Hide truly empty divs in the thread that create weird visual boxes */
 .crayon-shell-thread > div:empty {

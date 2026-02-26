@@ -34,13 +34,13 @@ import { ProgressTracker } from "./components/ProgressTracker";
 import { BackButton } from "./components/BackButton";
 import { CancelButton } from "./components/CancelButton";
 import { Confetti } from "./components/Confetti";
-import { DispatchConfirmationModal } from "./components/DispatchConfirmationModal";
+// DispatchConfirmationModal replaced by InlineDispatchCard template
 import { WaitingRoomConnected } from "./components/WaitingRoomConnected";
 import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
-import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions } from "./lib/xano";
+import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions, searchPersons } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
 // Interview classifier imports removed - backend handles conversational flow
@@ -49,6 +49,143 @@ import { generateMeetingPrep } from "./lib/meeting-prep";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useForceFullWidth } from "./hooks/useForceFullWidth";
 import "@crayonai/react-ui/styles/index.css";
+
+// Inline dispatch confirmation card — renders in chat stream
+function InlineDispatchCard({ person_name, goal, context, master_person_id }: {
+  person_name?: string;
+  goal?: string;
+  context?: string;
+  master_person_id?: number;
+}) {
+  const [dispatching, setDispatching] = useState(false);
+  const [dispatched, setDispatched] = useState(false);
+
+  const handleConfirm = () => {
+    if (dispatching || dispatched) return;
+    setDispatching(true);
+    window.dispatchEvent(new CustomEvent("inline-dispatch-confirmed", {
+      detail: { person_name, goal, context, master_person_id }
+    }));
+  };
+
+  // Listen for dispatch completion
+  useEffect(() => {
+    const onDone = () => { setDispatching(false); setDispatched(true); };
+    window.addEventListener("dispatch-completed", onDone);
+    return () => window.removeEventListener("dispatch-completed", onDone);
+  }, []);
+
+  return (
+    <div style={{
+      maxWidth: "560px",
+      background: "linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.08))",
+      border: "2px solid rgba(59,130,246,0.35)",
+      borderRadius: "20px",
+      padding: "28px",
+      margin: "16px 0",
+      boxShadow: "0 8px 32px rgba(59,130,246,0.15), 0 0 0 1px rgba(255,255,255,0.05)",
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+        <div style={{
+          width: "48px", height: "48px", borderRadius: "14px",
+          background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "24px", boxShadow: "0 4px 16px rgba(59,130,246,0.4)",
+        }}>
+          {dispatched ? "\u2713" : "\u2728"}
+        </div>
+        <div>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "rgba(255,255,255,0.95)", letterSpacing: "-0.02em" }}>
+            {dispatched ? "Dispatched!" : "Ready to Dispatch"}
+          </div>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
+            {dispatched ? "Analyzing your network now" : "Review and confirm your request"}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div style={{
+        padding: "16px 18px",
+        background: "rgba(0,0,0,0.2)",
+        borderRadius: "12px",
+        border: "1px solid rgba(255,255,255,0.05)",
+        marginBottom: "16px",
+      }}>
+        {person_name && (
+          <div style={{ marginBottom: "8px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Person</div>
+            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{person_name}</div>
+          </div>
+        )}
+        {goal && (
+          <div style={{ marginBottom: "8px" }}>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Goal</div>
+            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.9)" }}>{goal}</div>
+          </div>
+        )}
+        {context && (
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: "2px" }}>Context</div>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{context}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Action */}
+      {!dispatched ? (
+        <button
+          onClick={handleConfirm}
+          disabled={dispatching}
+          style={{
+            width: "100%",
+            padding: "14px 24px",
+            background: dispatching ? "rgba(99,102,241,0.4)" : "linear-gradient(135deg, #3b82f6, #6366f1)",
+            border: "none",
+            borderRadius: "12px",
+            color: "white",
+            fontSize: "15px",
+            fontWeight: 700,
+            cursor: dispatching ? "not-allowed" : "pointer",
+            boxShadow: dispatching ? "none" : "0 4px 16px rgba(59,130,246,0.4)",
+            transition: "all 0.2s ease",
+            fontFamily: "inherit",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          {dispatching ? (
+            <>
+              <div style={{
+                width: "14px", height: "14px",
+                border: "2px solid rgba(255,255,255,0.3)",
+                borderTopColor: "white",
+                borderRadius: "50%",
+                animation: "spin 0.7s linear infinite",
+              }} />
+              Dispatching...
+            </>
+          ) : (
+            "Confirm & Dispatch"
+          )}
+        </button>
+      ) : (
+        <div style={{
+          textAlign: "center",
+          padding: "12px",
+          fontSize: "13px",
+          color: "rgba(139,92,246,0.8)",
+          fontWeight: 500,
+        }}>
+          Results will appear in 2-5 minutes
+        </div>
+      )}
+    </div>
+  );
+}
 
 const templates = [
   { name: "outcome_card",       Component: OutcomeCardEnhanced       },
@@ -60,12 +197,13 @@ const templates = [
   { name: "submit_button",      Component: SubmitButton      },
   { name: "error_message",      Component: ErrorMessage      },
   { name: "question_card",      Component: QuestionCard      },
-  { name: "question_card_enhanced", Component: QuestionCardEnhanced }, // NEW: with "I don't know" + help text
-  { name: "quick_result_card",  Component: QuickResultCard   }, // NEW: Jason's two-layer system
+  { name: "question_card_enhanced", Component: QuestionCardEnhanced },
+  { name: "quick_result_card",  Component: QuickResultCard   },
   { name: "scanning_card",      Component: ScanningCard      },
   { name: "loading_indicator",  Component: LoadingIndicator  },
   { name: "error_card",         Component: ErrorCard         },
-  { name: "interview_card",     Component: InlineInterviewCard }, // NEW: Inline conversational interview
+  { name: "interview_card",     Component: InlineInterviewCard },
+  { name: "dispatch_confirmation", Component: InlineDispatchCard },
 ];
 
 type Tab = "Network" | "Search" | "Outcomes" | "Horizon" | "Collections" | "Insights" | "Docs";
@@ -114,6 +252,8 @@ interface CopilotModalProps {
   pendingPrompt: string | null;
   onPendingPromptConsumed: () => void;
   onTabChange?: (tab: string) => void;
+  hasConversationContext: boolean;
+  onResetContext: () => void;
 }
 
 function CopilotModal({
@@ -129,12 +269,24 @@ function CopilotModal({
   pendingPrompt,
   onPendingPromptConsumed,
   onTabChange,
+  hasConversationContext,
+  onResetContext,
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
   const [hasStartedConversation, setHasStartedConversation] = useState(false);
-  const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [isQuickDispatching, setIsQuickDispatching] = useState(false);
+  const [autoSending, setAutoSending] = useState(false);
+  const [suggestedPeople, setSuggestedPeople] = useState<any[]>([]);
+
+  // Fetch suggested people when entering leverage mode
+  useEffect(() => {
+    if (selectedMode === 'leverage' && !selectedPerson && open) {
+      searchPersons("", "network", 9).then(data => {
+        setSuggestedPeople(data.items || []);
+      }).catch(() => {});
+    }
+  }, [selectedMode, selectedPerson, open]);
 
   // Quick leverage: Button 1 fires suggestion_request immediately, returns to person search
   const handleQuickLeverage = useCallback(async () => {
@@ -237,8 +389,7 @@ function CopilotModal({
       }, 50);
     };
   }, [open]);
-  const [dispatchDescription, setDispatchDescription] = useState("");
-  const [isDispatching, setIsDispatching] = useState(false);
+  // Dispatch state managed by inline card template + event listeners
   const [processId, setProcessId] = useState<number | null>(null);
   const [showWaitingRoom, setShowWaitingRoom] = useState(false);
   const [currentDispatchData, setCurrentDispatchData] = useState<{
@@ -258,52 +409,79 @@ function CopilotModal({
     }
   }, [showFork, selectedPerson]);
 
-  // Listen for interview dispatch ready event
+  // Listen for legacy interview dispatch ready event (InlineInterviewCard)
+  // Routes to the same inline dispatch handler
   useEffect(() => {
     const handleDispatchReady = (event: CustomEvent) => {
-      const { personId, personName, outcome, constraints, description } = event.detail;
-      
-      // Set dispatch data (using new format)
-      setCurrentDispatchData({
-        summary: outcome || "Help with outcome",
-        mode: "outcome", // This looks like an outcome dispatch
-        personName: personName,
-      });
-      setDispatchDescription(description);
-      
-      // Show dispatch modal
-      setShowDispatchModal(true);
+      const { personId, personName, outcome, description } = event.detail;
+      window.dispatchEvent(new CustomEvent("inline-dispatch-confirmed", {
+        detail: {
+          person_name: personName,
+          goal: outcome || "Help with outcome",
+          context: description || "",
+          master_person_id: personId || selectedPerson?.master_person_id,
+        }
+      }));
     };
 
     window.addEventListener("interview-dispatch-ready", handleDispatchReady as EventListener);
     return () => {
       window.removeEventListener("interview-dispatch-ready", handleDispatchReady as EventListener);
     };
-  }, []);
+  }, [selectedPerson]);
 
-  // Listen for dispatch_confirmation template from backend
+  // Listen for inline dispatch card confirmation (user clicks "Confirm & Dispatch" in chat)
   useEffect(() => {
-    const handleDispatchConfirmation = (event: CustomEvent) => {
+    const handleInlineDispatch = async (event: CustomEvent) => {
       const { person_name, goal, context, master_person_id } = event.detail;
-      console.log('[MODAL TRIGGER]', event.detail);
-      
-      // Set dispatch data (using new format)
-      setDispatchDescription(`Leverage my network to help ${person_name} ${goal}\n\n${context}`);
-      setCurrentDispatchData({
-        summary: `${goal} - ${context}`,
-        mode: "loop", // This is a leverage loop
-        personName: person_name,
-      });
-      
-      // Show dispatch modal
-      setShowDispatchModal(true);
+      console.log('[INLINE DISPATCH]', event.detail);
+
+      try {
+        const BASE_URL = process.env.NEXT_PUBLIC_XANO_API_URL || "https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz";
+
+        const createResponse = await fetch(`${BASE_URL}/leverage-loop`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            master_person_id: master_person_id || selectedPerson?.master_person_id || null,
+            goal: goal || "Help with network analysis",
+            context: `${goal || ""} - ${context || ""}`,
+            fast: false,
+          }),
+        });
+
+        if (!createResponse.ok) throw new Error("Failed to create leverage loop");
+        const { id: loopId, process_id } = await createResponse.json();
+
+        await fetch(`${BASE_URL}/leverage-loop/${loopId}/dispatch`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approved: true }),
+        });
+
+        setProcessId(process_id);
+        setCurrentDispatchData({
+          summary: `${goal} - ${context}`,
+          mode: "loop",
+          personName: person_name,
+        });
+
+        // Signal the inline card that dispatch completed
+        window.dispatchEvent(new Event("dispatch-completed"));
+
+        // Show waiting room after brief delay
+        setTimeout(() => setShowWaitingRoom(true), 1500);
+      } catch (error) {
+        console.error("Inline dispatch failed:", error);
+        window.dispatchEvent(new Event("dispatch-completed"));
+      }
     };
 
-    window.addEventListener("dispatch-confirmation-received", handleDispatchConfirmation as EventListener);
+    window.addEventListener("inline-dispatch-confirmed", handleInlineDispatch as unknown as EventListener);
     return () => {
-      window.removeEventListener("dispatch-confirmation-received", handleDispatchConfirmation as EventListener);
+      window.removeEventListener("inline-dispatch-confirmed", handleInlineDispatch as unknown as EventListener);
     };
-  }, []);
+  }, [selectedPerson]);
 
   /**
    * ═══════════════════════════════════════════════════════════════════════
@@ -350,6 +528,7 @@ function CopilotModal({
     }
     if (pendingPrompt && !showFork && hasStartedConversation) {
       console.log('[AUTO-SEND TRIGGERED] Waiting 500ms for CrayonChat mount...');
+      setAutoSending(true);
       // TIMING NOTE: Wait for CrayonChat to mount (500ms tested as reliable)
       const timer = setTimeout(() => {
         /**
@@ -400,17 +579,21 @@ function CopilotModal({
             if (sendButton) {
               sendButton.click();
               onPendingPromptConsumed();
+              // Brief delay so message starts flowing before we reveal chat
+              setTimeout(() => setAutoSending(false), 300);
             } else {
               // Fallback: try Enter key on the input
               inputElement.dispatchEvent(new KeyboardEvent('keydown', {
                 key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
               }));
               onPendingPromptConsumed();
+              setTimeout(() => setAutoSending(false), 300);
             }
           }, 200);
         } else {
           console.warn('[AUTO-SEND] Could not find input element');
           onPendingPromptConsumed();
+          setAutoSending(false);
         }
       }, 500); // TIMING: 500ms tested as reliable for CrayonChat mount
       
@@ -602,50 +785,45 @@ function CopilotModal({
             />
           </div>
 
-          {/* Dispatch button - triggers dispatch modal only when ready */}
+          {/* Dispatch button - disabled until conversation has context */}
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              
-              if (selectedPerson) {
-                // Person selected - show dispatch modal directly
-                setDispatchDescription(`Help ${personName} with...`);
-                setCurrentDispatchData({
-                  summary: "Help with...",
-                  mode: "loop",
-                  personName: personName,
-                });
-                setShowDispatchModal(true);
-              } else {
-                // No person - prompt in chat
-                onForkChoice("I want to help someone from my network");
-              }
+              if (!hasConversationContext) return;
+              // Dispatch via chat prompt — backend returns dispatch_confirmation template
+              onForkChoice("I'm ready to dispatch. Create the dispatch confirmation now.");
             }}
+            disabled={!hasConversationContext}
             style={{
               padding: "7px 14px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              border: "1px solid rgba(99,102,241,0.3)",
-              color: "white",
+              background: hasConversationContext
+                ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
+                : "rgba(99,102,241,0.2)",
+              border: `1px solid rgba(99,102,241,${hasConversationContext ? 0.3 : 0.1})`,
+              color: hasConversationContext ? "white" : "rgba(255,255,255,0.35)",
               fontSize: "12px",
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: hasConversationContext ? "pointer" : "not-allowed",
               display: "flex",
               alignItems: "center",
               gap: "6px",
               flexShrink: 0,
               fontFamily: "inherit",
               transition: "all 0.2s ease",
-              boxShadow: "0 2px 12px rgba(99,102,241,0.4)",
+              boxShadow: hasConversationContext ? "0 2px 12px rgba(99,102,241,0.4)" : "none",
+              opacity: hasConversationContext ? 1 : 0.6,
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.6)";
+              if (hasConversationContext) {
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 16px rgba(99,102,241,0.6)";
+              }
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(99,102,241,0.4)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = hasConversationContext ? "0 2px 12px rgba(99,102,241,0.4)" : "none";
             }}
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -717,6 +895,7 @@ function CopilotModal({
             ) : (
               <div
                 key={`chat-${chatKey.current}`}
+                className={autoSending ? "auto-sending" : ""}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -725,6 +904,39 @@ function CopilotModal({
                   flexDirection: "column",
                 }}
               >
+                {/* Loading overlay during auto-send transition */}
+                {autoSending && (
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 10,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "16px",
+                    background: "rgba(10,10,18,0.95)",
+                  }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          background: "rgba(139,92,246,0.7)",
+                          animation: `autoSendPulse 1.2s ease-in-out ${i * 0.15}s infinite`,
+                        }} />
+                      ))}
+                    </div>
+                    <div style={{
+                      fontSize: "13px",
+                      color: "rgba(255,255,255,0.4)",
+                      letterSpacing: "-0.01em",
+                    }}>
+                      Starting conversation...
+                    </div>
+                  </div>
+                )}
                 <div className="force-light-text" style={{
                   width: "100%",
                   height: "100%",
@@ -747,6 +959,7 @@ function CopilotModal({
                         } else {
                           // Reset for fresh start
                           setHasStartedConversation(mode === 'default');
+                          onResetContext();
                           onPersonClear();
                           chatKey.current += 1;
                         }
@@ -804,6 +1017,101 @@ function CopilotModal({
                             onClear={() => { onPersonClear(); }}
                           />
                         </div>
+
+                        {/* Suggested people from network */}
+                        {suggestedPeople.length > 0 && (
+                          <div style={{ width: "100%", maxWidth: "580px", marginTop: "8px" }}>
+                            <div style={{
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: "rgba(255,255,255,0.35)",
+                              textTransform: "uppercase" as const,
+                              letterSpacing: "0.06em",
+                              marginBottom: "12px",
+                            }}>
+                              Your Network
+                            </div>
+                            <div style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(3, 1fr)",
+                              gap: "8px",
+                            }}>
+                              {suggestedPeople.slice(0, 9).map((person) => {
+                                const name = person.master_person?.name || person.full_name;
+                                const title = person.master_person?.current_title;
+                                const company = person.master_person?.master_company?.company_name;
+                                const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+
+                                return (
+                                  <button
+                                    key={person.master_person_id}
+                                    onClick={() => onPersonSelect(person as any, "")}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "10px",
+                                      padding: "10px 12px",
+                                      background: "rgba(255,255,255,0.02)",
+                                      border: "1px solid rgba(255,255,255,0.06)",
+                                      borderRadius: "10px",
+                                      cursor: "pointer",
+                                      textAlign: "left",
+                                      transition: "all 0.15s ease",
+                                      fontFamily: "inherit",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = "rgba(99,102,241,0.08)";
+                                      e.currentTarget.style.borderColor = "rgba(99,102,241,0.2)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                                    }}
+                                  >
+                                    <div style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      borderRadius: "50%",
+                                      background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      color: "rgba(167,139,250,0.9)",
+                                      flexShrink: 0,
+                                    }}>
+                                      {initials}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{
+                                        fontSize: "13px",
+                                        fontWeight: 500,
+                                        color: "rgba(255,255,255,0.85)",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}>
+                                        {name}
+                                      </div>
+                                      {(title || company) && (
+                                        <div style={{
+                                          fontSize: "11px",
+                                          color: "rgba(255,255,255,0.35)",
+                                          whiteSpace: "nowrap",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                        }}>
+                                          {[title, company].filter(Boolean).join(" \u00B7 ")}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (selectedMode !== 'default' && !hasStartedConversation) ? (
                       // Meeting/Outcome modes: Start screens
@@ -942,53 +1250,7 @@ function CopilotModal({
         </div>
       </div>
 
-      {/* Dispatch Confirmation Modal */}
-      <DispatchConfirmationModal
-        open={showDispatchModal}
-        onClose={() => setShowDispatchModal(false)}
-        onConfirm={async () => {
-          setIsDispatching(true);
-          try {
-            // Create leverage loop
-            const BASE_URL = process.env.NEXT_PUBLIC_XANO_API_URL || "https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz";
-            
-            const createResponse = await fetch(`${BASE_URL}/leverage-loop`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                master_person_id: selectedPerson?.master_person_id || null,
-                goal: currentDispatchData?.summary || "Help with network analysis",
-                context: dispatchDescription,
-                fast: false,
-              }),
-            });
-            
-            if (!createResponse.ok) throw new Error("Failed to create leverage loop");
-            
-            const { id: loopId, process_id } = await createResponse.json();
-            
-            // Dispatch the loop
-            await fetch(`${BASE_URL}/leverage-loop/${loopId}/dispatch`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ approved: true }),
-            });
-            
-            // Store process ID and show waiting room
-            setProcessId(process_id);
-            setShowDispatchModal(false);
-            setIsDispatching(false);
-            setShowWaitingRoom(true);
-          } catch (error) {
-            console.error("Dispatch failed:", error);
-            setIsDispatching(false);
-            alert("Failed to dispatch: " + (error instanceof Error ? error.message : "Unknown error"));
-          }
-        }}
-        description={dispatchDescription}
-        personName={personName}
-        isDispatching={isDispatching}
-      />
+      {/* Dispatch is now inline via InlineDispatchCard template in chat */}
 
       </>
       )}
@@ -1206,6 +1468,7 @@ export default function Home() {
   const [networkSummary, setNetworkSummary] = useState<string>("");
   const [processId, setProcessId] = useState<number | null>(null);
   const [showWaitingRoom, setShowWaitingRoom] = useState(false);
+  const [hasConversationContext, setHasConversationContext] = useState(false);
   const [currentDispatchData, setCurrentDispatchData] = useState<{
     summary: string;
     mode: "loop" | "outcome";
@@ -1479,6 +1742,11 @@ export default function Home() {
 
         let items: ResponseItem[] = (data.response || []).map(normalizeItem);
 
+      // Signal that we have conversation context (enables dispatch button)
+      if (items.length > 0) {
+        setHasConversationContext(true);
+      }
+
       // MARK'S REQUIREMENT: NO intermediate suggestions during conversation
       // Filter out person/leverage loop cards - only allow at dispatch confirmation
       const BLOCKED_DURING_INTERVIEW = ['contact_card', 'leverage_loop_card', 'serendipity_card'];
@@ -1538,17 +1806,6 @@ export default function Home() {
                 const chunk = (i === 0 ? "" : " ") + words[i];
                 controller.enqueue(encoder.encode(`event: text\ndata: ${chunk}\n\n`));
               }
-            } else if ("name" in item && item.name === "dispatch_confirmation") {
-              // Special handling: dispatch_confirmation triggers modal, not a chat template
-              const props = (item as { templateProps: Record<string, unknown> }).templateProps;
-              console.log('[DISPATCH CONFIRMATION]', props);
-              
-              // Emit event to trigger modal (event listener is set up in useEffect)
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("dispatch-confirmation-received", {
-                  detail: props
-                }));
-              }, 0);
             } else if ("name" in item && item.name) {
               controller.enqueue(encoder.encode(
                 `event: tpl\ndata: ${JSON.stringify({
@@ -1829,6 +2086,8 @@ export default function Home() {
         pendingPrompt={pendingPrompt}
         onPendingPromptConsumed={() => setPendingPrompt(null)}
         onTabChange={(tab) => setActiveTab(tab as Tab | "Home")}
+        hasConversationContext={hasConversationContext}
+        onResetContext={() => setHasConversationContext(false)}
       />
 
       {/* ─── Calendar Settings Modal ──────────────────────── */}

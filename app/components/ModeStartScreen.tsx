@@ -160,9 +160,10 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '120px 48px 80px',
-      minHeight: '600px',
+      justifyContent: 'flex-start',
+      padding: '48px 48px 40px',
+      height: '100%',
+      overflowY: 'auto',
       background: 'transparent',
       position: 'relative',
     }}>
@@ -420,7 +421,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
         {/* Calendar Events for Meeting Prep */}
         {mode === 'meeting' && calendarConnected && !calendarLoading && calendarEvents.length > 0 && (
           <div style={{
-            marginTop: '40px',
+            marginTop: '24px',
             width: '100%',
           }}>
             <div style={{
@@ -439,7 +440,7 @@ export function ModeStartScreen({ mode, onSubmit }: ModeStartScreenProps) {
               flexDirection: 'column',
               gap: '8px',
             }}>
-              {calendarEvents.slice(0, 5).map((event, idx) => {
+              {calendarEvents.slice(0, 3).map((event, idx) => {
                 // Support both Nylas format (when.start_time) and flat format (start_time)
                 const rawStart = (event as any).when?.start_time || event.start_time;
                 const startDate = rawStart ? new Date(rawStart * 1000) : new Date();
