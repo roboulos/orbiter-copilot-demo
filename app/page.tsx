@@ -28,6 +28,7 @@ import { QuickResultCard } from "./components/QuickResultCard";
 import { ScanningCard } from "./components/ScanningCard";
 import { RichWelcomeScreen } from "./components/RichWelcomeScreen";
 import { LoadingIndicator } from "./components/LoadingIndicator";
+import { ModeStartScreen } from "./components/ModeStartScreen";
 import { ErrorCard } from "./components/ErrorCard";
 import { ProgressTracker } from "./components/ProgressTracker";
 import { BackButton } from "./components/BackButton";
@@ -131,6 +132,8 @@ function CopilotModal({
 }: CopilotModalProps) {
   const chatKey = useRef(0);
   const [selectedMode, setSelectedMode] = useState<'leverage' | 'meeting' | 'outcome' | null>(null);
+  const [hasStartedConversation, setHasStartedConversation] = useState(false);
+  const [promptToSend, setPromptToSend] = useState<string | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [dispatchDescription, setDispatchDescription] = useState("");
   const [isDispatching, setIsDispatching] = useState(false);
@@ -478,6 +481,8 @@ function CopilotModal({
                   {/* Left sidebar - always visible */}
                   <ModePicker onSelectMode={(mode) => {
                     setSelectedMode(mode);
+                    setHasStartedConversation(false);
+                    setPromptToSend(null);
                     chatKey.current += 1;
                   }} />
                   
@@ -488,44 +493,16 @@ function CopilotModal({
                     flexDirection: "column",
                     minWidth: 0
                   }}>
-                    {selectedMode === 'leverage' && !selectedPerson ? (
-                      // Big search interface for Leverage Loops
-                      <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        padding: "48px",
-                        gap: "24px"
-                      }}>
-                        <div style={{
-                          fontSize: "28px",
-                          fontWeight: 600,
-                          color: "#f1f5f9",
-                          textAlign: "center"
-                        }}>
-                          Who would you like to help?
-                        </div>
-                        <div style={{
-                          fontSize: "14px",
-                          color: "#94a3b8",
-                          textAlign: "center",
-                          marginBottom: "16px"
-                        }}>
-                          Search your network or type a name
-                        </div>
-                        <div style={{
-                          width: "100%",
-                          maxWidth: "500px"
-                        }}>
-                          <PersonPicker
-                            onSelect={onPersonSelect}
-                            selectedPerson={selectedPerson}
-                            onClear={() => { onPersonClear(); }}
-                          />
-                        </div>
-                      </div>
+                    {selectedMode && !hasStartedConversation ? (
+                      // Linear-style start screen for all modes
+                      <ModeStartScreen 
+                        mode={selectedMode}
+                        onSubmit={(value) => {
+                          // Handle the submitted value (person name or goal)
+                          setPromptToSend(value);
+                          setHasStartedConversation(true);
+                        }}
+                      />
                     ) : (
                       <CrayonChat
                         key={chatKey.current}
