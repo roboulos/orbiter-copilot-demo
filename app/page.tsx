@@ -468,29 +468,17 @@ function CopilotModal({
       console.log('[INLINE DISPATCH]', event.detail);
 
       try {
-        const BASE_URL = process.env.NEXT_PUBLIC_XANO_API_URL || "https://xh2o-yths-38lt.n7c.xano.io/api:Bd_dCiOz";
-
-        const createResponse = await fetch(`${BASE_URL}/leverage-loop`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            master_person_id: master_person_id || selectedPerson?.master_person_id || null,
-            goal: goal || "Help with network analysis",
-            context: `${goal || ""} - ${context || ""}`,
-            fast: false,
-          }),
+        const personId = master_person_id || selectedPerson?.master_person_id || 0;
+        const createResult = await createLeverageLoop({
+          master_person_id: personId,
+          request_panel_title: goal || "Help with network analysis",
+          request_context: `${goal || ""} - ${context || ""}`,
         });
 
-        if (!createResponse.ok) throw new Error("Failed to create leverage loop");
-        const { id: loopId, process_id } = await createResponse.json();
+        const loopId = createResult.id;
+        await dispatchLeverageLoop(loopId);
 
-        await fetch(`${BASE_URL}/leverage-loop/${loopId}/dispatch`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ approved: true }),
-        });
-
-        setProcessId(process_id);
+        setProcessId(loopId);
         setCurrentDispatchData({
           summary: `${goal} - ${context}`,
           mode: "loop",
