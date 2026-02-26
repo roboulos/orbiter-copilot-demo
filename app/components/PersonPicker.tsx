@@ -247,6 +247,62 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
     if (q.length < 2) { setResults([]); return; }
     setLoading(true);
     try {
+      // MOCK MODE: Return hardcoded results for testing
+      const MOCK_ENABLED = process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
+      if (MOCK_ENABLED) {
+        console.log('[PERSON SEARCH] Mock mode - returning hardcoded results for:', q);
+        const mockResults: PersonResult[] = [
+          {
+            master_person_id: 520,
+            full_name: "Ray Deck",
+            in_my_network: true,
+            master_person: {
+              id: 520,
+              name: "Ray Deck",
+              avatar: null,
+              current_title: "Chief Technology Officer",
+              bio: "CTO at Element55, expert in web3 and decentralized systems",
+              master_company: { id: 1, company_name: "Element55", logo: null }
+            }
+          },
+          {
+            master_person_id: 234,
+            full_name: "Luis Videgaray",
+            in_my_network: true,
+            master_person: {
+              id: 234,
+              name: "Luis Videgaray",
+              avatar: null,
+              current_title: "Former Secretary of Finance",
+              bio: "Mexican politician and economist",
+              master_company: null
+            }
+          },
+          {
+            master_person_id: 156,
+            full_name: "Bjørn Stray",
+            in_my_network: true,
+            master_person: {
+              id: 156,
+              name: "Bjørn Stray",
+              avatar: null,
+              current_title: "CEO",
+              bio: "Tech entrepreneur",
+              master_company: { id: 2, company_name: "Nordic Tech", logo: null }
+            }
+          }
+        ];
+        // Filter by search query
+        const filtered = mockResults.filter(r => 
+          r.full_name.toLowerCase().includes(q.toLowerCase())
+        );
+        setResults(filtered);
+        setIsOpen(true);
+        setLoading(false);
+        return;
+      }
+
+      // REAL MODE: Call Xano backend
       const data = await searchPersons(q, "network", 8);
       setResults(data.items || []);
       setIsOpen(true);
@@ -280,6 +336,24 @@ export function PersonPicker({ onSelect, selectedPerson, onClear }: PersonPicker
     setLoadingContext(true);
     setLoadingName(person.full_name);
     try {
+      // MOCK MODE: Return synthetic context
+      const MOCK_ENABLED = process.env.NEXT_PUBLIC_MOCK_BACKEND === 'true';
+      if (MOCK_ENABLED) {
+        console.log('[PERSON CONTEXT] Mock mode - returning synthetic context for:', person.full_name);
+        const mockContext = `name: ${person.full_name}
+title: ${person.master_person?.current_title || "Unknown"}
+company: ${person.master_person?.master_company?.company_name || "Unknown"}
+bio: ${person.master_person?.bio || "No bio available"}
+
+Recent activity: Active in network, interested in tech and innovation.
+Potential collaboration areas: Web3, decentralized systems, startup ecosystems.`;
+        onSelect(person, mockContext);
+        setLoadingContext(false);
+        setLoadingName("");
+        return;
+      }
+
+      // REAL MODE: Fetch from Xano
       const context = await getPersonContext(person.master_person_id);
       onSelect(person, context);
     } catch {

@@ -224,7 +224,9 @@ function CopilotModal({
 
   // When fork closes (showFork becomes false), start conversation  
   useEffect(() => {
+    console.log('[FORK CLOSE EFFECT]', { showFork, selectedPerson: !!selectedPerson });
     if (!showFork && selectedPerson) {
+      console.log('[FORK CLOSE EFFECT] Setting hasStartedConversation = true');
       setHasStartedConversation(true);
     }
   }, [showFork, selectedPerson]);
@@ -669,8 +671,11 @@ function CopilotModal({
                   avatar: selectedPerson.master_person?.avatar,
                 }}
                 onChoice={(prompt) => {
+                  console.log('[FORK CHOICE]', { prompt });
                   onForkChoice(prompt);
+                  console.log('[FORK CHOICE] After onForkChoice');
                   onChatStart();
+                  console.log('[FORK CHOICE] After onChatStart');
                 }}
               />
             ) : (
@@ -1157,7 +1162,9 @@ export default function Home() {
   }, []);
 
   const handleChatStart = useCallback(() => {
+    console.log('[handleChatStart] Called');
     setShowFork(false);
+    console.log('[handleChatStart] Set showFork = false');
     // hasStartedConversation will be set by useEffect watching showFork
   }, []);
 
