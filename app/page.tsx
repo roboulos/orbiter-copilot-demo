@@ -205,39 +205,8 @@ function CopilotModal({
   const personCompany = selectedPerson?.master_person?.master_company?.company_name;
 
   // Dynamic conversation starters based on whether person is selected
-  const defaultStarters = selectedPerson
-    ? [
-        {
-          displayText: `Explore ways to help ${personName}`,
-          prompt: `I want to explore ways to help ${personName}. Guide me through some options.`,
-        },
-        {
-          displayText: `What's my best move with ${personName}?`,
-          prompt: `What's my single best move right now to activate my relationship with ${personName}? Be direct — tell me what to do.`,
-        },
-        {
-          displayText: `Help ${personName} with something specific`,
-          prompt: `I want to help ${personName}${personTitle ? ` — ${personTitle}` : ""} with something specific. Ask me what I want to help them with — keep it brief.`,
-        },
-        {
-          displayText: `Meeting Prep for ${personName}`,
-          prompt: `Meeting prep: give me a meeting prep card for ${personName}. Include a summary, 3 talking points, things to listen for, and any landmines to avoid.`,
-        },
-      ]
-    : [
-        {
-          displayText: "Help someone in my network",
-          prompt: "I want to help someone in my network. Ask me who and what they need.",
-        },
-        {
-          displayText: "Explore my network for opportunities",
-          prompt: "Guide me through exploring my network to find valuable connections.",
-        },
-        {
-          displayText: "Find the right person for...",
-          prompt: "I'm looking for someone specific in my network. Help me find them.",
-        },
-      ];
+  // No conversation starters after mode selected (per Mark's feedback - mode picker is the clear entry point)
+  const defaultStarters: Array<{displayText: string; prompt: string}> = [];
 
   return (
     <>
