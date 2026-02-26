@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { CrayonChat } from "@crayonai/react-ui";
+import { useThreadManager } from "@crayonai/react-core";
+import type { Message } from "@crayonai/react-core";
 import { OutcomeCardEnhanced } from "./components/OutcomeCard";
 import { LeverageLoopCard } from "./components/LeverageLoopCard";
 import { ContactCard } from "./components/ContactCard";
@@ -40,7 +42,7 @@ import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
-import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions, searchPersons, createConversation, addMessage, getConversations, type CopilotConversation } from "./lib/xano";
+import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions, searchPersons, createConversation, addMessage, getConversations, getMessages, type CopilotConversation, type CopilotMessage } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
 // Interview classifier imports removed - backend handles conversational flow
@@ -309,6 +311,74 @@ function CopilotModal({
   const [isQuickDispatching, setIsQuickDispatching] = useState(false);
   const [autoSending, setAutoSending] = useState(false);
   const [suggestedPeople, setSuggestedPeople] = useState<any[]>([]);
+  const [loadThreadId, setLoadThreadId] = useState<string | null>(null);
+
+  // Thread manager — loads messages from Xano backend when selecting a conversation
+  const threadManager = useThreadManager({
+    threadId: loadThreadId,
+    shouldResetThreadState: true,
+    loadThread: async (threadId: string) => {
+      try {
+        const convId = parseInt(threadId, 10);
+        if (isNaN(convId)) return [];
+        const xanoMessages = await getMessages(convId);
+        // Map Xano CopilotMessage[] to CrayonChat Message[]
+        return (xanoMessages || []).map((m: CopilotMessage, i: number): Message => {
+          if (m.role === "user") {
+            return {
+              id: `msg-${m.id || i}`,
+              role: "user" as const,
+              type: "prompt" as const,
+              message: m.content,
+            };
+          }
+          // Assistant messages
+          const parts: Array<{ type: "text"; text: string } | { type: "template"; name: string; templateProps: any }> = [];
+          if (m.template_name && m.template_props) {
+            parts.push({ type: "template", name: m.template_name, templateProps: m.template_props });
+          }
+          if (m.content) {
+            parts.push({ type: "text", text: m.content });
+          }
+          return {
+            id: `msg-${m.id || i}`,
+            role: "assistant" as const,
+            message: parts.length > 0 ? parts : [{ type: "text", text: "(empty response)" }],
+          };
+        });
+      } catch (err) {
+        console.error("[loadThread] Failed to load messages:", err);
+        return [];
+      }
+    },
+    onProcessMessage: async ({ message, threadManager: tm, abortController }) => {
+      // Add user message to UI
+      const newMessage = { id: crypto.randomUUID(), ...message };
+      tm.appendMessages(newMessage);
+
+      // Get threadId — use loadThreadId or fallback
+      const threadId = loadThreadId || "new";
+
+      // Call the parent's processMessage (SSE stream)
+      const response = await processMessage({
+        threadId,
+        messages: [...tm.messages, newMessage],
+        abortController,
+      });
+
+      // Process the SSE stream
+      const { processStreamedMessage } = await import("@crayonai/react-core");
+      await processStreamedMessage({
+        response,
+        createMessage: tm.appendMessages,
+        updateMessage: tm.updateMessage,
+        deleteMessage: tm.deleteMessage,
+      });
+
+      return [];
+    },
+    responseTemplates: templates,
+  });
 
   // Fetch suggested people when entering leverage mode
   useEffect(() => {
@@ -968,19 +1038,14 @@ function CopilotModal({
                     onSelectMode={(mode) => {
                       if (mode !== selectedMode) {
                         setSelectedMode(mode);
-
-                        // Preserve conversation if switching within same mode or has active person
-                        const shouldPreserveConversation = selectedPerson !== null;
-
-                        if (shouldPreserveConversation) {
-                          // Keep conversation active, don't reset
-                          setHasStartedConversation(true);
-                        } else {
-                          // Reset for fresh start
-                          setHasStartedConversation(mode === 'default');
-                          onResetContext();
+                        // Always reset conversation state when switching modes
+                        setHasStartedConversation(mode === 'default');
+                        setLoadThreadId(null); // Clear loaded conversation
+                        onResetContext();
+                        chatKey.current += 1;
+                        // Clear person if switching away from leverage
+                        if (mode !== 'leverage') {
                           onPersonClear();
-                          chatKey.current += 1;
                         }
                       }
                     }}
@@ -988,6 +1053,7 @@ function CopilotModal({
                     onSelectConversation={(conv) => {
                       setSelectedMode((conv.mode || 'default') as typeof selectedMode);
                       setHasStartedConversation(true);
+                      setLoadThreadId(String(conv.id));
                       onSelectConversation(conv);
                       chatKey.current += 1;
                     }}
@@ -1155,7 +1221,10 @@ function CopilotModal({
                       <CrayonChat
                         key={chatKey.current}
                         type="standalone"
-                        processMessage={processMessage}
+                        {...(loadThreadId
+                          ? { threadManager }
+                          : { processMessage }
+                        )}
                         logoUrl={ORBITER_AVATAR}
                         agentName={
                           selectedMode === 'default' ? "Copilot" :
