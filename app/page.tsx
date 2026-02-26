@@ -40,7 +40,7 @@ import { InlineInterviewCard } from "./components/InlineInterviewCard";
 import { FormattedDispatchSummary } from "./components/FormattedDispatchSummary";
 import { ModePicker } from "./components/ModePicker";
 // InterviewPanel removed - using conversational backend flow instead
-import { chat, dispatch, getLeverageLoopSuggestions } from "./lib/xano";
+import { chat, dispatch, createLeverageLoop, dispatchLeverageLoop, getLeverageLoopSuggestions } from "./lib/xano";
 import { detectDispatchIntent, generateDispatchDescription } from "./lib/dispatch";
 import { generateMeetingPrep } from "./lib/meeting-prep";
 // Interview classifier imports removed - backend handles conversational flow
@@ -134,6 +134,34 @@ function CopilotModal({
   const [selectedMode, setSelectedMode] = useState<'default' | 'leverage' | 'meeting' | 'outcome'>('default');
   const [hasStartedConversation, setHasStartedConversation] = useState(false);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [isQuickDispatching, setIsQuickDispatching] = useState(false);
+
+  // Quick leverage: Button 1 fires suggestion_request immediately, returns to person search
+  const handleQuickLeverage = useCallback(async () => {
+    if (!selectedPerson?.master_person_id) return;
+    setIsQuickDispatching(true);
+    try {
+      const result = await createLeverageLoop({
+        master_person_id: selectedPerson.master_person_id,
+        request_panel_title: `Leverage network for ${selectedPerson.master_person?.name || selectedPerson.full_name}`,
+        request_context: `General leverage loop — suggest ways to help ${selectedPerson.master_person?.name || selectedPerson.full_name}`,
+      });
+
+      // Dispatch it immediately
+      await dispatchLeverageLoop(result.id);
+
+      console.log('[QUICK LEVERAGE] Created + dispatched loop:', result.id);
+
+      // Brief success flash, then clear person and return to search
+      setTimeout(() => {
+        setIsQuickDispatching(false);
+        onPersonClear();
+      }, 800);
+    } catch (error) {
+      console.error('[QUICK LEVERAGE] Failed:', error);
+      setIsQuickDispatching(false);
+    }
+  }, [selectedPerson, onPersonClear]);
 
   /**
    * ═══════════════════════════════════════════════════════════════════════════
@@ -677,67 +705,13 @@ function CopilotModal({
                   company: personCompany,
                   avatar: selectedPerson.master_person?.avatar,
                 }}
+                isDispatching={isQuickDispatching}
+                onQuickLeverage={handleQuickLeverage}
                 onChoice={(prompt) => {
-                  console.log('[FORK CHOICE]', { prompt });
+                  // Button 2: "Help with something specific" → chat interview
                   onForkChoice(prompt);
                   onChatStart();
-                  
-                  // Auto-send: use native setter to properly update React controlled input
-                  setTimeout(() => {
-                    const textarea = document.querySelector(
-                      '.crayon-shell-desktop-welcome-composer__input, ' +
-                      'textarea[placeholder*="Type your message"]'
-                    ) as HTMLTextAreaElement;
-
-                    if (textarea) {
-                      // Use native setter to bypass React's controlled input
-                      const setter = Object.getOwnPropertyDescriptor(
-                        window.HTMLTextAreaElement.prototype, 'value'
-                      )?.set;
-                      if (setter) setter.call(textarea, prompt);
-                      else textarea.value = prompt;
-
-                      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                      textarea.dispatchEvent(new Event('change', { bubbles: true }));
-
-                      // Wait for React to enable the button
-                      setTimeout(() => {
-                        const container = textarea.closest('[class*="composer"]');
-                        const btn = container?.querySelector('button:not([disabled])') as HTMLButtonElement;
-                        if (btn) {
-                          console.log('[AUTO-SEND FIX] Clicking send button');
-                          btn.click();
-                        } else {
-                          // Fallback: Enter key
-                          textarea.dispatchEvent(new KeyboardEvent('keydown', {
-                            key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
-                          }));
-                        }
-                      }, 300);
-                    } else {
-                      console.warn('[AUTO-SEND FIX] Textarea not found, retrying...');
-                      setTimeout(() => {
-                        const retryInput = document.querySelector(
-                          '.crayon-shell-desktop-welcome-composer__input, ' +
-                          'textarea[placeholder*="Type your message"]'
-                        ) as HTMLTextAreaElement;
-                        if (retryInput) {
-                          const s = Object.getOwnPropertyDescriptor(
-                            window.HTMLTextAreaElement.prototype, 'value'
-                          )?.set;
-                          if (s) s.call(retryInput, prompt);
-                          else retryInput.value = prompt;
-                          retryInput.dispatchEvent(new Event('input', { bubbles: true }));
-                          retryInput.dispatchEvent(new Event('change', { bubbles: true }));
-                          setTimeout(() => {
-                            const c = retryInput.closest('[class*="composer"]');
-                            const b = c?.querySelector('button:not([disabled])') as HTMLButtonElement;
-                            if (b) b.click();
-                          }, 300);
-                        }
-                      }, 1000);
-                    }
-                  }, 1500);
+                  // Auto-send useEffect handles injecting prompt into CrayonChat
                 }}
               />
             ) : (

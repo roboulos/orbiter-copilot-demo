@@ -13,6 +13,8 @@ interface ForkPerson {
 interface ForkInTheRoadProps {
   person: ForkPerson;
   onChoice: (prompt: string) => void;
+  onQuickLeverage?: () => void;
+  isDispatching?: boolean;
 }
 
 function ArrowRight() {
@@ -93,11 +95,9 @@ function ForkButton({
   );
 }
 
-export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
+export function ForkInTheRoad({ person, onChoice, onQuickLeverage, isDispatching }: ForkInTheRoadProps) {
   const displayTitle =
     [person.title, person.company].filter(Boolean).join(" · ");
-
-  const leveragePrompt = `Leverage my network for ${person.name}${displayTitle ? ` (${displayTitle})` : ""}. What's my single best move right now to activate this relationship? Be direct and concise — tell me what to do and draft the message.`;
 
   const interviewPrompt = `I want to help ${person.name}${displayTitle ? ` (${displayTitle})` : ""} with something specific. What would I like to help them with?`;
 
@@ -183,10 +183,12 @@ export function ForkInTheRoad({ person, onChoice }: ForkInTheRoadProps) {
         }}
       >
         <ForkButton
-          title={`Leverage my Network for ${person.name}`}
-          subtitle="Skip the interview — get instant suggestions"
+          title={isDispatching ? "Dispatching..." : `Leverage my Network for ${person.name}`}
+          subtitle={isDispatching ? "Creating suggestion request" : "Instantly create a leverage loop"}
           accentColor="99,102,241"
-          onClick={() => onChoice(leveragePrompt)}
+          onClick={() => {
+            if (!isDispatching && onQuickLeverage) onQuickLeverage();
+          }}
         />
         <ForkButton
           title={`Help ${person.name} with something specific`}
